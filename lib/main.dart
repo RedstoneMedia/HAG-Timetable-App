@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:convert'; // Contains the JSON encoder
-import 'package:http/http.dart'; // Contains a client for making API calls
-import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
-import 'package:html/dom.dart' as dom; // Contains DOM related classes for extracting data from elements
+import 'package:http/http.dart';
+import 'package:stundenplan/parse.dart';
+import 'content.dart';
 
 void main() {
   runApp(MaterialApp(home: MyApp()));
@@ -11,33 +10,13 @@ void main() {
 class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
+  Content content = new Content(6, 10);
 }
 
 class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    initiate().then((value) => print(value));
-  }
-
-  Future initiate() async {
-    // Make API call to Hackernews homepage
-    var client = Client();
-    Response response = await client.get('https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen.htm');
-
-    // Use html parser
-    var document = parse(response.body);
-    List<dom.Element> links = document.querySelectorAll('a');
-    List<Map<String, dynamic>> linkMap = [];
-
-    for (var link in links) {
-      linkMap.add({
-        'title': link.text,
-        'href': link.attributes['href'],
-      });
-    }
-
-    return json.encode(linkMap);
   }
 
   @override
@@ -58,10 +37,18 @@ class _MyAppState extends State<MyApp> {
                       ),
                       width: 50,
                       height: 50,
-                      child: Center(child: Text("$x - $y")),
+                      child: Center(
+                          child: Text(widget.content.cells[y][x].subject)),
                     )
                 ],
               ),
+            RaisedButton(
+              child: Text("Reload"),
+              onPressed: () {
+                getCourseSubsitutionPlan("11K", new Client())
+                    .then((value) => print(value));
+              },
+            ),
           ],
         ),
       ),
