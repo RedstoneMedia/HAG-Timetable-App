@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 
 class Content {
 
@@ -13,10 +12,18 @@ class Content {
   }
 
   List<List<Cell>> cells = List<List<Cell>>();
+  void setCell(int x, int y, Cell value) {
+   // print("Setting sell at $x $y to $value");
+    cells[x][y] = value;
+  }
 }
 
 class Cell {
-  String subject = "Hallo";
+  String subject = "";
   String room;
   String teacher;
+
+  String toString() {
+    return subject;
+  }
 }

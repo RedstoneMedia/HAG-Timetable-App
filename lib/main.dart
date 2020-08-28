@@ -17,6 +17,19 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    asyncinit();
+  }
+
+  Future<void> asyncinit() async {
+    var result = await initiate("11e", widget.content);
+    return;
+    /*
+      setState(() {
+        for (List<Cell> cellList in value.cells)
+          for (Cell cell in cellList) print(cell.subject);
+        widget.content = value;
+      });
+    });*/
   }
 
   @override
@@ -38,16 +51,14 @@ class _MyAppState extends State<MyApp> {
                       width: 50,
                       height: 50,
                       child: Center(
-                          child: Text(widget.content.cells[y][x].subject)),
+                          child:
+                              Text("" ?? widget.content.cells[y][x].subject)),
                     )
                 ],
               ),
             RaisedButton(
               child: Text("Reload"),
-              onPressed: () {
-                getCourseSubsitutionPlan("11K", new Client())
-                    .then((value) => print(value));
-              },
+              onPressed: () {},
             ),
           ],
         ),
