@@ -4,27 +4,27 @@ import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
 
 class WeekdayGridObject extends StatelessWidget {
-  WeekdayGridObject(this.weekday, this.day, this.needsLeftBorder);
+  WeekdayGridObject(
+      this.weekday, this.day, this.needsLeftBorder, this.needsRightBorder);
 
   final String weekday;
   final String day;
   final bool needsLeftBorder;
+  final bool needsRightBorder;
 
   @override
   Widget build(BuildContext context) {
-    //print("$day - $weekday = ${compareWeekdays(day, weekday)}");
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(width: 1.0, color: Colors.black),
-              top: BorderSide(width: 1.0, color: Colors.black),
-              right: BorderSide(width: 1.0, color: Colors.black),
-              left: needsLeftBorder
-                  ? BorderSide(width: 1.0, color: Colors.black)
-                  : BorderSide(color: Colors.transparent),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(needsLeftBorder ? 5 : 0),
+              topRight: Radius.circular(needsRightBorder ? 5 : 0),
             ),
-            color: compareWeekdays(day, weekday) ? Colors.black : Colors.white),
+            border: Border.all(width: 0.75, color: Colors.black26),
+            color: compareWeekdays(day, weekday)
+                ? Colors.black
+                : Colors.black.withAlpha(25)),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Center(
@@ -65,18 +65,59 @@ class ClassGridObject extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return (content.cells[y][x].subject == "---" &&
+        content.cells[y][x].originalSubject == "---")
+        ? Expanded(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withAlpha(10),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(
+                  (y == constants.height - 2 && x == 1) ? 5 : 0),
+              bottomRight: Radius.circular(
+                  (y == constants.height - 2 && x == constants.width - 1)
+                      ? 5
+                      : 0),
+            ),
+            border: Border.all(width: 0.5, color: Colors.black26),
+          ),
+          child: Column(
+            children: [
+              Text(
+                content.cells[y][x].originalSubject,
+                style: TextStyle(
+                    color: Colors.transparent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0),
+              ),
+              Text(
+                content.cells[y][x].subject,
+                style: TextStyle(
+                  color: Colors.transparent,
+                ),
+              ),
+              Text(content.cells[y][x].room,
+                  style: TextStyle(
+                    color: Colors.transparent,
+                  )),
+              Text(content.cells[y][x].teacher,
+                  style: TextStyle(
+                    color: Colors.transparent,
+                  )),
+            ],
+          ),
+        ))
+        : Expanded(
       child: Container(
         decoration: BoxDecoration(
             border: Border(
-              bottom: BorderSide(
-                  width: 1.0,
-                  color: (y - 1) % 2 == 0 ? Colors.black54 : Colors.black26),
-              right: BorderSide(width: 2.0, color: Colors.black26),
-              left: needsLeftBorder
-                  ? BorderSide(width: 2.0, color: Colors.black26)
-                  : BorderSide(color: Colors.transparent),
-            ),
+                bottom: BorderSide(
+                    width: 1.0,
+                    color: (y - 1) % 2 == 0
+                        ? Colors.black54
+                        : Colors.black26),
+                right: BorderSide(width: 0.5, color: Colors.black26),
+                left: BorderSide(width: 0.5, color: Colors.black26)),
             color: !content.cells[y][x].isDropped
                 ? constants.subjectColor
                 : constants.subjectAusfallColor),
@@ -97,6 +138,14 @@ class ClassGridObject extends StatelessWidget {
           ]
               : [
             Text(
+              content.cells[y][x].originalSubject,
+              style: TextStyle(
+                color: Colors.transparent,
+                fontWeight: FontWeight.bold,
+                fontSize: 8.5,
+              ),
+            ),
+            Text(
               content.cells[y][x].subject,
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
@@ -107,7 +156,7 @@ class ClassGridObject extends StatelessWidget {
               style: TextStyle(
                 color: Colors.transparent,
                 fontWeight: FontWeight.bold,
-                fontSize: 16.0,
+                fontSize: 8.5,
               ),
             ),
           ],

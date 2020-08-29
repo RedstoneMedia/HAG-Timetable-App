@@ -28,10 +28,11 @@ class _MyAppState extends State<MyApp> {
     date = DateTime.now();
     day = DateFormat('EEEE').format(date);
 
-    initiate("11e", widget.content, constants.subjects).then((value) => setState(() {
-          print("State was set to : ${widget.content}");
-          loading = false;
-        }));
+    initiate("11e", widget.content, constants.subjects)
+        .then((value) => setState(() {
+              print("State was set to : ${widget.content}");
+              loading = false;
+            }));
   }
 
   @override
@@ -69,9 +70,17 @@ class _MyAppState extends State<MyApp> {
                                         : TimeGridObject("12:30", "12:43", y)
                                     : y == 0
                                         ? WeekdayGridObject(
-                                            constants.weekDays[x], day, x == 1)
-                                        : ClassGridObject(widget.content,
-                                            constants, x, y - 1, x == 1),
+                                    constants.weekDays[x],
+                                    day,
+                                    x == 1,
+                                    x == constants.width - 1)
+                                    : ClassGridObject(
+                                  widget.content,
+                                  constants,
+                                  x,
+                                  y - 1,
+                                  x == 1,
+                                ),
                             ],
                           ),
                       ],
