@@ -13,7 +13,6 @@ class Content {
 
   List<List<Cell>> cells = List<List<Cell>>();
   void setCell(int x, int y, Cell value) {
-   // print("Setting sell at $x $y to $value");
     cells[x][y] = value;
   }
 
@@ -23,7 +22,9 @@ class Content {
 }
 
 class Cell {
+  //TODO: Replace default values
   String subject = "";
+  String originalSubject = "De";
   String room = "/";
   String teacher = "/";
 

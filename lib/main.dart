@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
+import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/parse.dart';
 import 'content.dart';
 
@@ -14,46 +14,61 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  Constants constants = new Constants();
+  bool loading = true;
+
   @override
   void initState() {
     super.initState();
-    initiate("11e", widget.content).then((value) => setState(() => print("State was set to : ${widget.content}")));
+    initiate("11e", widget.content).then((value) => setState(() {
+          print("State was set to : ${widget.content}");
+          loading = false;
+        }));
   }
 
   @override
   Widget build(BuildContext context) {
     return Material(
+      color: constants.backgroundColor,
       child: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (int y = 0; y < 10; y++)
-              Row(
+        child: loading
+            ? SizedBox(
+                width: 80, height: 80, child: CircularProgressIndicator())
+            : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  for (int x = 0; x < 6; x++)
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(width: 1.0, color: Colors.black),
-                      ),
-                      width: 50,
-                      height: 50,
-                      child: Column(
-                        children: [
-                          Text(widget.content.cells[y][x].subject),
-                          Text(widget.content.cells[y][x].room),
-                          Text(widget.content.cells[y][x].subject),
-                        ],
-                      ),
-                    )
+                  for (int y = 0; y < 10; y++)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        for (int x = 0; x < 6; x++)
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  border: Border.all(
+                                      width: 1.0, color: Colors.black),
+                                  color:
+                                      widget.content.cells[y][x].subject == ""
+                                          ? constants.subjectColor
+                                          : constants.subjectAusfallColor),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    widget.content.cells[y][x].originalSubject,
+                                    style: TextStyle(
+                                        decoration: TextDecoration.lineThrough),
+                                  ),
+                                  Text(widget.content.cells[y][x].subject),
+                                  Text(widget.content.cells[y][x].room),
+                                  Text(widget.content.cells[y][x].teacher),
+                                ],
+                              ),
+                            ),
+                          )
+                      ],
+                    ),
                 ],
               ),
-            RaisedButton(
-              child: Text("Reload"),
-              onPressed: () {},
-            ),
-          ],
-        ),
       ),
     );
   }
