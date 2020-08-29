@@ -16,6 +16,10 @@ class Content {
    // print("Setting sell at $x $y to $value");
     cells[x][y] = value;
   }
+
+  String toString() {
+    return cells.toString();
+  }
 }
 
 class Cell {

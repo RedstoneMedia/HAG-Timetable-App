@@ -17,19 +17,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    asyncinit();
-  }
-
-  Future<void> asyncinit() async {
-    var result = await initiate("11e", widget.content);
-    return;
-    /*
-      setState(() {
-        for (List<Cell> cellList in value.cells)
-          for (Cell cell in cellList) print(cell.subject);
-        widget.content = value;
-      });
-    });*/
+    initiate("11e", widget.content).then((value) => setState(() => print("State was set to : ${widget.content}")));
   }
 
   @override

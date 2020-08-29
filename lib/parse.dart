@@ -7,29 +7,27 @@ import 'package:html/parser.dart'; // Contains HTML parsers to generate a Docume
 import 'package:html/dom.dart' as dom;
 import 'package:stundenplan/content.dart'; // Contains DOM related classes for extracting data from elements
 
-Future<Content> initiate(course, Content content) async{
+const String SUBSTITUTION_LINK_BASE = "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
+
+Future<void> initiate(course, Content content) async {
   var client = Client();
 
-  await getCourseSubsitutionPlan(course, client).then((plan) {
-    getCourseSubsitutionPlan("11K", client).then((value) {
-      plan.addAll(value);
-      for (int i = 0; i < plan.length; i++) {
-        var hour = int.parse(plan[i]["Stunde"][1]);
+  List<HashMap<String, String>> plan = await getCourseSubsitutionPlan(course, SUBSTITUTION_LINK_BASE, client);
+  List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("11K", SUBSTITUTION_LINK_BASE, client);
+  plan.addAll(coursePlan);
+  for (int i = 0; i < plan.length; i++) {
+    var hour = int.parse(plan[i]["Stunde"][1]);
 
-        Cell cell = new Cell();
-        cell.subject = plan[i]["Fach"];
-        content.setCell(hour, 1, cell);
-      }
-    });
-  });
-  return content;
+    Cell cell = new Cell();
+    cell.subject = plan[i]["Fach"];
+    content.setCell(hour, 1, cell);
+  }
 }
 
-Future<List<HashMap<String, String>>> getCourseSubsitutionPlan(
-    String course, client) async {
-  Response response = await client.get(
-      'https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen_${course}.htm');
-  if (response.statusCode != 200) return new List<HashMap<String, String>>();
+Future<List<HashMap<String,String>>> getCourseSubsitutionPlan(String course, String linkBase, client) async {
+  Response response = await client.get('${linkBase}_${course}.htm');
+  if(response.statusCode != 200)
+    return new List<HashMap<String,String>>();
 
   var document = parse(response.body);
   List<dom.Element> tables = document.getElementsByTagName("table");
@@ -54,7 +52,7 @@ Future<List<HashMap<String, String>>> getCourseSubsitutionPlan(
   ];
   rows.removeAt(0);
   List<HashMap<String, String>> subsituions =
-      new List<HashMap<String, String>>();
+  new List<HashMap<String, String>>();
 
   for (var row in rows) {
     HashMap<String, String> substituion = new HashMap<String, String>();
