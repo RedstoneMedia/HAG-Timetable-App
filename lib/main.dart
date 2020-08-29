@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/parse.dart';
+import 'package:stundenplan/widgets/grid.dart';
+
 import 'content.dart';
 
 void main() {
@@ -32,8 +34,10 @@ class _MyAppState extends State<MyApp> {
       color: constants.backgroundColor,
       child: SafeArea(
         child: loading
-            ? SizedBox(
-                width: 80, height: 80, child: CircularProgressIndicator())
+            ? Center(
+                child: SizedBox(
+                    width: 80, height: 80, child: CircularProgressIndicator()),
+              )
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -43,55 +47,13 @@ class _MyAppState extends State<MyApp> {
                       children: [
                         for (int x = 0; x < constants.width; x++)
                           x == 0
-                              ? Expanded(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                          width: 1.0, color: Colors.black),
-                                    ),
-                                    child: Text("HEY"),
-                                  ),
-                                )
+                              ? y == 0
+                              ? PlaceholderGridObject()
+                              : TimeGridObject("12:30", "12:43", y)
                               : y == 0
-                                  ? Expanded(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                              width: 1.0, color: Colors.black),
-                                        ),
-                                        child: Text(constants.weekDays[x]),
-                                      ),
-                                    )
-                                  : Expanded(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                            border: Border.all(
-                                                width: 1.0,
-                                                color: Colors.black),
-                                            color: !widget.content.cells[y][x]
-                                                    .isDropped
-                                                ? constants.subjectColor
-                                                : constants
-                                                    .subjectAusfallColor),
-                                        child: Column(
-                                          children: [
-                                            Text(
-                                              widget.content.cells[y][x]
-                                                  .originalSubject,
-                                              style: TextStyle(
-                                                  decoration: TextDecoration
-                                                      .lineThrough),
-                                            ),
-                                            Text(widget
-                                                .content.cells[y][x].subject),
-                                            Text(widget
-                                                .content.cells[y][x].room),
-                                            Text(widget
-                                                .content.cells[y][x].teacher),
-                                          ],
-                                        ),
-                                      ),
-                                    )
+                              ? WeekdayGridObject(constants.weekDays[x])
+                              : ClassGridObject(
+                              widget.content, constants, x, y),
                       ],
                     ),
                 ],

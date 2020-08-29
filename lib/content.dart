@@ -22,13 +22,13 @@ class Content {
 
 class Cell {
   //TODO: Replace default values
-  String subject = "";
-  String originalSubject = "De";
-  String room = "/";
-  String originalRoom = "/";
-  String teacher = "/";
-  String originalTeacher = "/";
-  String text = "/";
+  String subject = "---";
+  String originalSubject = "---";
+  String room = "---";
+  String originalRoom = "---";
+  String teacher = "---";
+  String originalTeacher = "---";
+  String text = "---";
   bool isDropped = false;
 
 
