@@ -67,13 +67,15 @@ class _MyAppState extends State<MyApp> {
                                 x == 0
                                     ? y == 0
                                         ? PlaceholderGridObject()
-                                        : TimeGridObject("12:30", "12:43", y)
+                                        : TimeGridObject(
+                                            "12:30", "12:43", y, constants)
                                     : y == 0
                                         ? WeekdayGridObject(
                                     constants.weekDays[x],
                                     day,
                                     x == 1,
-                                    x == constants.width - 1)
+                                    x == constants.width - 1,
+                                    constants)
                                     : ClassGridObject(
                                   widget.content,
                                   constants,
@@ -83,6 +85,17 @@ class _MyAppState extends State<MyApp> {
                                 ),
                             ],
                           ),
+                        RaisedButton(
+                          child: Text("Switch Mode"),
+                          onPressed: () {
+                            setState(() {
+                              if (constants.theme == constants.darkTheme)
+                                constants.theme = constants.lightTheme;
+                              else
+                                constants.theme = constants.darkTheme;
+                            });
+                          },
+                        )
                       ],
                     ),
                   ),
