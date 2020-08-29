@@ -4,23 +4,33 @@ import 'package:html/parser.dart'; // Contains HTML parsers to generate a Docume
 import 'package:html/dom.dart' as dom;
 import 'package:stundenplan/content.dart'; // Contains DOM related classes for extracting data from elements
 
-const String SUBSTITUTION_LINK_BASE =
-    "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
+const String SUBSTITUTION_LINK_BASE = "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
 
 Future<void> initiate(course, Content content) async {
   var client = Client();
 
-  List<HashMap<String, String>> plan =
-      await getCourseSubsitutionPlan(course, SUBSTITUTION_LINK_BASE, client);
-  List<HashMap<String, String>> coursePlan =
-      await getCourseSubsitutionPlan("11K", SUBSTITUTION_LINK_BASE, client);
+  List<HashMap<String, String>> plan = await getCourseSubsitutionPlan(course, SUBSTITUTION_LINK_BASE, client);
+  List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("11K", SUBSTITUTION_LINK_BASE, client);
   plan.addAll(coursePlan);
   for (int i = 0; i < plan.length; i++) {
-    var hour = int.parse(plan[i]["Stunde"][1]);
+    var hours = plan[i]["Stunde"].replaceAll(" ", "").split("-");
 
+    // Fill cell
     Cell cell = new Cell();
     cell.subject = plan[i]["Fach"];
-    content.setCell(hour, 1, cell);
+
+    if (hours.length == 1) {
+      // No hour range (5)
+      var hour = int.parse(hours[0]);
+      content.setCell(hour, 1, cell);
+    } else if (hours.length == 2) {
+      // Hour range (5-6)
+      var hourStart = int.parse(hours[0]);
+      var hourEnd = int.parse(hours[1]);
+      for (var i = hourStart; i < hourEnd + 1; i++) {
+        content.setCell(i, 1, cell);
+      }
+    }
   }
 }
 
