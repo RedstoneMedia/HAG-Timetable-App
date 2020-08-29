@@ -13,11 +13,12 @@ String strip(String s) {
 }
 
 
-Future<void> initiate(course, Content content) async {
+Future<void> initiate(course, Content content, List<String> subjects) async {
   var client = Client();
   var weekDay = DateTime.now().weekday;
 
-  await fillTimeTable(course, TIMETABLE_LINK_BASE, client, content);
+  await fillTimeTable(course, TIMETABLE_LINK_BASE, client, content, subjects);
+  await fillTimeTable("11K", TIMETABLE_LINK_BASE, client, content, subjects);
 
   List<HashMap<String, String>> plan = await getCourseSubsitutionPlan(course, SUBSTITUTION_LINK_BASE, client);
   List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("11K", SUBSTITUTION_LINK_BASE, client);
@@ -29,6 +30,9 @@ Future<void> initiate(course, Content content) async {
     Cell cell = new Cell();
     cell.subject = strip(plan[i]["Fach"]);
     cell.originalSubject = strip(plan[i]["statt Fach"]);
+    if (!subjects.contains(cell.originalSubject)) {  // If user dose not have that subject skip that class
+      continue;
+    }
     cell.teacher = strip(plan[i]["Vertretung"]);
     cell.originalTeacher = strip(plan[i]["statt Lehrer"]);
     cell.room = strip(plan[i]["Raum"]);
@@ -44,14 +48,15 @@ Future<void> initiate(course, Content content) async {
       // Hour range (5-6)
       var hourStart = int.parse(hours[0]);
       var hourEnd = int.parse(hours[1]);
+      print("${hourStart} ${hourEnd}");
       for (var i = hourStart; i < hourEnd + 1; i++) {
-        content.setCell(i, min(weekDay, 5), cell);
+        content.setCell(i-1, min(weekDay, 5), cell);
       }
     }
   }
 }
 
-Future<void> fillTimeTable(String course, String linkBase, client, Content content) async {
+Future<void> fillTimeTable(String course, String linkBase, client, Content content, List<String> subjects) async {
   Response response = await client.get('${linkBase}_${course}.htm');
   if (response.statusCode != 200) {
     print("Cannot get timetable");
@@ -82,7 +87,7 @@ Future<void> fillTimeTable(String course, String linkBase, client, Content conte
     }
     for (var x = 0; x < 6; x++) {
       if (x == 0) {
-        parseOneCell(columns[x], x, y, content);
+        parseOneCell(columns[x], x, y, content, subjects);
         tableX++;
       } else {
         var doParseCell = true;
@@ -98,7 +103,7 @@ Future<void> fillTimeTable(String course, String linkBase, client, Content conte
           print("${contentY} ${x} ${doParseCell} ${tableX}");
         }
         if (doParseCell) {
-          parseOneCell(columns[tableX], x, y, content);
+          parseOneCell(columns[tableX], x, y, content, subjects);
           tableX++;
         }
       }
@@ -106,7 +111,7 @@ Future<void> fillTimeTable(String course, String linkBase, client, Content conte
   }
 }
 
-void parseOneCell(dom.Element cellDom, int x, int y, Content content) {
+void parseOneCell(dom.Element cellDom, int x, int y, Content content, List<String> subjects) {
   var cell = new Cell();
   // sidebar
   if (x == 0) {
@@ -125,8 +130,16 @@ void parseOneCell(dom.Element cellDom, int x, int y, Content content) {
     cell.subject = strip(subjectAndFootnote[0].text);
   }
 
-  for (var i = 0; i < hours; i++) {
-    content.setCell((y / 2).floor() + i, x, cell);
+  if (subjects.contains(cell.subject)) {  // If user dose not have that subject skip that class
+    for (var i = 0; i < hours; i++) {
+      content.setCell((y / 2).floor() + i, x, cell);
+    }
+  } else {
+    for (var i = 0; i < hours; i++) {
+      cell = content.cells[(y / 2).floor() + i][x];
+      cell.isDoubleClass = true;
+      content.setCell((y / 2).floor() + i, x, cell);
+    }
   }
 }
 

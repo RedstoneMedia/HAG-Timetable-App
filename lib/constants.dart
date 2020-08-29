@@ -5,6 +5,7 @@ class Constants {
   final int width = 6;
   final int height = 10;
   final List<String> weekDays = ["","Mo", "Di", "Mi", "Do", "Fr"];
+  final List<String> subjects = ["De", "Ma", "Sp", "Ge", "Ek", "Po", "En", "---"];
 
   //Colors
   final Color backgroundColor = Colors.white;
