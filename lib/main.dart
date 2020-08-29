@@ -28,7 +28,7 @@ class _MyAppState extends State<MyApp> {
     date = DateTime.now();
     day = DateFormat('EEEE').format(date);
 
-    initiate("11e", widget.content).then((value) => setState(() {
+    initiate("11e", widget.content, constants.subjects).then((value) => setState(() {
           print("State was set to : ${widget.content}");
           loading = false;
         }));
