@@ -42,7 +42,7 @@ class _MyAppState extends State<MyApp> {
 
   void asyncinit() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    constants.setThemeAsString = prefs.get("theme") ?? "light";
+    constants.setThemeAsString = prefs.get("theme") ?? "dark";
   }
 
   void saveTheme() async {
@@ -138,7 +138,9 @@ class _MyAppState extends State<MyApp> {
       appBar: AppBar(
         title: Text(
           "StundenPlan",
-          style: TextStyle(color: constants.textColor),
+          style: GoogleFonts.poppins(
+            color: constants.textColor,
+          ),
         ),
         backgroundColor: constants.backgroundColor,
         actions: [

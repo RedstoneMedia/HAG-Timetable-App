@@ -231,7 +231,8 @@ class TimeGridObject extends StatelessWidget {
             ),
             Text(
               constants.startTimes[y - 1],
-              style: GoogleFonts.poppins(color: constants.textColor),
+              style: GoogleFonts.poppins(
+                  color: constants.textColor, fontWeight: FontWeight.w200),
             ),
             Text(
               "$y.",
@@ -240,7 +241,8 @@ class TimeGridObject extends StatelessWidget {
             ),
             Text(
               constants.endTimes[y - 1],
-              style: GoogleFonts.poppins(color: constants.textColor),
+              style: GoogleFonts.poppins(
+                  color: constants.textColor, fontWeight: FontWeight.w200),
             ),
           ],
         ),
