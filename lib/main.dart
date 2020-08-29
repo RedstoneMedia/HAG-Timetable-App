@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/parse.dart';
 import 'package:stundenplan/widgets/grid.dart';
@@ -18,10 +19,15 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   Constants constants = new Constants();
   bool loading = true;
+  DateTime date;
+  String day;
 
   @override
   void initState() {
     super.initState();
+    date = DateTime.now();
+    day = DateFormat('EEEE').format(date);
+
     initiate("11e", widget.content).then((value) => setState(() {
           print("State was set to : ${widget.content}");
           loading = false;
@@ -36,26 +42,41 @@ class _MyAppState extends State<MyApp> {
         child: loading
             ? Center(
                 child: SizedBox(
-                    width: 80, height: 80, child: CircularProgressIndicator()),
+                  width: 80,
+                  height: 80,
+                  child: CircularProgressIndicator(),
+                ),
               )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            : ListView(
                 children: [
-                  for (int y = 0; y < constants.height; y++)
-                    Row(
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: 8.0,
+                      top: 8.0,
+                      right: 8.0,
+                    ),
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        for (int x = 0; x < constants.width; x++)
-                          x == 0
-                              ? y == 0
-                              ? PlaceholderGridObject()
-                              : TimeGridObject("12:30", "12:43", y)
-                              : y == 0
-                              ? WeekdayGridObject(constants.weekDays[x])
-                              : ClassGridObject(
-                              widget.content, constants, x, y),
+                        for (int y = 0; y < constants.height; y++)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              for (int x = 0; x < constants.width; x++)
+                                x == 0
+                                    ? y == 0
+                                        ? PlaceholderGridObject()
+                                        : TimeGridObject("12:30", "12:43", y)
+                                    : y == 0
+                                        ? WeekdayGridObject(
+                                            constants.weekDays[x], day)
+                                        : ClassGridObject(
+                                            widget.content, constants, x, y),
+                            ],
+                          ),
                       ],
                     ),
+                  ),
                 ],
               ),
       ),

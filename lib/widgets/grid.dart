@@ -4,28 +4,45 @@ import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
 
 class WeekdayGridObject extends StatelessWidget {
-  WeekdayGridObject(this.weekday);
+  WeekdayGridObject(this.weekday, this.day);
 
   final String weekday;
+  final String day;
 
   @override
   Widget build(BuildContext context) {
+    //print("$day - $weekday = ${compareWeekdays(day, weekday)}");
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(width: 1.0, color: Colors.black),
-        ),
+            border: Border.all(width: 1.0, color: Colors.black),
+            color: compareWeekdays(day, weekday) ? Colors.black : Colors.white),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Center(
               child: Text(
             weekday,
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                color: compareWeekdays(day, weekday)
+                    ? Colors.white
+                    : Colors.black),
           )),
         ),
       ),
     );
   }
+}
+
+bool compareWeekdays(String day, String otherDay) {
+  day = day.toLowerCase();
+  otherDay = otherDay.toLowerCase();
+  if ((day == "monday" && otherDay == "mo") ||
+      (day == "tuesday" && otherDay == "di") ||
+      (day == "wednesday" && otherDay == "mi") ||
+      (day == "thursday" && otherDay == "do") ||
+      (day == "friday" && otherDay == "fr")) return true;
+  return false;
 }
 
 class ClassGridObject extends StatelessWidget {
