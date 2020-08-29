@@ -11,7 +11,11 @@ import 'package:stundenplan/widgets/grid.dart';
 import 'content.dart';
 
 void main() {
-  runApp(MaterialApp(home: MyApp()));
+  runApp(
+    MaterialApp(
+      home: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -36,17 +40,18 @@ class _MyAppState extends State<MyApp> {
     date = DateTime.now();
     day = DateFormat('EEEE').format(date);
 
-    initiate(widget.content, constants)
-        .then((value) => setState(() {
-      print("State was set to : ${widget.content}");
-      loading = false;
-    }));
-    asyncinit();
+    initiate(widget.content, constants).then((value) => setState(() {
+          print("State was set to : ${widget.content}");
+          loading = false;
+        }));
+    asyncInit();
   }
 
-  void asyncinit() async {
+  void asyncInit() async {
     prefs = await SharedPreferences.getInstance();
-    constants.setThemeAsString = prefs.get("theme") ?? "dark";
+    setState(() {
+      constants.setThemeAsString = prefs.get("theme") ?? "dark";
+    });
   }
 
   void saveTheme() async {
@@ -54,83 +59,90 @@ class _MyAppState extends State<MyApp> {
   }
 
   void showSettingsWindow() {
-    scaffoldKey.currentState.showBottomSheet((context) => Container(
-          color: constants.subjectAusfallColor,
-          height: 250,
-          width: double.infinity,
-          child: Column(
-            children: [
-              Container(
-                color: constants.textColor,
-                width: double.infinity,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      "Themes",
-                      style: GoogleFonts.poppins(
-                          color: constants.backgroundColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18.0),
+    showModalBottomSheet(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        backgroundColor: constants.subjectAusfallColor,
+        context: context,
+        builder: (builder) =>
+            Container(
+              color: Colors.transparent,
+              height: 250,
+              width: double.infinity,
+              child: Column(
+                children: [
+                  Container(
+                    color: constants.textColor,
+                    width: double.infinity,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          "Themes",
+                          style: GoogleFonts.poppins(
+                              color: constants.backgroundColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18.0),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Material(
-                        color: constants.textColor.withAlpha(25),
-                        child: InkWell(
-                          onTap: () {
-                            setState(() {
-                              constants.theme = constants.darkTheme;
-                              saveTheme();
-                              Navigator.pop(context);
-                            });
-                          },
-                          child: Center(
-                            child: Text(
-                              "Dark Theme",
-                              style: GoogleFonts.poppins(
-                                  color: constants.textColor,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 32.0),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Material(
+                            color: constants.textColor.withAlpha(25),
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  constants.theme = constants.darkTheme;
+                                  saveTheme();
+                                  Navigator.pop(context);
+                                });
+                              },
+                              child: Center(
+                                child: Text(
+                                  "Dark Theme",
+                                  style: GoogleFonts.poppins(
+                                      color: constants.textColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 32.0),
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Material(
-                        color: constants.invertedTextColor.withAlpha(100),
-                        child: InkWell(
-                          onTap: () {
-                            setState(() {
-                              constants.theme = constants.lightTheme;
-                              saveTheme();
-                              Navigator.pop(context);
-                            });
-                          },
-                          child: Center(
-                            child: Text(
-                              "Light Theme",
-                              style: GoogleFonts.poppins(
-                                  color: constants.textColor,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 32.0),
+                        Expanded(
+                          child: Material(
+                            color: constants.invertedTextColor.withAlpha(100),
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  constants.theme = constants.lightTheme;
+                                  saveTheme();
+                                  Navigator.pop(context);
+                                });
+                              },
+                              child: Center(
+                                child: Text(
+                                  "Light Theme",
+                                  style: GoogleFonts.poppins(
+                                      color: constants.textColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 32.0),
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ));
+            ));
     return;
   }
 
@@ -166,7 +178,12 @@ class _MyAppState extends State<MyApp> {
             child: SizedBox(
               width: 80,
               height: 80,
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                valueColor:
+                AlwaysStoppedAnimation<Color>(constants.subjectColor),
+                backgroundColor: Colors.transparent,
+                strokeWidth: 6.0,
+              ),
             ),
           )
               : SmartRefresher(
@@ -178,12 +195,17 @@ class _MyAppState extends State<MyApp> {
                 AlwaysStoppedAnimation<Color>(constants.subjectColor),
               ),
               waterDropColor: constants.subjectColor,
+              complete: Icon(
+                Icons.done,
+                color: constants.subjectColor,
+              ),
             ),
             onRefresh: () {
               initiate(widget.content, constants)
                   .then((value) => _refreshController.refreshCompleted());
             },
             child: ListView(
+              physics: BouncingScrollPhysics(),
               children: [
                 Padding(
                   padding: const EdgeInsets.only(
