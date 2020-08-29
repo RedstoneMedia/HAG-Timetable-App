@@ -1,4 +1,3 @@
-
 class Content {
 
   Content(int width, int height) {
@@ -26,9 +25,13 @@ class Cell {
   String subject = "";
   String originalSubject = "De";
   String room = "/";
+  String originalRoom = "/";
   String teacher = "/";
+  String originalTeacher = "/";
+  String text = "/";
+  bool isDropped = false;
 
   String toString() {
-    return subject;
+    return "{Cell isDropped : ${isDropped}, subject : ${subject}, room : ${room}}";
   }
 }

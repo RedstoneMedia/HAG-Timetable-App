@@ -6,6 +6,10 @@ import 'package:stundenplan/content.dart'; // Contains DOM related classes for e
 
 const String SUBSTITUTION_LINK_BASE = "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
 
+String strip(String s) {
+  return s.replaceAll(" ", "").replaceAll("\t", "");
+}
+
 Future<void> initiate(course, Content content) async {
   var client = Client();
 
@@ -17,7 +21,14 @@ Future<void> initiate(course, Content content) async {
 
     // Fill cell
     Cell cell = new Cell();
-    cell.subject = plan[i]["Fach"];
+    cell.subject = strip(plan[i]["Fach"]);
+    cell.originalSubject = strip(plan[i]["statt Fach"]);
+    cell.teacher = strip(plan[i]["Vertretung"]);
+    cell.originalTeacher = strip(plan[i]["statt Lehrer"]);
+    cell.room = strip(plan[i]["Raum"]);
+    cell.originalRoom = strip(plan[i]["statt Raum"]);
+    cell.text = plan[i]["Text"];
+    cell.isDropped = strip(plan[i]["Entfall"]) == "x";
 
     if (hours.length == 1) {
       // No hour range (5)
