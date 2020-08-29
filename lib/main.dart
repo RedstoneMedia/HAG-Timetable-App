@@ -42,29 +42,56 @@ class _MyAppState extends State<MyApp> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         for (int x = 0; x < constants.width; x++)
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  border: Border.all(
-                                      width: 1.0, color: Colors.black),
-                                  color:
-                                      widget.content.cells[y][x].subject == ""
-                                          ? constants.subjectColor
-                                          : constants.subjectAusfallColor),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    widget.content.cells[y][x].originalSubject,
-                                    style: TextStyle(
-                                        decoration: TextDecoration.lineThrough),
+                          x == 0
+                              ? Expanded(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                          width: 1.0, color: Colors.black),
+                                    ),
+                                    child: Text("HEY"),
                                   ),
-                                  Text(widget.content.cells[y][x].subject),
-                                  Text(widget.content.cells[y][x].room),
-                                  Text(widget.content.cells[y][x].teacher),
-                                ],
-                              ),
-                            ),
-                          )
+                                )
+                              : y == 0
+                                  ? Expanded(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                              width: 1.0, color: Colors.black),
+                                        ),
+                                        child: Text(constants.weekDays[x]),
+                                      ),
+                                    )
+                                  : Expanded(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                            border: Border.all(
+                                                width: 1.0,
+                                                color: Colors.black),
+                                            color: !widget.content.cells[y][x]
+                                                    .isDropped
+                                                ? constants.subjectColor
+                                                : constants
+                                                    .subjectAusfallColor),
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              widget.content.cells[y][x]
+                                                  .originalSubject,
+                                              style: TextStyle(
+                                                  decoration: TextDecoration
+                                                      .lineThrough),
+                                            ),
+                                            Text(widget
+                                                .content.cells[y][x].subject),
+                                            Text(widget
+                                                .content.cells[y][x].room),
+                                            Text(widget
+                                                .content.cells[y][x].teacher),
+                                          ],
+                                        ),
+                                      ),
+                                    )
                       ],
                     ),
                 ],

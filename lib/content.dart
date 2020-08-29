@@ -31,6 +31,7 @@ class Cell {
   String text = "/";
   bool isDropped = false;
 
+
   String toString() {
     return "{Cell isDropped : ${isDropped}, subject : ${subject}, room : ${room}}";
   }
