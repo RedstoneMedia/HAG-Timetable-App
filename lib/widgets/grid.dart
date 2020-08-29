@@ -69,45 +69,45 @@ class ClassGridObject extends StatelessWidget {
     return (content.cells[y][x].subject == "---" &&
             content.cells[y][x].originalSubject == "---")
         ? Expanded(
-        child: Container(
-          decoration: BoxDecoration(
-            color: constants.textColor.withAlpha(10),
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(
-                  (y == constants.height - 2 && x == 1) ? 5 : 0),
-              bottomRight: Radius.circular(
-                  (y == constants.height - 2 && x == constants.width - 1)
-                      ? 5
-                      : 0),
+            child: Container(
+            decoration: BoxDecoration(
+              color: constants.textColor.withAlpha(10),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(
+                    (y == constants.height - 2 && x == 1) ? 5 : 0),
+                bottomRight: Radius.circular(
+                    (y == constants.height - 2 && x == constants.width - 1)
+                        ? 5
+                        : 0),
+              ),
+              border: Border.all(width: 0.5, color: Colors.black26),
             ),
-            border: Border.all(width: 0.5, color: Colors.black26),
-          ),
-          child: Column(
-            children: [
-              Text(
-                content.cells[y][x].originalSubject,
-                style: TextStyle(
-                    color: Colors.transparent,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16.0),
-              ),
-              Text(
-                content.cells[y][x].subject,
-                style: TextStyle(
-                  color: Colors.transparent,
+            child: Column(
+              children: [
+                Text(
+                  content.cells[y][x].originalSubject,
+                  style: TextStyle(
+                      color: Colors.transparent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.0),
                 ),
-              ),
-              Text(content.cells[y][x].room,
+                Text(
+                  content.cells[y][x].subject,
                   style: TextStyle(
                     color: Colors.transparent,
-                  )),
-              Text(content.cells[y][x].teacher,
-                  style: TextStyle(
-                    color: Colors.transparent,
-                  )),
-            ],
-          ),
-        ))
+                  ),
+                ),
+                Text(content.cells[y][x].room,
+                    style: TextStyle(
+                      color: Colors.transparent,
+                    )),
+                Text(content.cells[y][x].teacher,
+                    style: TextStyle(
+                      color: Colors.transparent,
+                    )),
+              ],
+            ),
+          ))
         : Expanded(
       child: Container(
         decoration: BoxDecoration(
@@ -190,10 +190,11 @@ class PlaceholderGridObject extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Container(
-          child: Text(
-        "12:30",
-        style: GoogleFonts.poppins(color: Colors.transparent),
-      )),
+        child: Text(
+          "99:99",
+          style: GoogleFonts.poppins(color: Colors.transparent),
+        ),
+      ),
     );
   }
 }
@@ -221,8 +222,15 @@ class TimeGridObject extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Container(
+              height: 0,
+              child: Text(
+                "99:99",
+                style: GoogleFonts.poppins(color: Colors.transparent),
+              ),
+            ),
             Text(
-              "12:30",
+              constants.startTimes[y - 1],
               style: GoogleFonts.poppins(color: constants.textColor),
             ),
             Text(
@@ -231,7 +239,7 @@ class TimeGridObject extends StatelessWidget {
                   fontWeight: FontWeight.bold, color: constants.textColor),
             ),
             Text(
-              "12:43",
+              constants.endTimes[y - 1],
               style: GoogleFonts.poppins(color: constants.textColor),
             ),
           ],

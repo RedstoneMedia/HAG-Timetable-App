@@ -23,7 +23,7 @@ class Constants {
     }
   }
 
-  void set setThemeAsString(String value) {
+  set setThemeAsString(String value) {
     switch (value) {
       case ("light"):
         theme = Theme.light;
@@ -53,6 +53,32 @@ class Constants {
     "Ek",
     "Po",
     "En",
+  ];
+  final List<String> startTimes = [
+    "7:55",
+    "8:45",
+    "9:50",
+    "10:35",
+    "11:40",
+    "12:25",
+    "13:10",
+    "13:50",
+    "14:35",
+    "15:30",
+    "16:15"
+  ];
+  final List<String> endTimes = [
+    "8:40",
+    "9:30",
+    "10:35",
+    "11:20",
+    "12:25",
+    "13:10",
+    "13:45",
+    "14:35",
+    "15:20",
+    "16:15",
+    "17:00"
   ];
 
   //Colors
