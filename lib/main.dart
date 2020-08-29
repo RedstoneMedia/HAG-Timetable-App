@@ -152,7 +152,7 @@ class _MyAppState extends State<MyApp> {
       key: scaffoldKey,
       appBar: AppBar(
         title: Text(
-          "StundenPlan",
+          "Stundenplan",
           style: GoogleFonts.poppins(
             color: constants.textColor,
           ),
