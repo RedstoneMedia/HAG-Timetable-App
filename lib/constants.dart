@@ -9,6 +9,34 @@ class Constants {
   //Theme
   Theme theme = Theme.light;
 
+  String get themeAsString {
+    switch (theme) {
+      case (Theme.light):
+        return "light";
+        break;
+      case (Theme.dark):
+        return "dark";
+        break;
+      default:
+        return "light";
+        break;
+    }
+  }
+
+  void set setThemeAsString(String value) {
+    switch (value) {
+      case ("light"):
+        theme = Theme.light;
+        break;
+      case ("dark"):
+        theme = Theme.dark;
+        break;
+      default:
+        theme = Theme.light;
+        break;
+    }
+  }
+
   Theme get lightTheme => Theme.light;
 
   Theme get darkTheme => Theme.dark;

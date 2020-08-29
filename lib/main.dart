@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/parse.dart';
 import 'package:stundenplan/widgets/grid.dart';
@@ -33,6 +34,18 @@ class _MyAppState extends State<MyApp> {
               print("State was set to : ${widget.content}");
               loading = false;
             }));
+    asyncinit();
+  }
+
+  void asyncinit() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    constants.setThemeAsString = prefs.get("theme") ?? "light";
+  }
+
+  void saveTheme() async {
+    print("saving Theme " + constants.themeAsString.toString());
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("theme", constants.themeAsString.toString());
   }
 
   @override
@@ -93,6 +106,7 @@ class _MyAppState extends State<MyApp> {
                                 constants.theme = constants.lightTheme;
                               else
                                 constants.theme = constants.darkTheme;
+                              saveTheme();
                             });
                           },
                         )
