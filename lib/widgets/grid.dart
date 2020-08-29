@@ -71,11 +71,10 @@ class ClassGridObject extends StatelessWidget {
             border: Border(
               bottom: BorderSide(
                   width: 1.0,
-                  color: (y - 1) % 2 == 0 ? Colors.black : Colors.black26),
-              right: BorderSide(width: 1.0, color: Colors.black),
+                  color: (y - 1) % 2 == 0 ? Colors.black54 : Colors.black26),
+              right: BorderSide(width: 2.0, color: Colors.black26),
               left: needsLeftBorder
-                  ? BorderSide(
-                  width: 1.0, color: Color.fromRGBO(90, 90, 90, 1.0))
+                  ? BorderSide(width: 2.0, color: Colors.black26)
                   : BorderSide(color: Colors.transparent),
             ),
             color: !content.cells[y][x].isDropped
