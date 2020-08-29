@@ -88,9 +88,11 @@ Future<void> fillTimeTable(String course, String linkBase, client, Content conte
         var doParseCell = true;
         if (y != 0) {
           var contentY = (y/2).floor();
-          var isDoubleClass = content.cells[contentY-1][x].isDoubleClass;
-          var isYEven = contentY.isEven;
-          if ((isDoubleClass && !isYEven) || (contentY >= content.cells.length)) {
+          if (contentY >= content.cells.length) {
+            continue;
+          }
+          var isDoubleClass = content.cells[contentY][x].isDoubleClass;
+          if (isDoubleClass) {
             doParseCell = false;
           }
           print("${contentY} ${x} ${doParseCell} ${tableX}");
@@ -102,7 +104,6 @@ Future<void> fillTimeTable(String course, String linkBase, client, Content conte
       }
     }
   }
-
 }
 
 void parseOneCell(dom.Element cellDom, int x, int y, Content content) {
