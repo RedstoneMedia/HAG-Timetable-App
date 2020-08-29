@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:math';
 import 'package:http/http.dart'; // Contains a client for making API calls
 import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
 import 'package:html/dom.dart' as dom;
@@ -12,6 +13,7 @@ String strip(String s) {
 
 Future<void> initiate(course, Content content) async {
   var client = Client();
+  var weekDay = DateTime.now().weekday;
 
   List<HashMap<String, String>> plan = await getCourseSubsitutionPlan(course, SUBSTITUTION_LINK_BASE, client);
   List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("11K", SUBSTITUTION_LINK_BASE, client);
@@ -33,13 +35,13 @@ Future<void> initiate(course, Content content) async {
     if (hours.length == 1) {
       // No hour range (5)
       var hour = int.parse(hours[0]);
-      content.setCell(hour, 1, cell);
+      content.setCell(hour, min(weekDay, 5), cell);
     } else if (hours.length == 2) {
       // Hour range (5-6)
       var hourStart = int.parse(hours[0]);
       var hourEnd = int.parse(hours[1]);
       for (var i = hourStart; i < hourEnd + 1; i++) {
-        content.setCell(i, 1, cell);
+        content.setCell(i, min(weekDay, 5), cell);
       }
     }
   }
