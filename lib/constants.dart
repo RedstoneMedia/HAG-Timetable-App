@@ -45,6 +45,11 @@ class Constants {
   final int width = 6;
   final int height = 10;
   final List<String> weekDays = ["", "Mo", "Di", "Mi", "Do", "Fr"];
+  final substitutionLinkBase = "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
+  final timeTableLinkBase = "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
+  final int schoolGrade = 11;
+  final subSchoolClass = "e";
+
   final List<String> subjects = [
     "De",
     "Ma",

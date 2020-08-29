@@ -3,31 +3,30 @@ import 'dart:math';
 import 'package:http/http.dart'; // Contains a client for making API calls
 import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
 import 'package:html/dom.dart' as dom;
+import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart'; // Contains DOM related classes for extracting data from elements
-
-const String SUBSTITUTION_LINK_BASE = "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
-const String TIMETABLE_LINK_BASE = "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
 
 String strip(String s) {
   return s.replaceAll(" ", "").replaceAll("\t", "").replaceAll("\n", "");
 }
 
 
-Future<void> initiate(course, Content content, List<String> subjects) async {
+Future<void> initiate(Content content, Constants constants) async {
   var client = Client();
   var weekDay = DateTime.now().weekday;
+  var schoolClassName ="${constants.schoolGrade}${constants.subSchoolClass}";
 
   print("Parsing main time table");
-  await fillTimeTable(course, TIMETABLE_LINK_BASE, client, content, subjects);
+  await fillTimeTable(schoolClassName, constants.timeTableLinkBase, client, content, constants.subjects);
   print("Parsing course only time table");
   var courseTimeTableContent = new Content(6, 10);
-  await fillTimeTable("11K", TIMETABLE_LINK_BASE, client, courseTimeTableContent, subjects);
+  await fillTimeTable("${constants.schoolGrade}K", constants.timeTableLinkBase, client, courseTimeTableContent, constants.subjects);
   print("Combining both tables");
   content.combine(courseTimeTableContent);
 
   print("Parsing submission plan");
-  List<HashMap<String, String>> plan = await getCourseSubsitutionPlan(course, SUBSTITUTION_LINK_BASE, client);
-  List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("11K", SUBSTITUTION_LINK_BASE, client);
+  List<HashMap<String, String>> plan = await getCourseSubsitutionPlan(schoolClassName, constants.substitutionLinkBase, client);
+  List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("${constants.schoolGrade}K", constants.substitutionLinkBase, client);
   plan.addAll(coursePlan);
   for (int i = 0; i < plan.length; i++) {
     var hours = strip(plan[i]["Stunde"]).split("-");
@@ -36,7 +35,7 @@ Future<void> initiate(course, Content content, List<String> subjects) async {
     Cell cell = new Cell();
     cell.subject = strip(plan[i]["Fach"]);
     cell.originalSubject = strip(plan[i]["statt Fach"]);
-    if (!subjects.contains(cell.originalSubject)) {  // If user dose not have that subject skip that class
+    if (!constants.subjects.contains(cell.originalSubject)) {  // If user dose not have that subject skip that class
       continue;
     }
     cell.teacher = strip(plan[i]["Vertretung"]);

@@ -36,7 +36,7 @@ class _MyAppState extends State<MyApp> {
     date = DateTime.now();
     day = DateFormat('EEEE').format(date);
 
-    initiate("11e", widget.content, constants.subjects)
+    initiate(widget.content, constants)
         .then((value) => setState(() {
       print("State was set to : ${widget.content}");
       loading = false;
@@ -180,7 +180,7 @@ class _MyAppState extends State<MyApp> {
               waterDropColor: constants.subjectColor,
             ),
             onRefresh: () {
-              initiate("11e", widget.content, constants.subjects)
+              initiate(widget.content, constants)
                   .then((value) => _refreshController.refreshCompleted());
             },
             child: ListView(
