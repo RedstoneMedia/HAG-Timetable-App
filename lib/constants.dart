@@ -53,6 +53,9 @@ class Constants {
     "Ek",
     "Po",
     "En",
+    "re1",
+    "if1",
+    "ifwp1"
   ];
   final List<String> startTimes = [
     "7:55",
@@ -124,7 +127,6 @@ class Constants {
     }
   }
 
-  //final Color subjectColor = Color.fromRGBO(38, 222, 129, 1.0);
   Color get subjectColor {
     switch (theme) {
       case (Theme.light):

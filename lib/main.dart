@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/parse.dart';
@@ -24,7 +25,10 @@ class _MyAppState extends State<MyApp> {
   bool loading = true;
   DateTime date;
   String day;
+  SharedPreferences prefs;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -41,12 +45,11 @@ class _MyAppState extends State<MyApp> {
   }
 
   void asyncinit() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs = await SharedPreferences.getInstance();
     constants.setThemeAsString = prefs.get("theme") ?? "dark";
   }
 
   void saveTheme() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString("theme", constants.themeAsString.toString());
   }
 
@@ -166,47 +169,62 @@ class _MyAppState extends State<MyApp> {
               child: CircularProgressIndicator(),
             ),
           )
-              : ListView(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 8.0,
-                  top: 8.0,
-                  right: 8.0,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (int y = 0; y < constants.height; y++)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          for (int x = 0; x < constants.width; x++)
-                            x == 0
-                                ? y == 0
-                                ? PlaceholderGridObject()
-                                : TimeGridObject(
-                                "12:30", "12:43", y, constants)
-                                : y == 0
-                                ? WeekdayGridObject(
-                                constants.weekDays[x],
-                                day,
-                                x == 1,
-                                x == constants.width - 1,
-                                constants)
-                                : ClassGridObject(
-                              widget.content,
-                              constants,
-                              x,
-                              y - 1,
-                              x == 1,
-                            ),
-                        ],
-                      ),
-                  ],
-                ),
+              : SmartRefresher(
+            enablePullDown: true,
+            controller: _refreshController,
+            header: WaterDropHeader(
+              refresh: CircularProgressIndicator(
+                valueColor:
+                AlwaysStoppedAnimation<Color>(constants.subjectColor),
               ),
-            ],
+              waterDropColor: constants.subjectColor,
+            ),
+            onRefresh: () {
+              initiate("11e", widget.content, constants.subjects)
+                  .then((value) => _refreshController.refreshCompleted());
+            },
+            child: ListView(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 8.0,
+                    top: 8.0,
+                    right: 8.0,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (int y = 0; y < constants.height; y++)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            for (int x = 0; x < constants.width; x++)
+                              x == 0
+                                  ? y == 0
+                                  ? PlaceholderGridObject()
+                                  : TimeGridObject(
+                                  "12:30", "12:43", y, constants)
+                                  : y == 0
+                                  ? WeekdayGridObject(
+                                  constants.weekDays[x],
+                                  day,
+                                  x == 1,
+                                  x == constants.width - 1,
+                                  constants)
+                                  : ClassGridObject(
+                                widget.content,
+                                constants,
+                                x,
+                                y - 1,
+                                x == 1,
+                              ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
