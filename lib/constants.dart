@@ -18,7 +18,7 @@ class Constants {
         return "dark";
         break;
       default:
-        return "light";
+        return "dark";
         break;
     }
   }
