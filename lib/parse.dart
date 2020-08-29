@@ -1,19 +1,19 @@
 import 'dart:collection';
-
-import 'package:flutter/material.dart';
-import 'dart:convert'; // Contains the JSON encoder
 import 'package:http/http.dart'; // Contains a client for making API calls
 import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
 import 'package:html/dom.dart' as dom;
 import 'package:stundenplan/content.dart'; // Contains DOM related classes for extracting data from elements
 
-const String SUBSTITUTION_LINK_BASE = "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
+const String SUBSTITUTION_LINK_BASE =
+    "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
 
 Future<void> initiate(course, Content content) async {
   var client = Client();
 
-  List<HashMap<String, String>> plan = await getCourseSubsitutionPlan(course, SUBSTITUTION_LINK_BASE, client);
-  List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("11K", SUBSTITUTION_LINK_BASE, client);
+  List<HashMap<String, String>> plan =
+      await getCourseSubsitutionPlan(course, SUBSTITUTION_LINK_BASE, client);
+  List<HashMap<String, String>> coursePlan =
+      await getCourseSubsitutionPlan("11K", SUBSTITUTION_LINK_BASE, client);
   plan.addAll(coursePlan);
   for (int i = 0; i < plan.length; i++) {
     var hour = int.parse(plan[i]["Stunde"][1]);
@@ -24,10 +24,10 @@ Future<void> initiate(course, Content content) async {
   }
 }
 
-Future<List<HashMap<String,String>>> getCourseSubsitutionPlan(String course, String linkBase, client) async {
+Future<List<HashMap<String, String>>> getCourseSubsitutionPlan(
+    String course, String linkBase, client) async {
   Response response = await client.get('${linkBase}_${course}.htm');
-  if(response.statusCode != 200)
-    return new List<HashMap<String,String>>();
+  if (response.statusCode != 200) return new List<HashMap<String, String>>();
 
   var document = parse(response.body);
   List<dom.Element> tables = document.getElementsByTagName("table");
@@ -52,7 +52,7 @@ Future<List<HashMap<String,String>>> getCourseSubsitutionPlan(String course, Str
   ];
   rows.removeAt(0);
   List<HashMap<String, String>> subsituions =
-  new List<HashMap<String, String>>();
+      new List<HashMap<String, String>>();
 
   for (var row in rows) {
     HashMap<String, String> substituion = new HashMap<String, String>();

@@ -24,8 +24,8 @@ class Content {
 
 class Cell {
   String subject = "";
-  String room;
-  String teacher;
+  String room = "/";
+  String teacher = "/";
 
   String toString() {
     return subject;

@@ -38,9 +38,13 @@ class _MyAppState extends State<MyApp> {
                       ),
                       width: 50,
                       height: 50,
-                      child: Center(
-                          child:
-                              Text("" ?? widget.content.cells[y][x].subject)),
+                      child: Column(
+                        children: [
+                          Text(widget.content.cells[y][x].subject),
+                          Text(widget.content.cells[y][x].room),
+                          Text(widget.content.cells[y][x].subject),
+                        ],
+                      ),
                     )
                 ],
               ),
