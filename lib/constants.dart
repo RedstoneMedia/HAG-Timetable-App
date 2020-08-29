@@ -32,7 +32,7 @@ class Constants {
         theme = Theme.dark;
         break;
       default:
-        theme = Theme.light;
+        theme = Theme.dark;
         break;
     }
   }
