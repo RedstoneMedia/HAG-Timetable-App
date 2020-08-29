@@ -10,7 +10,7 @@ void main() {
 class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
-  Content content = new Content(6, 10);
+  Content content = new Content(Constants().width, Constants().height);
 }
 
 class _MyAppState extends State<MyApp> {
@@ -37,11 +37,11 @@ class _MyAppState extends State<MyApp> {
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  for (int y = 0; y < 10; y++)
+                  for (int y = 0; y < constants.height; y++)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        for (int x = 0; x < 6; x++)
+                        for (int x = 0; x < constants.width; x++)
                           Expanded(
                             child: Container(
                               decoration: BoxDecoration(
