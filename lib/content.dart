@@ -11,8 +11,9 @@ class Content {
   }
 
   List<List<Cell>> cells = List<List<Cell>>();
-  void setCell(int x, int y, Cell value) {
-    cells[x][y] = value;
+  void setCell(int y, int x, Cell value) {
+    print("Seting cell at y:${y}, x:${x} to ${value}");
+    cells[y][x] = value;
   }
 
   String toString() {
@@ -30,7 +31,7 @@ class Cell {
   String originalTeacher = "---";
   String text = "---";
   bool isDropped = false;
-
+  bool isDoubleClass = false;
 
   String toString() {
     return "{Cell isDropped : ${isDropped}, subject : ${subject}, room : ${room}}";

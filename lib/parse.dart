@@ -6,20 +6,24 @@ import 'package:html/dom.dart' as dom;
 import 'package:stundenplan/content.dart'; // Contains DOM related classes for extracting data from elements
 
 const String SUBSTITUTION_LINK_BASE = "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
+const String TIMETABLE_LINK_BASE = "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
 
 String strip(String s) {
-  return s.replaceAll(" ", "").replaceAll("\t", "");
+  return s.replaceAll(" ", "").replaceAll("\t", "").replaceAll("\n", "");
 }
+
 
 Future<void> initiate(course, Content content) async {
   var client = Client();
   var weekDay = DateTime.now().weekday;
 
+  await fillTimeTable(course, TIMETABLE_LINK_BASE, client, content);
+
   List<HashMap<String, String>> plan = await getCourseSubsitutionPlan(course, SUBSTITUTION_LINK_BASE, client);
   List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("11K", SUBSTITUTION_LINK_BASE, client);
   plan.addAll(coursePlan);
   for (int i = 0; i < plan.length; i++) {
-    var hours = plan[i]["Stunde"].replaceAll(" ", "").split("-");
+    var hours = strip(plan[i]["Stunde"]).split("-");
 
     // Fill cell
     Cell cell = new Cell();
@@ -44,6 +48,84 @@ Future<void> initiate(course, Content content) async {
         content.setCell(i, min(weekDay, 5), cell);
       }
     }
+  }
+}
+
+Future<void> fillTimeTable(String course, String linkBase, client, Content content) async {
+  Response response = await client.get('${linkBase}_${course}.htm');
+  if (response.statusCode != 200) {
+    print("Cannot get timetable");
+    return;
+  }
+
+  var document = parse(response.body);
+
+  // Find all tables with attr rules
+  List<dom.Element> tables = document.getElementsByTagName("table");
+  for (int i = 0; i < tables.length; i++) {
+    if (!tables[i].attributes.containsKey("rules")) {
+      tables.removeAt(i);
+    }
+  }
+  var mainTimeTable = tables[0];
+  var footnoteTable = tables[1];
+
+  List<dom.Element> rows = mainTimeTable.children[0].children;
+  rows.removeAt(0);
+
+  for (var y = 0; y < rows.length; y++) {
+    var row = rows[y];
+    var columns = row.children;
+    var tableX = 0;
+    if (columns.length <= 0) {
+      continue;
+    }
+    for (var x = 0; x < 6; x++) {
+      if (x == 0) {
+        parseOneCell(columns[x], x, y, content);
+        tableX++;
+      } else {
+        var doParseCell = true;
+        if (y != 0) {
+          var contentY = (y/2).floor();
+          var isDoubleClass = content.cells[contentY-1][x].isDoubleClass;
+          var isYEven = contentY.isEven;
+          if ((isDoubleClass && !isYEven) || (contentY >= content.cells.length)) {
+            doParseCell = false;
+          }
+          print("${contentY} ${x} ${doParseCell} ${tableX}");
+        }
+        if (doParseCell) {
+          parseOneCell(columns[tableX], x, y, content);
+          tableX++;
+        }
+      }
+    }
+  }
+
+}
+
+void parseOneCell(dom.Element cellDom, int x, int y, Content content) {
+  var cell = new Cell();
+  // sidebar
+  if (x == 0) {
+    return;
+  }
+
+  // Normal cell
+  var hours = int.parse(cellDom.attributes["rowspan"]) / 2;
+  cell.isDoubleClass = hours == 2;
+  List<dom.Element> cellData = cellDom.children[0].children[0].children;
+  if (cellData.length >= 2) {
+    List<dom.Element> teacherAndRoom = cellData[0].children;
+    List<dom.Element> subjectAndFootnote = cellData[1].children;
+    cell.teacher = strip(teacherAndRoom[0].text);
+    cell.room = strip(teacherAndRoom[1].text);
+    cell.subject = strip(subjectAndFootnote[0].text);
+  }
+
+  for (var i = 0; i < hours; i++) {
+    content.setCell((y / 2).floor() + i, x, cell);
   }
 }
 
