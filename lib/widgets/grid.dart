@@ -4,10 +4,11 @@ import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
 
 class WeekdayGridObject extends StatelessWidget {
-  WeekdayGridObject(this.weekday, this.day);
+  WeekdayGridObject(this.weekday, this.day, this.needsLeftBorder);
 
   final String weekday;
   final String day;
+  final bool needsLeftBorder;
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +16,14 @@ class WeekdayGridObject extends StatelessWidget {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-            border: Border.all(width: 1.0, color: Colors.black),
+            border: Border(
+              bottom: BorderSide(width: 1.0, color: Colors.black),
+              top: BorderSide(width: 1.0, color: Colors.black),
+              right: BorderSide(width: 1.0, color: Colors.black),
+              left: needsLeftBorder
+                  ? BorderSide(width: 1.0, color: Colors.black)
+                  : BorderSide(color: Colors.transparent),
+            ),
             color: compareWeekdays(day, weekday) ? Colors.black : Colors.white),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -46,27 +54,40 @@ bool compareWeekdays(String day, String otherDay) {
 }
 
 class ClassGridObject extends StatelessWidget {
-  ClassGridObject(this.content, this.constants, this.x, this.y);
+  ClassGridObject(
+      this.content, this.constants, this.x, this.y, this.needsLeftBorder);
 
   final Content content;
   final Constants constants;
   final int x;
   final int y;
+  final bool needsLeftBorder;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-            border: Border.all(width: 1.0, color: Colors.black),
+            border: Border(
+              bottom: BorderSide(
+                  width: 1.0,
+                  color: (y - 1) % 2 == 0 ? Colors.black : Colors.black26),
+              right: BorderSide(width: 1.0, color: Colors.black),
+              left: needsLeftBorder
+                  ? BorderSide(
+                  width: 1.0, color: Color.fromRGBO(90, 90, 90, 1.0))
+                  : BorderSide(color: Colors.transparent),
+            ),
             color: !content.cells[y][x].isDropped
                 ? constants.subjectColor
                 : constants.subjectAusfallColor),
         child: Column(
-          children: [
+          children: content.cells[y][x].isDropped
+              ? [
             Text(
               content.cells[y][x].originalSubject,
               style: TextStyle(
+                  color: Colors.black54,
                   decoration: TextDecoration.lineThrough,
                   fontWeight: FontWeight.bold,
                   fontSize: 16.0),
@@ -74,6 +95,22 @@ class ClassGridObject extends StatelessWidget {
             Text(content.cells[y][x].subject),
             Text(content.cells[y][x].room),
             Text(content.cells[y][x].teacher),
+          ]
+              : [
+            Text(
+              content.cells[y][x].subject,
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Text(content.cells[y][x].room),
+            Text(content.cells[y][x].teacher),
+            Text(
+              content.cells[y][x].originalSubject,
+              style: TextStyle(
+                color: Colors.transparent,
+                fontWeight: FontWeight.bold,
+                fontSize: 16.0,
+              ),
+            ),
           ],
         ),
       ),

@@ -1,17 +1,19 @@
 import 'dart:collection';
 import 'dart:math';
-import 'package:http/http.dart'; // Contains a client for making API calls
-import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
+
 import 'package:html/dom.dart' as dom;
+import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
+import 'package:http/http.dart'; // Contains a client for making API calls
 import 'package:stundenplan/content.dart'; // Contains DOM related classes for extracting data from elements
 
-const String SUBSTITUTION_LINK_BASE = "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
-const String TIMETABLE_LINK_BASE = "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
+const String SUBSTITUTION_LINK_BASE =
+    "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
+const String TIMETABLE_LINK_BASE =
+    "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
 
 String strip(String s) {
   return s.replaceAll(" ", "").replaceAll("\t", "").replaceAll("\n", "");
 }
-
 
 Future<void> initiate(course, Content content) async {
   var client = Client();
@@ -19,8 +21,10 @@ Future<void> initiate(course, Content content) async {
 
   await fillTimeTable(course, TIMETABLE_LINK_BASE, client, content);
 
-  List<HashMap<String, String>> plan = await getCourseSubsitutionPlan(course, SUBSTITUTION_LINK_BASE, client);
-  List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("11K", SUBSTITUTION_LINK_BASE, client);
+  List<HashMap<String, String>> plan =
+      await getCourseSubsitutionPlan(course, SUBSTITUTION_LINK_BASE, client);
+  List<HashMap<String, String>> coursePlan =
+      await getCourseSubsitutionPlan("11K", SUBSTITUTION_LINK_BASE, client);
   plan.addAll(coursePlan);
   for (int i = 0; i < plan.length; i++) {
     var hours = strip(plan[i]["Stunde"]).split("-");
@@ -45,13 +49,14 @@ Future<void> initiate(course, Content content) async {
       var hourStart = int.parse(hours[0]);
       var hourEnd = int.parse(hours[1]);
       for (var i = hourStart; i < hourEnd + 1; i++) {
-        content.setCell(i, min(weekDay, 5), cell);
+        content.setCell(i - 1, min(weekDay, 5), cell);
       }
     }
   }
 }
 
-Future<void> fillTimeTable(String course, String linkBase, client, Content content) async {
+Future<void> fillTimeTable(String course, String linkBase, client,
+    Content content) async {
   Response response = await client.get('${linkBase}_${course}.htm');
   if (response.statusCode != 200) {
     print("Cannot get timetable");
@@ -87,7 +92,7 @@ Future<void> fillTimeTable(String course, String linkBase, client, Content conte
       } else {
         var doParseCell = true;
         if (y != 0) {
-          var contentY = (y/2).floor();
+          var contentY = (y / 2).floor();
           if (contentY >= content.cells.length) {
             continue;
           }

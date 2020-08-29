@@ -13,7 +13,7 @@ void main() {
 class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
-  Content content = new Content(Constants().width, Constants().height);
+  final Content content = new Content(Constants().width, Constants().height);
 }
 
 class _MyAppState extends State<MyApp> {
@@ -69,9 +69,9 @@ class _MyAppState extends State<MyApp> {
                                         : TimeGridObject("12:30", "12:43", y)
                                     : y == 0
                                         ? WeekdayGridObject(
-                                            constants.weekDays[x], day)
-                                        : ClassGridObject(
-                                            widget.content, constants, x, y),
+                                            constants.weekDays[x], day, x == 1)
+                                        : ClassGridObject(widget.content,
+                                            constants, x, y - 1, x == 1),
                             ],
                           ),
                       ],
