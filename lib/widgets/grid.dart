@@ -4,11 +4,12 @@ import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
 
 class WeekdayGridObject extends StatelessWidget {
-  WeekdayGridObject(this.weekday, this.day, this.needsLeftBorder,
+  WeekdayGridObject(this.weekday, this.x, this.needsLeftBorder,
       this.needsRightBorder, this.constants);
 
   final String weekday;
-  final String day;
+  final int x;
+  final int weekdayToday = DateTime.now().weekday;
   final bool needsLeftBorder;
   final bool needsRightBorder;
   final Constants constants;
@@ -23,7 +24,7 @@ class WeekdayGridObject extends StatelessWidget {
               topRight: Radius.circular(needsRightBorder ? 5 : 0),
             ),
             border: Border.all(width: 0.75, color: Colors.black26),
-            color: compareWeekdays(day, weekday)
+            color: x + 1 == weekdayToday
                 ? constants.textColor
                 : constants.textColor.withAlpha(25)),
         child: Padding(
@@ -33,7 +34,7 @@ class WeekdayGridObject extends StatelessWidget {
             weekday,
             style: GoogleFonts.poppins(
                 fontWeight: FontWeight.bold,
-                color: compareWeekdays(day, weekday)
+                color: x + 1 == weekdayToday
                     ? constants.invertedTextColor
                     : constants.textColor),
           )),

@@ -66,8 +66,7 @@ class _MyAppState extends State<MyApp> {
         ),
         backgroundColor: constants.subjectAusfallColor,
         context: context,
-        builder: (builder) =>
-            Container(
+        builder: (builder) => Container(
               color: Colors.transparent,
               height: 250,
               width: double.infinity,
@@ -230,7 +229,7 @@ class _MyAppState extends State<MyApp> {
                                   : y == 0
                                   ? WeekdayGridObject(
                                   constants.weekDays[x],
-                                  day,
+                                  x,
                                   x == 1,
                                   x == constants.width - 1,
                                   constants)
