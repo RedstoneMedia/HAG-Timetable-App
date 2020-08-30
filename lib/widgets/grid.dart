@@ -210,8 +210,10 @@ class ClassGridObject extends StatelessWidget {
                     left: BorderSide(width: 0.5, color: Colors.black26)),
                 color: !content.cells[y][x].isDropped
                     ? sharedState.theme.subjectColor
-                    : sharedState.theme.subjectDropOutColor),
-            child: Column(
+                          : content.cells[y][x].isSubstitute
+                              ? sharedState.theme.subjectSubstitutionColor
+                              : sharedState.theme.subjectDropOutColor),
+                  child: Column(
               children: content.cells[y][x].isDropped
                   ? [
                 Text(
