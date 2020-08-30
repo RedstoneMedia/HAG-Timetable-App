@@ -64,13 +64,13 @@ class _MyAppState extends State<MyApp> {
       }
     });
     initiate(widget.content, constants).then((value) => setState(() {
-      print("State was set to : ${widget.content}");
-      loading = false;
-    }));
+          print("State was set to : ${widget.content}");
+          loading = false;
+        }));
   }
 
   void saveTheme() {
-    prefs.setString("theme", constants.themeAsString.toString());
+    prefs.setString("theme", constants.themeAsString);
   }
 
   void showSettingsWindow() {

@@ -54,6 +54,7 @@ class _SetupPageState extends State<SetupPage> {
       prefs.setInt("schoolGrade", constants.schoolGrade);
       prefs.setString("subSchoolClass", constants.subSchoolClass);
       prefs.setStringList("subjects", constants.subjects);
+      prefs.setString("theme", constants.themeAsString);
 
       Navigator.push(
         context,
