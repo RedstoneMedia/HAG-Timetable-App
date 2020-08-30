@@ -45,12 +45,15 @@ class Constants {
   final int width = 6;
   final int height = 10;
   final List<String> weekDays = ["", "Mo", "Di", "Mi", "Do", "Fr"];
-  final substitutionLinkBase = "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
-  final timeTableLinkBase = "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
-  final int schoolGrade = 11;
-  final subSchoolClass = "e";
+  final substitutionLinkBase =
+      "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
+  final timeTableLinkBase =
+      "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
+  int schoolGrade = 11;
+  String subSchoolClass = "e";
 
-  final List<String> subjects = [
+  List<String> subjects = [];
+  final List<String> defaultSubjects = [
     "De",
     "Ma",
     "Sp",
@@ -58,9 +61,6 @@ class Constants {
     "Ek",
     "Po",
     "En",
-    "re1",
-    "if1",
-    "ifwp1"
   ];
   final List<String> startTimes = [
     "7:55",

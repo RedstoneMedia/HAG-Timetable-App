@@ -5,15 +5,18 @@ import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
+import 'package:stundenplan/pages/setup_page.dart';
 import 'package:stundenplan/parsing/parse.dart';
 import 'package:stundenplan/widgets/grid.dart';
 
 import 'content.dart';
 
 void main() {
+  Constants constants = new Constants();
+
   runApp(
     MaterialApp(
-      home: MyApp(),
+      home: MyApp(constants),
     ),
   );
 }
@@ -21,36 +24,49 @@ void main() {
 class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
+
+  MyApp(this.constants);
   final Content content = new Content(Constants().width, Constants().height);
+  final Constants constants;
 }
 
 class _MyAppState extends State<MyApp> {
-  Constants constants = new Constants();
+  Constants constants;
   bool loading = true;
   DateTime date;
   String day;
   SharedPreferences prefs;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  RefreshController _refreshController = RefreshController(initialRefresh: false);
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
 
   @override
   void initState() {
     super.initState();
+    constants = widget.constants;
     date = DateTime.now();
     day = DateFormat('EEEE').format(date);
 
-    initiate(widget.content, constants).then((value) => setState(() {
-        print("State was set to : ${widget.content}");
-        loading = false;
-    }));
-
-    // Load saved data
     SharedPreferences.getInstance().then((prefs) {
       this.prefs = prefs;
-      setState(() {
-        constants.setThemeAsString = prefs.get("theme") ?? "dark";  // Set theme
-      });
+      var theme = prefs.get("theme");
+      var schoolGrade = prefs.getInt("schoolGrade");
+      constants.setThemeAsString = theme ?? "dark"; // Set theme
+      constants.schoolGrade = schoolGrade ?? 11;
+      constants.subSchoolClass = prefs.getString("subSchoolClass") ?? "e";
+      constants.subjects = prefs.getStringList("subjects") ?? [];
+      if (schoolGrade == null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SetupPage(constants, prefs)),
+        );
+        return;
+      }
     });
+    initiate(widget.content, constants).then((value) => setState(() {
+      print("State was set to : ${widget.content}");
+      loading = false;
+    }));
   }
 
   void saveTheme() {
@@ -58,90 +74,10 @@ class _MyAppState extends State<MyApp> {
   }
 
   void showSettingsWindow() {
-    showModalBottomSheet(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0),
-        ),
-        backgroundColor: constants.subjectAusfallColor,
-        context: context,
-        builder: (builder) => Container(
-              color: Colors.transparent,
-              height: 250,
-              width: double.infinity,
-              child: Column(
-                children: [
-                  Container(
-                    color: constants.textColor,
-                    width: double.infinity,
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          "Themes",
-                          style: GoogleFonts.poppins(
-                              color: constants.backgroundColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18.0),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: Material(
-                            color: constants.textColor.withAlpha(25),
-                            child: InkWell(
-                              onTap: () {
-                                setState(() {
-                                  constants.theme = constants.darkTheme;
-                                  saveTheme();
-                                  Navigator.pop(context);
-                                });
-                              },
-                              child: Center(
-                                child: Text(
-                                  "Dark Theme",
-                                  style: GoogleFonts.poppins(
-                                      color: constants.textColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 32.0),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Material(
-                            color: constants.invertedTextColor.withAlpha(100),
-                            child: InkWell(
-                              onTap: () {
-                                setState(() {
-                                  constants.theme = constants.lightTheme;
-                                  saveTheme();
-                                  Navigator.pop(context);
-                                });
-                              },
-                              child: Center(
-                                child: Text(
-                                  "Light Theme",
-                                  style: GoogleFonts.poppins(
-                                      color: constants.textColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 32.0),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ));
-    return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SetupPage(constants, prefs)),
+    );
   }
 
   @override
