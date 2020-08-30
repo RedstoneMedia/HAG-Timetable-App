@@ -5,9 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
+import 'package:stundenplan/parsing/parse.dart';
 import 'package:stundenplan/widgets/grid.dart';
-
-import 'file:///D:/Programming/Apps/FLUTTER/stundenplan/lib/parsing/parse.dart';
 
 import 'content.dart';
 
@@ -32,8 +31,7 @@ class _MyAppState extends State<MyApp> {
   String day;
   SharedPreferences prefs;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  RefreshController _refreshController = RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -42,20 +40,20 @@ class _MyAppState extends State<MyApp> {
     day = DateFormat('EEEE').format(date);
 
     initiate(widget.content, constants).then((value) => setState(() {
-          print("State was set to : ${widget.content}");
-          loading = false;
-        }));
-    asyncInit();
-  }
+        print("State was set to : ${widget.content}");
+        loading = false;
+    }));
 
-  void asyncInit() async {
-    prefs = await SharedPreferences.getInstance();
-    setState(() {
-      constants.setThemeAsString = prefs.get("theme") ?? "dark";
+    // Load saved data
+    SharedPreferences.getInstance().then((prefs) {
+      this.prefs = prefs;
+      setState(() {
+        constants.setThemeAsString = prefs.get("theme") ?? "dark";  // Set theme
+      });
     });
   }
 
-  void saveTheme() async {
+  void saveTheme() {
     prefs.setString("theme", constants.themeAsString.toString());
   }
 
