@@ -51,7 +51,7 @@ class _SetupPageState extends State<SetupPage> {
       constants.subjects = [];
       constants.subjects.addAll(courses);
       constants.schoolGrade = int.parse(schoolGrade);
-      constants.subSchoolClass = subSchoolClass;
+      constants.subSchoolClass = subClassTextEdetingController.text;
 
       prefs.setInt("schoolGrade", constants.schoolGrade);
       prefs.setString("subSchoolClass", constants.subSchoolClass);
@@ -81,63 +81,108 @@ class _SetupPageState extends State<SetupPage> {
     return Material(
       color: constants.backgroundColor,
       child: SafeArea(
-        child: Column(
+        child: ListView(
+          shrinkWrap: true,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Text(
-                "Klasse",
-                style: GoogleFonts.poppins(
-                    color: constants.textColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 26.0),
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: constants.textColor.withAlpha(200),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 0.0, horizontal: 15.0),
-                      child: DropdownButton<String>(
-                        value: schoolGrade,
-                        icon: Icon(Icons.keyboard_arrow_down),
-                        iconSize: 24,
-                        elevation: 16,
-                        dropdownColor: constants.textColor.withAlpha(255),
-                        style: TextStyle(color: constants.invertedTextColor),
-                        underline: Container(),
-                        onChanged: (String newValue) {
-                          setState(() {
-                            schoolGrade = newValue;
-                          });
-                        },
-                        items: grades
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 16.0),
-                              child: Text(
-                                value,
-                                style: GoogleFonts.poppins(fontSize: 16.0),
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    "Klasse",
+                    style: GoogleFonts.poppins(
+                        color: constants.textColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 26.0),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: constants.textColor.withAlpha(200),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 0.0, horizontal: 15.0),
+                          child: DropdownButton<String>(
+                            value: schoolGrade,
+                            icon: Icon(Icons.keyboard_arrow_down),
+                            iconSize: 24,
+                            elevation: 16,
+                            dropdownColor: constants.textColor.withAlpha(255),
+                            style:
+                                TextStyle(color: constants.invertedTextColor),
+                            underline: Container(),
+                            onChanged: (String newValue) {
+                              setState(() {
+                                schoolGrade = newValue;
+                              });
+                            },
+                            items: grades
+                                .map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 16.0),
+                                  child: Text(
+                                    value,
+                                    style: GoogleFonts.poppins(fontSize: 16.0),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
                       ),
                     ),
+                    Container(
+                      width: 60,
+                      decoration: BoxDecoration(
+                        color: constants.textColor.withAlpha(200),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 0.0, horizontal: 15.0),
+                        child: TextField(
+                          controller: subClassTextEdetingController,
+                          style: GoogleFonts.poppins(
+                              color: constants.invertedTextColor),
+                          decoration: InputDecoration(
+                            hintText: "a",
+                            hintStyle: GoogleFonts.poppins(
+                                color:
+                                    constants.invertedTextColor.withAlpha(80)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 80.0, vertical: 4.0),
+                  child: Divider(
+                    thickness: 2.0,
+                    color: constants.textColor.withAlpha(200),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 0.0, bottom: 12.0),
+                  child: Text(
+                    "Theme",
+                    style: GoogleFonts.poppins(
+                        color: constants.textColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 26.0),
                   ),
                 ),
                 Container(
-                  width: 60,
                   decoration: BoxDecoration(
                     color: constants.textColor.withAlpha(200),
                     borderRadius: BorderRadius.circular(15),
@@ -145,102 +190,106 @@ class _SetupPageState extends State<SetupPage> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                         vertical: 0.0, horizontal: 15.0),
-                    child: TextField(
-                      controller: subClassTextEdetingController,
-                      decoration: InputDecoration(hintText: "a"),
+                    child: DropdownButton<String>(
+                      value: theme,
+                      icon: Icon(Icons.keyboard_arrow_down),
+                      iconSize: 24,
+                      elevation: 16,
+                      style: TextStyle(color: constants.invertedTextColor),
+                      underline: Container(),
+                      dropdownColor: constants.textColor.withAlpha(255),
+                      onChanged: (String newValue) {
+                        setState(() {
+                          theme = newValue;
+                          setState(() {
+                            constants.setThemeAsString = newValue;
+                          });
+                        });
+                      },
+                      items:
+                          themes.map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 16.0),
+                            child: Text(
+                              value,
+                              style: GoogleFonts.poppins(fontSize: 16.0),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 80.0, vertical: 4.0),
+                  child: Divider(
+                    thickness: 2.0,
+                    color: constants.textColor.withAlpha(200),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 0.0, bottom: 8.0),
+                  child: Text(
+                    "Kurse",
+                    style: GoogleFonts.poppins(
+                        color: constants.textColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 26.0),
+                  ),
+                ),
+                CourseSelectList(
+                  constants,
+                  courses,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                        color: constants.textColor,
+                        borderRadius: BorderRadius.circular(100)),
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          courses.add("");
+                        });
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.all(10.0),
+                        child: Icon(
+                          Icons.add,
+                          color: constants.subjectColor,
+                          size: 50,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0, top: 2.0),
+                  child: RaisedButton(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        "Fertig",
+                        style: GoogleFonts.poppins(
+                            color: constants.textColor,
+                            fontSize: 25.0,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    onPressed: () {
+                      saveDataAndGotToMain();
+                    },
+                    color: constants.subjectColor,
                   ),
                 ),
               ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 4.0, bottom: 12.0),
-              child: Text(
-                "Theme",
-                style: GoogleFonts.poppins(
-                    color: constants.textColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 26.0),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: constants.textColor.withAlpha(200),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Padding(
-                padding:
-                const EdgeInsets.symmetric(vertical: 0.0, horizontal: 15.0),
-                child: DropdownButton<String>(
-                  value: theme,
-                  icon: Icon(Icons.keyboard_arrow_down),
-                  iconSize: 24,
-                  elevation: 16,
-                  style: TextStyle(color: constants.invertedTextColor),
-                  underline: Container(),
-                  dropdownColor: constants.textColor.withAlpha(255),
-                  onChanged: (String newValue) {
-                    setState(() {
-                      theme = newValue;
-                      setState(() {
-                        constants.setThemeAsString = newValue;
-                      });
-                    });
-                  },
-                  items: themes.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 16.0),
-                        child: Text(
-                          value,
-                          style: GoogleFonts.poppins(fontSize: 16.0),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-            Expanded(
-              child: CourseSelectList(
-                constants,
-                courses,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                    color: constants.textColor,
-                    borderRadius: BorderRadius.circular(100)),
-                child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      courses.add("");
-                    });
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.all(10.0),
-                    child: Icon(
-                      Icons.add,
-                      color: constants.subjectColor,
-                      size: 50,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            RaisedButton(
-              child: Text(
-                "Fertig",
-                style: GoogleFonts.poppins(
-                    color: constants.textColor, fontSize: 25.0),
-              ),
-              onPressed: () {
-                saveDataAndGotToMain();
-              },
-              color: constants.subjectColor,
             ),
           ],
         ),
