@@ -58,7 +58,12 @@ class _SetupPageState extends State<SetupPage> {
 
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => MyApp(constants)),
+        MaterialPageRoute(
+          builder: (context) => WillPopScope(
+            onWillPop: () async => false,
+            child: MyApp(constants),
+          ),
+        ),
       );
     });
   }
