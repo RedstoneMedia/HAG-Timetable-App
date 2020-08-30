@@ -41,11 +41,12 @@ class _CourseSelectListState extends State<CourseSelectList> {
             color: widget.sharedState.theme.textColor.withAlpha(15),
             borderRadius: BorderRadius.circular(5)),
         child: ListView.builder(
+            physics: BouncingScrollPhysics(),
             shrinkWrap: true,
             itemCount: widget.courses.length,
             itemBuilder: (_, index) {
               return Dismissible(
-                key: Key(widget.courses[index]),
+                key: UniqueKey(),
                 background: Container(
                   color: Colors.red,
                 ),

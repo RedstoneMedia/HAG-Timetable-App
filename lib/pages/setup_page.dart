@@ -75,6 +75,7 @@ class _SetupPageState extends State<SetupPage> {
       child: SafeArea(
         child: ListView(
           shrinkWrap: true,
+          physics: BouncingScrollPhysics(),
           children: [
             Column(
               children: [

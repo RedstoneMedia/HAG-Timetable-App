@@ -39,7 +39,8 @@ class _MyAppState extends State<MyApp> {
   DateTime date;
   String day;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  RefreshController _refreshController = RefreshController(initialRefresh: false);
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -48,13 +49,13 @@ class _MyAppState extends State<MyApp> {
     date = DateTime.now();
     day = DateFormat('EEEE').format(date);
 
-
     if (sharedState.loadStateAndCheckIfFirstTime()) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
-        );});
+        );
+      });
     } else {
       parsePlans(widget.content, sharedState).then((value) => setState(() {
         print("State was set to : ${widget.content}");
@@ -159,7 +160,8 @@ class _MyAppState extends State<MyApp> {
                                       x == Constants.width - 1,
                                       sharedState)
                                 else
-                                  ClassGridObject(widget.content,
+                                  ClassGridObject(
+                                      widget.content,
                                           sharedState,
                                           x,
                                           y - 1,
