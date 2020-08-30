@@ -13,7 +13,6 @@ class Constants {
     "Ge",
     "Ek",
     "Po",
-    "En",
   ];
   static const List<String> startTimes = [
     "7:55",
