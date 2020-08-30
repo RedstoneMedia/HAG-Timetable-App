@@ -15,12 +15,15 @@ String strip(String s) {
 Future<void> initiate(Content content, Constants constants) async {
   var client = Client();
   var weekDay = DateTime.now().weekday;
+  if (weekDay > 5) {
+    weekDay = 1;
+  }
   var schoolClassName ="${constants.schoolGrade}${constants.subSchoolClass}";
 
   print("Parsing main time table");
   await fillTimeTable(schoolClassName, constants.timeTableLinkBase, client, content, constants.subjects);
   print("Parsing course only time table");
-  var courseTimeTableContent = new Content(6, 10);
+  var courseTimeTableContent = new Content(constants.width, constants.height);
   await fillTimeTable("${constants.schoolGrade}K", constants.timeTableLinkBase, client, courseTimeTableContent, constants.subjects);
   print("Combining both tables");
   content.combine(courseTimeTableContent);
@@ -49,13 +52,13 @@ Future<void> initiate(Content content, Constants constants) async {
     if (hours.length == 1) {
       // No hour range (5)
       var hour = int.parse(hours[0]);
-      content.setCell(hour, min(weekDay, 5), cell);
+      content.setCell(hour, weekDay, cell);
     } else if (hours.length == 2) {
       // Hour range (5-6)
       var hourStart = int.parse(hours[0]);
       var hourEnd = int.parse(hours[1]);
       for (var i = hourStart; i < hourEnd + 1; i++) {
-        content.setCell(i-1, min(weekDay, 5), cell);
+        content.setCell(i-1, weekDay, cell);
       }
     }
   }
