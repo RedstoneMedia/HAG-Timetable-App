@@ -39,9 +39,6 @@ class _SetupPageState extends State<SetupPage> {
     for (int i = 5; i <= 13; i++) {
       grades.add(i.toString());
     }
-    setState(() {
-      constants.theme = constants.darkTheme;
-    });
   }
 
   void saveDataAndGotToMain() {
