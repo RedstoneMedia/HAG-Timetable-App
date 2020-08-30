@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
+import 'package:stundenplan/shared_state.dart';
 
 class WeekdayGridObject extends StatelessWidget {
-  WeekdayGridObject(this.weekday, this.x, this.needsLeftBorder, this.needsRightBorder, this.constants);
+  WeekdayGridObject(this.weekday, this.x, this.needsLeftBorder, this.needsRightBorder, this.sharedState);
 
   final String weekday;
   final int x;
   final int weekdayToday = DateTime.now().weekday;
   final bool needsLeftBorder;
   final bool needsRightBorder;
-  final Constants constants;
+  final SharedState sharedState;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +24,7 @@ class WeekdayGridObject extends StatelessWidget {
               topRight: Radius.circular(needsRightBorder ? 5 : 0),
             ),
             border: Border.all(width: 0.75, color: Colors.black26),
-            color: x + 1 == weekdayToday ? constants.textColor : constants.textColor.withAlpha(25)),
+            color: x + 1 == weekdayToday ? sharedState.theme.textColor : sharedState.theme.textColor.withAlpha(25)),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Center(
@@ -31,7 +32,7 @@ class WeekdayGridObject extends StatelessWidget {
             weekday,
             style: GoogleFonts.poppins(
                 fontWeight: FontWeight.bold,
-                color: x + 1 == weekdayToday ? constants.invertedTextColor : constants.textColor),
+                color: x + 1 == weekdayToday ? sharedState.theme.invertedTextColor : sharedState.theme.textColor),
           )),
         ),
       ),
@@ -40,10 +41,10 @@ class WeekdayGridObject extends StatelessWidget {
 }
 
 class ClassGridObject extends StatelessWidget {
-  ClassGridObject(this.content, this.constants, this.x, this.y, this.needsLeftBorder);
+  ClassGridObject(this.content, this.sharedState, this.x, this.y, this.needsLeftBorder);
 
   final Content content;
-  final Constants constants;
+  final SharedState sharedState;
   final int x;
   final int y;
   final bool needsLeftBorder;
@@ -54,10 +55,10 @@ class ClassGridObject extends StatelessWidget {
         ? Expanded(
             child: Container(
             decoration: BoxDecoration(
-              color: constants.textColor.withAlpha(10),
+              color: sharedState.theme.textColor.withAlpha(10),
               borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular((y == constants.height - 2 && x == 1) ? 5 : 0),
-                bottomRight: Radius.circular((y == constants.height - 2 && x == constants.width - 1) ? 5 : 0),
+                bottomLeft: Radius.circular((y == Constants.height - 2 && x == 1) ? 5 : 0),
+                bottomRight: Radius.circular((y == Constants.height - 2 && x == Constants.width - 1) ? 5 : 0),
               ),
               border: Border.all(width: 0.5, color: Colors.black26),
             ),
@@ -96,29 +97,29 @@ class ClassGridObject extends StatelessWidget {
                     color: (y - 1) % 2 == 0 ? Colors.black54 : Colors.black26),
                 right: BorderSide(width: 0.5, color: Colors.black26),
                 left: BorderSide(width: 0.5, color: Colors.black26)),
-            color: !content.cells[y][x].isDropped ? constants.subjectColor : constants.subjectAusfallColor
+            color: !content.cells[y][x].isDropped ? sharedState.theme.subjectColor : sharedState.theme.subjectDropOutColor
         ),
         child: Column(
           children: content.cells[y][x].isDropped ? [
             Text(
               content.cells[y][x].originalSubject,
               style: TextStyle(
-                  color: constants.textColor.withAlpha(214),
+                  color: sharedState.theme.textColor.withAlpha(214),
                   decoration: TextDecoration.lineThrough,
                   fontWeight: FontWeight.bold,
                   fontSize: 16.0),
             ),
             Text(
               content.cells[y][x].subject,
-              style: TextStyle(color: constants.textColor),
+              style: TextStyle(color: sharedState.theme.textColor),
             ),
             Text(
               content.cells[y][x].room,
-              style: TextStyle(color: constants.textColor),
+              style: TextStyle(color: sharedState.theme.textColor),
             ),
             Text(
               content.cells[y][x].teacher,
-              style: TextStyle(color: constants.textColor),
+              style: TextStyle(color: sharedState.theme.textColor),
             ),
           ] : [
             Text(
@@ -133,15 +134,15 @@ class ClassGridObject extends StatelessWidget {
               content.cells[y][x].subject,
               style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: constants.textColor),
+                  color: sharedState.theme.textColor),
             ),
             Text(
               content.cells[y][x].room,
-              style: TextStyle(color: constants.textColor),
+              style: TextStyle(color: sharedState.theme.textColor),
             ),
             Text(
               content.cells[y][x].teacher,
-              style: TextStyle(color: constants.textColor),
+              style: TextStyle(color: sharedState.theme.textColor),
             ),
             Text(
               content.cells[y][x].originalSubject,
@@ -174,10 +175,10 @@ class PlaceholderGridObject extends StatelessWidget {
 }
 
 class TimeGridObject extends StatelessWidget {
-  TimeGridObject(this.y, this.constants);
+  TimeGridObject(this.y, this.sharedState);
 
   final int y;
-  final Constants constants;
+  final SharedState sharedState;
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +188,7 @@ class TimeGridObject extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: constants.textColor.withAlpha(214),
+              color: sharedState.theme.textColor.withAlpha(214),
             ),
           ),
         ),
@@ -204,21 +205,21 @@ class TimeGridObject extends StatelessWidget {
               ),
             ),
             Text(
-              constants.startTimes[y - 1],
+              Constants.startTimes[y - 1],
               style: GoogleFonts.poppins(
-                  color: constants.textColor, fontWeight: FontWeight.w200
+                  color: sharedState.theme.textColor, fontWeight: FontWeight.w200
               ),
             ),
             Text(
               "$y.",
               style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold, color: constants.textColor
+                  fontWeight: FontWeight.bold, color: sharedState.theme.textColor
               ),
             ),
             Text(
-              constants.endTimes[y - 1],
+              Constants.endTimes[y - 1],
               style: GoogleFonts.poppins(
-                  color: constants.textColor, fontWeight: FontWeight.w200
+                  color: sharedState.theme.textColor, fontWeight: FontWeight.w200
               ),
             ),
           ],

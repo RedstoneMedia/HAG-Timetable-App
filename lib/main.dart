@@ -7,76 +7,66 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/pages/setup_page.dart';
 import 'package:stundenplan/parsing/parse.dart';
+import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/widgets/grid.dart';
 
 import 'content.dart';
 
 void main() {
-  Constants constants = new Constants();
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.getInstance().then((prefs) {
+    SharedState sharedState = new SharedState(prefs);
 
-  runApp(
-    MaterialApp(
-      home: MyApp(constants),
-    ),
-  );
+    runApp(
+      MaterialApp(
+        home: MyApp(sharedState),
+      ),
+    );
+  });
 }
 
 class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
 
-  final Content content = new Content(Constants().width, Constants().height);
-  final Constants constants;
+  final Content content = new Content(Constants.width, Constants.height);
+  final SharedState sharedState;
 
-  MyApp(this.constants);
+  MyApp(this.sharedState);
 }
 
 class _MyAppState extends State<MyApp> {
-  Constants constants;
+  SharedState sharedState;
   bool loading = true;
   DateTime date;
   String day;
-  SharedPreferences prefs;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   RefreshController _refreshController = RefreshController(initialRefresh: false);
 
   @override
   void initState() {
     super.initState();
-    constants = widget.constants;
+    sharedState = widget.sharedState;
     date = DateTime.now();
     day = DateFormat('EEEE').format(date);
 
-    SharedPreferences.getInstance().then((prefs) {
-      this.prefs = prefs;
-      var theme = prefs.get("theme");
-      var schoolGrade = prefs.getInt("schoolGrade");
-      constants.setThemeAsString = theme ?? "dark"; // Set theme
-      constants.schoolGrade = schoolGrade ?? 11;
-      constants.subSchoolClass = prefs.getString("subSchoolClass") ?? "e";
-      constants.subjects = prefs.getStringList("subjects") ?? [];
-      if (schoolGrade == null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => SetupPage(constants, prefs)),
-        );
-        return;
-      }
-      parsePlans(widget.content, constants).then((value) => setState(() {
-        print("State was set to : ${widget.content}");
-        loading = false;
-      }));
-    });
-  }
-
-  void saveTheme() {
-    prefs.setString("theme", constants.themeAsString);
+    if (sharedState.loadStateAndCheckIfFirstTime()) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
+      );
+      return;
+    }
+    parsePlans(widget.content, sharedState).then((value) => setState(() {
+      print("State was set to : ${widget.content}");
+      loading = false;
+    }));
   }
 
   void showSettingsWindow() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SetupPage(constants, prefs)),
+      MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
     );
   }
 
@@ -88,15 +78,15 @@ class _MyAppState extends State<MyApp> {
         title: Text(
           "Stundenplan",
           style: GoogleFonts.poppins(
-            color: constants.textColor,
+            color: sharedState.theme.textColor,
           ),
         ),
-        backgroundColor: constants.backgroundColor,
+        backgroundColor: sharedState.theme.backgroundColor,
         actions: [
           IconButton(
             icon: Icon(
               Icons.settings,
-              color: constants.textColor,
+              color: sharedState.theme.textColor,
             ),
             onPressed: () {
               showSettingsWindow();
@@ -105,7 +95,7 @@ class _MyAppState extends State<MyApp> {
         ],
       ),
       body: Material(
-        color: constants.backgroundColor,
+        color: sharedState.theme.backgroundColor,
         child: SafeArea(
           child: loading ? Center(
             child: SizedBox(
@@ -113,7 +103,7 @@ class _MyAppState extends State<MyApp> {
               height: 80,
               child: CircularProgressIndicator(
                 valueColor:
-                AlwaysStoppedAnimation<Color>(constants.subjectColor),
+                AlwaysStoppedAnimation<Color>(sharedState.theme.subjectColor),
                 backgroundColor: Colors.transparent,
                 strokeWidth: 6.0,
               ),
@@ -123,16 +113,16 @@ class _MyAppState extends State<MyApp> {
             controller: _refreshController,
             header: WaterDropHeader(
               refresh: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(constants.subjectColor),
+                valueColor: AlwaysStoppedAnimation<Color>(sharedState.theme.subjectColor),
               ),
-              waterDropColor: constants.subjectColor,
+              waterDropColor: sharedState.theme.subjectColor,
               complete: Icon(
                 Icons.done,
-                color: constants.subjectColor,
+                color: sharedState.theme.subjectColor,
               ),
             ),
             onRefresh: () {
-              parsePlans(widget.content, constants).then((value) => _refreshController.refreshCompleted());
+              parsePlans(widget.content, sharedState).then((value) => _refreshController.refreshCompleted());
             },
             child: ListView(
               physics: BouncingScrollPhysics(),
@@ -146,21 +136,21 @@ class _MyAppState extends State<MyApp> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      for (int y = 0; y < constants.height; y++)
+                      for (int y = 0; y < Constants.height; y++)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            for (int x = 0; x < constants.width; x++)
+                            for (int x = 0; x < Constants.width; x++)
                               if (x == 0)
                                 if (y == 0)
                                   PlaceholderGridObject()
                                 else
-                                  TimeGridObject(y, constants)
+                                  TimeGridObject(y, sharedState)
                               else
                                 if (y == 0)
-                                  WeekdayGridObject(constants.weekDays[x], x, x == 1, x == constants.width - 1, constants)
+                                  WeekdayGridObject(Constants.weekDays[x], x, x == 1, x == Constants.width - 1, sharedState)
                                 else
-                                  ClassGridObject(widget.content, constants, x, y - 1, x == 1)
+                                  ClassGridObject(widget.content, sharedState, x, y - 1, x == 1)
                           ],
                         ),
                     ],
