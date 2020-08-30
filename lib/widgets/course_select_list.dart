@@ -75,7 +75,8 @@ class _CourseSelectListState extends State<CourseSelectList> {
                         },
                         controller: controllers[index],
                         style: GoogleFonts.poppins(
-                            color: widget.sharedState.theme.textColor, fontSize: 25),
+                            color: widget.sharedState.theme.textColor,
+                            fontSize: 25),
                       ),
                     ),
                   ),

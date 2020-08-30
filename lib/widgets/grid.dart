@@ -79,11 +79,24 @@ class ClassGridObject extends StatelessWidget {
                   itemBuilder: (_, i) {
                     return Column(
                       children: [
-                        Text("Fach: ${cell.footnotes[i].subject}"),
-                        Text("Raum: ${cell.footnotes[i].room}"),
-                        Text("Lehrer: ${cell.footnotes[i].teacher}"),
-                        Text("Text: ${cell.footnotes[i].text}")
-                      ],
+                              Text(
+                                "Fach:   ${cell.footnotes[i].subject}",
+                                textAlign: TextAlign.left,
+                              ),
+                              Text(
+                                "Raum:   ${cell.footnotes[i].room}",
+                                textAlign: TextAlign.left,
+                              ),
+                              Text(
+                                "Lehrer: ${cell.footnotes[i].teacher}",
+                                textAlign: TextAlign.left,
+                              ),
+                              Text(
+                                "Text:   ${cell.footnotes[i].text}",
+                                textAlign: TextAlign.left,
+                              ),
+                              Divider(),
+                            ],
                     );
                   },
                 ),
@@ -91,22 +104,29 @@ class ClassGridObject extends StatelessWidget {
                   : ListBody(
                 children: cell.isDropped
                     ? [
-                  Text("Orginal-Fach: ${cell.originalSubject}"),
-                  Text("Fach: ${cell.subject}\n"),
-                  Text("Orginal-Raum: ${cell.originalRoom}"),
-                  Text("Raum: ${cell.room}\n"),
-                  Text("Orginal-Lehrer: ${cell.originalTeacher}"),
-                  Text("Lehrer: ${cell.teacher}\n"),
+                  Text("Orginal-Fach:   ${cell.originalSubject}",
+                    textAlign: TextAlign.left,),
+                  Text("Fach:           ${cell.subject}\n",
+                      textAlign: TextAlign.left),
+                  Text("Orginal-Raum:   ${cell.originalRoom}",
+                      textAlign: TextAlign.left),
+                  Text("Raum:           ${cell.room}\n",
+                      textAlign: TextAlign.left),
+                  Text("Orginal-Lehrer: ${cell.originalTeacher}",
+                      textAlign: TextAlign.left),
+                  Text("Lehrer:         ${cell.teacher}\n",
+                      textAlign: TextAlign.left),
                   cell.isSubstitute
-                      ? Text("Text: ${cell.text}")
+                      ? Text(
+                      "Text:           ${cell.text}", textAlign: TextAlign.left)
                       : Container(),
                 ]
                     : [
-                  Text("Fach: ${cell.subject}"),
-                  Text("Raum: ${cell.room}"),
-                  Text("Lehrer: ${cell.teacher}"),
+                  Text("Fach:      ${cell.subject}"),
+                  Text("Raum:     ${cell.room}"),
+                  Text("Lehrer:    ${cell.teacher}"),
                   cell.isSubstitute
-                      ? Text("Text: ${cell.text}")
+                      ? Text("Text:      ${cell.text}")
                       : Container(),
                 ],
               ),
