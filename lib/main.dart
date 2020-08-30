@@ -25,9 +25,10 @@ class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
 
-  MyApp(this.constants);
   final Content content = new Content(Constants().width, Constants().height);
   final Constants constants;
+
+  MyApp(this.constants);
 }
 
 class _MyAppState extends State<MyApp> {
@@ -37,8 +38,7 @@ class _MyAppState extends State<MyApp> {
   String day;
   SharedPreferences prefs;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  RefreshController _refreshController = RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -107,8 +107,7 @@ class _MyAppState extends State<MyApp> {
       body: Material(
         color: constants.backgroundColor,
         child: SafeArea(
-          child: loading
-              ? Center(
+          child: loading ? Center(
             child: SizedBox(
               width: 80,
               height: 80,
@@ -119,14 +118,12 @@ class _MyAppState extends State<MyApp> {
                 strokeWidth: 6.0,
               ),
             ),
-          )
-              : SmartRefresher(
+          ) : SmartRefresher(
             enablePullDown: true,
             controller: _refreshController,
             header: WaterDropHeader(
               refresh: CircularProgressIndicator(
-                valueColor:
-                AlwaysStoppedAnimation<Color>(constants.subjectColor),
+                valueColor: AlwaysStoppedAnimation<Color>(constants.subjectColor),
               ),
               waterDropColor: constants.subjectColor,
               complete: Icon(
@@ -135,8 +132,7 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
             onRefresh: () {
-              parsePlans(widget.content, constants)
-                  .then((value) => _refreshController.refreshCompleted());
+              parsePlans(widget.content, constants).then((value) => _refreshController.refreshCompleted());
             },
             child: ListView(
               physics: BouncingScrollPhysics(),
@@ -155,25 +151,16 @@ class _MyAppState extends State<MyApp> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             for (int x = 0; x < constants.width; x++)
-                              x == 0
-                                  ? y == 0
-                                  ? PlaceholderGridObject()
-                                  : TimeGridObject(
-                                  "12:30", "12:43", y, constants)
-                                  : y == 0
-                                  ? WeekdayGridObject(
-                                  constants.weekDays[x],
-                                  x,
-                                  x == 1,
-                                  x == constants.width - 1,
-                                  constants)
-                                  : ClassGridObject(
-                                widget.content,
-                                constants,
-                                x,
-                                y - 1,
-                                x == 1,
-                              ),
+                              if (x == 0)
+                                if (y == 0)
+                                  PlaceholderGridObject()
+                                else
+                                  TimeGridObject(y, constants)
+                              else
+                                if (y == 0)
+                                  WeekdayGridObject(constants.weekDays[x], x, x == 1, x == constants.width - 1, constants)
+                                else
+                                  ClassGridObject(widget.content, constants, x, y - 1, x == 1)
                           ],
                         ),
                     ],
