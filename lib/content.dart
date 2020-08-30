@@ -62,6 +62,7 @@ class Cell {
   String text = "---";
   String footNoteTextId = "";
   List<Footnote> footnotes;
+  bool isSubstitute = false;
   bool isDropped = false;
   bool isDoubleClass = false;
 
@@ -70,6 +71,6 @@ class Cell {
   }
 
   bool isEmpty() {
-    return subject == "---" && room == "---" && teacher == "---" && isDropped == false;
+    return subject == "---" && room == "---" && teacher == "---" && isDropped == false && isSubstitute == false;
   }
 }

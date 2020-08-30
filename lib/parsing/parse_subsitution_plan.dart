@@ -33,6 +33,9 @@ Future<void> overwriteContentWithSubsitutionPlan(SharedState sharedState, Client
     cell.originalRoom = strip(plan[i]["statt Raum"]);
     cell.text = plan[i]["Text"];
     cell.isDropped = strip(plan[i]["Entfall"]) == "x";
+    if (!cell.isDropped) {
+      cell.isSubstitute = true;
+    }
 
     if (hours.length == 1) {
       // No hour range (5)
