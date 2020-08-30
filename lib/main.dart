@@ -41,7 +41,8 @@ class _MyAppState extends State<MyApp> {
   DateTime date;
   String day;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  RefreshController _refreshController = RefreshController(initialRefresh: false);
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -50,13 +51,15 @@ class _MyAppState extends State<MyApp> {
     date = DateTime.now();
     day = DateFormat('EEEE').format(date);
 
-    if (sharedState.loadStateAndCheckIfFirstTime()) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
-      );
-      return;
-    }
+    Future.delayed(Duration(milliseconds: 10), () {
+      if (sharedState.loadStateAndCheckIfFirstTime()) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
+        );
+        return;
+      }
+    });
     parsePlans(widget.content, sharedState).then((value) => setState(() {
       print("State was set to : ${widget.content}");
       loading = false;
@@ -97,23 +100,26 @@ class _MyAppState extends State<MyApp> {
       body: Material(
         color: sharedState.theme.backgroundColor,
         child: SafeArea(
-          child: loading ? Center(
+          child: loading
+              ? Center(
             child: SizedBox(
               width: 80,
               height: 80,
               child: CircularProgressIndicator(
-                valueColor:
-                AlwaysStoppedAnimation<Color>(sharedState.theme.subjectColor),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    sharedState.theme.subjectColor),
                 backgroundColor: Colors.transparent,
                 strokeWidth: 6.0,
               ),
             ),
-          ) : SmartRefresher(
+          )
+              : SmartRefresher(
             enablePullDown: true,
             controller: _refreshController,
             header: WaterDropHeader(
               refresh: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(sharedState.theme.subjectColor),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    sharedState.theme.subjectColor),
               ),
               waterDropColor: sharedState.theme.subjectColor,
               complete: Icon(
@@ -122,7 +128,8 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
             onRefresh: () {
-              parsePlans(widget.content, sharedState).then((value) => _refreshController.refreshCompleted());
+              parsePlans(widget.content, sharedState)
+                  .then((value) => _refreshController.refreshCompleted());
             },
             child: ListView(
               physics: BouncingScrollPhysics(),
@@ -148,9 +155,15 @@ class _MyAppState extends State<MyApp> {
                                   TimeGridObject(y, sharedState)
                               else
                                 if (y == 0)
-                                  WeekdayGridObject(Constants.weekDays[x], x, x == 1, x == Constants.width - 1, sharedState)
+                                  WeekdayGridObject(
+                                      Constants.weekDays[x],
+                                      x,
+                                      x == 1,
+                                      x == Constants.width - 1,
+                                      sharedState)
                                 else
-                                  ClassGridObject(widget.content, sharedState, x, y - 1, x == 1)
+                                  ClassGridObject(widget.content,
+                                      sharedState, x, y - 1, x == 1)
                           ],
                         ),
                     ],

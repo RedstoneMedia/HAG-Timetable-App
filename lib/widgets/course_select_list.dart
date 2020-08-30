@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/shared_state.dart';
 
 class CourseSelectList extends StatefulWidget {
@@ -42,6 +41,7 @@ class _CourseSelectListState extends State<CourseSelectList> {
             color: widget.sharedState.theme.textColor.withAlpha(15),
             borderRadius: BorderRadius.circular(5)),
         child: ListView.builder(
+            shrinkWrap: true,
             itemCount: widget.courses.length,
             itemBuilder: (_, index) {
               return Dismissible(
