@@ -53,7 +53,6 @@ class Footnote {
 }
 
 class Cell {
-  //TODO: Replace default values
   String subject = "---";
   String originalSubject = "---";
   String room = "---";

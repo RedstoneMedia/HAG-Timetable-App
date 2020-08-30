@@ -62,11 +62,11 @@ class _MyAppState extends State<MyApp> {
         );
         return;
       }
+      parsePlans(widget.content, constants).then((value) => setState(() {
+        print("State was set to : ${widget.content}");
+        loading = false;
+      }));
     });
-    initiate(widget.content, constants).then((value) => setState(() {
-          print("State was set to : ${widget.content}");
-          loading = false;
-        }));
   }
 
   void saveTheme() {
@@ -135,7 +135,7 @@ class _MyAppState extends State<MyApp> {
               ),
             ),
             onRefresh: () {
-              initiate(widget.content, constants)
+              parsePlans(widget.content, constants)
                   .then((value) => _refreshController.refreshCompleted());
             },
             child: ListView(
