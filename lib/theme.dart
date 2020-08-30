@@ -20,12 +20,12 @@ final lightTheme = Theme(
 
 
 final neonTheme = Theme(
-    "neon", // Theme name
-    Colors.redAccent, // Background color
-    Colors.yellowAccent, // Text color
-    Colors.pinkAccent,  // Subject color
-    Colors.cyanAccent,  // Subject drop out color
-    Colors.limeAccent,  // Subject substitution color
+    "nein danke", // Theme name
+    Color.fromRGBO(0, 255, 255, 1), // Background color
+    Color.fromRGBO(255, 255, 0, 1), // Text color
+    Color.fromRGBO(255, 0, 255, 1),  // Subject color
+    Color.fromRGBO(0, 0, 255, 1),  // Subject drop out color
+    Color.fromRGBO(255, 0, 0, 1),  // Subject substitution color
 );
 
 final themes = [darkTheme, lightTheme, neonTheme];
@@ -56,7 +56,9 @@ class Theme {
 
   static List<String> getThemeNames() {
     List<String> themeNames = [];
-    themes.map((theme) => themeNames.add(theme.themeName));
+    for (var theme in themes) {
+      themeNames.add(theme.themeName);
+    }
     return themeNames;
   }
 }

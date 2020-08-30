@@ -20,7 +20,7 @@ class _SetupPageState extends State<SetupPage> {
   String themeName = "dark";
 
   List<String> grades = [];
-  List<String> themes = MyTheme.Theme.getThemeNames();
+  List<String> themeNames = MyTheme.Theme.getThemeNames();
   List<String> courses = [];
 
   TextEditingController subClassTextEdetingController = new TextEditingController();
@@ -35,7 +35,6 @@ class _SetupPageState extends State<SetupPage> {
     schoolGrade = sharedState.schoolGrade.toString();
     subClassTextEdetingController.text = sharedState.subSchoolClass;
     courses = sharedState.subjects;
-
     for (int i = 5; i <= 13; i++) {
       grades.add(i.toString());
     }
@@ -49,8 +48,6 @@ class _SetupPageState extends State<SetupPage> {
       sharedState.subjects.addAll(courses);
       sharedState.schoolGrade = int.parse(schoolGrade);
       sharedState.subSchoolClass = subClassTextEdetingController.text;
-      sharedState.setThemeFromThemeName(themeName);
-
       sharedState.saveState();
 
       Navigator.push(
@@ -196,10 +193,11 @@ class _SetupPageState extends State<SetupPage> {
                       onChanged: (String newValue) {
                         setState(() {
                           themeName = newValue;
+                          sharedState.setThemeFromThemeName(themeName);
                         });
                       },
                       items:
-                          themes.map<DropdownMenuItem<String>>((String value) {
+                          themeNames.map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Padding(
