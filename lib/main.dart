@@ -160,8 +160,12 @@ class _MyAppState extends State<MyApp> {
                                       sharedState)
                                 else
                                   ClassGridObject(widget.content,
-                                      sharedState, x, y - 1, x == 1)
-                          ],
+                                          sharedState,
+                                          x,
+                                          y - 1,
+                                          x == 1,
+                                          context)
+                                ],
                         ),
                     ],
                   ),

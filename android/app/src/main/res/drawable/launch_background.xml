@@ -8,7 +8,7 @@
         <bitmap
             android:gravity="clip_vertical"
             android:src="@mipmap/launcher_icon"
-            android:tileModeX="mirror"
-            android:tileModeY="mirror" />
+            android:tileModeX="repeat"
+            android:tileModeY="repeat" />
     </item>
 </layer-list>
