@@ -26,10 +26,13 @@ Future<void> fillTimeTable(String course, String linkBase, client, Content conte
       tables.add(elements[i]);
     }
   }
-  var mainTimeTable = tables[0];
-  var footnoteTable = tables[1];
-  var footnoteMap = parseFootnoteTable(subjects, footnoteTable);  // Parse the footnote table
-  parseMainTimeTable(content, subjects, mainTimeTable, footnoteMap); // Parse the main timetable
+  // Check if tables exists if not don't parse the table
+  if (tables.length > 1) {
+    var mainTimeTable = tables[0];
+    var footnoteTable = tables[1];
+    var footnoteMap = parseFootnoteTable(subjects, footnoteTable);  // Parse the footnote table
+    parseMainTimeTable(content, subjects, mainTimeTable, footnoteMap); // Parse the main timetable
+  }
 }
 
 /// This class is used internally by parseFootnoteTable to parse the footnotes
