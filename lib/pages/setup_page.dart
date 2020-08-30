@@ -1,43 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/main.dart';
+import 'package:stundenplan/shared_state.dart';
+import 'package:stundenplan/theme.dart' as MyTheme;
 import 'package:stundenplan/widgets/course_select_list.dart';
 
 class SetupPage extends StatefulWidget {
   @override
   _SetupPageState createState() => _SetupPageState();
 
-  SetupPage(this.constants, this.prefs);
+  SetupPage(this.sharedState);
 
-  Constants constants;
-  SharedPreferences prefs;
+  SharedState sharedState;
 }
 
 class _SetupPageState extends State<SetupPage> {
   String schoolGrade = "11";
   String subSchoolClass;
-  String theme = "dark";
+  String themeName = "dark";
 
   List<String> grades = [];
-  List<String> themes = ["dark", "light"];
+  List<String> themes = MyTheme.Theme.getThemeNames();
   List<String> courses = [];
 
-  TextEditingController subClassTextEdetingController =
-      new TextEditingController();
+  TextEditingController subClassTextEdetingController = new TextEditingController();
 
-  Constants constants;
-  SharedPreferences prefs;
+  SharedState sharedState;
 
   @override
   void initState() {
     super.initState();
-    prefs = widget.prefs;
-    constants = widget.constants ?? new Constants();
-    schoolGrade = constants.schoolGrade.toString();
-    subClassTextEdetingController.text = constants.subSchoolClass;
-    courses = constants.subjects;
+    sharedState = widget.sharedState;
+    themeName = sharedState.theme.themeName;
+    schoolGrade = sharedState.schoolGrade.toString();
+    subClassTextEdetingController.text = sharedState.subSchoolClass;
+    courses = sharedState.subjects;
 
     for (int i = 5; i <= 13; i++) {
       grades.add(i.toString());
@@ -48,22 +45,20 @@ class _SetupPageState extends State<SetupPage> {
     setState(() {
       if (!validateSubClassInput()) return; //TODO: Error handling
 
-      constants.subjects = [];
-      constants.subjects.addAll(courses);
-      constants.schoolGrade = int.parse(schoolGrade);
-      constants.subSchoolClass = subClassTextEdetingController.text;
+      sharedState.subjects = [];
+      sharedState.subjects.addAll(courses);
+      sharedState.schoolGrade = int.parse(schoolGrade);
+      sharedState.subSchoolClass = subClassTextEdetingController.text;
+      sharedState.setThemeFromThemeName(themeName);
 
-      prefs.setInt("schoolGrade", constants.schoolGrade);
-      prefs.setString("subSchoolClass", constants.subSchoolClass);
-      prefs.setStringList("subjects", constants.subjects);
-      prefs.setString("theme", constants.themeAsString);
+      sharedState.saveState();
 
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => WillPopScope(
             onWillPop: () async => false,
-            child: MyApp(constants),
+            child: MyApp(sharedState),
           ),
         ),
       );
@@ -79,7 +74,7 @@ class _SetupPageState extends State<SetupPage> {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: constants.backgroundColor,
+      color: sharedState.theme.backgroundColor,
       child: SafeArea(
         child: ListView(
           shrinkWrap: true,
@@ -91,7 +86,7 @@ class _SetupPageState extends State<SetupPage> {
                   child: Text(
                     "Klasse",
                     style: GoogleFonts.poppins(
-                        color: constants.textColor,
+                        color: sharedState.theme.textColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 26.0),
                   ),
@@ -103,7 +98,7 @@ class _SetupPageState extends State<SetupPage> {
                       padding: const EdgeInsets.all(12.0),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: constants.textColor.withAlpha(200),
+                          color: sharedState.theme.textColor.withAlpha(200),
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: Padding(
@@ -114,9 +109,9 @@ class _SetupPageState extends State<SetupPage> {
                             icon: Icon(Icons.keyboard_arrow_down),
                             iconSize: 24,
                             elevation: 16,
-                            dropdownColor: constants.textColor.withAlpha(255),
+                            dropdownColor: sharedState.theme.textColor.withAlpha(255),
                             style:
-                                TextStyle(color: constants.invertedTextColor),
+                                TextStyle(color: sharedState.theme.invertedTextColor),
                             underline: Container(),
                             onChanged: (String newValue) {
                               setState(() {
@@ -143,7 +138,7 @@ class _SetupPageState extends State<SetupPage> {
                     Container(
                       width: 60,
                       decoration: BoxDecoration(
-                        color: constants.textColor.withAlpha(200),
+                        color: sharedState.theme.textColor.withAlpha(200),
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: Padding(
@@ -152,12 +147,12 @@ class _SetupPageState extends State<SetupPage> {
                         child: TextField(
                           controller: subClassTextEdetingController,
                           style: GoogleFonts.poppins(
-                              color: constants.invertedTextColor),
+                              color: sharedState.theme.invertedTextColor),
                           decoration: InputDecoration(
                             hintText: "a",
                             hintStyle: GoogleFonts.poppins(
                                 color:
-                                    constants.invertedTextColor.withAlpha(80)),
+                                sharedState.theme.invertedTextColor.withAlpha(80)),
                           ),
                         ),
                       ),
@@ -169,7 +164,7 @@ class _SetupPageState extends State<SetupPage> {
                       horizontal: 80.0, vertical: 4.0),
                   child: Divider(
                     thickness: 2.0,
-                    color: constants.textColor.withAlpha(200),
+                    color: sharedState.theme.textColor.withAlpha(200),
                   ),
                 ),
                 Padding(
@@ -177,33 +172,30 @@ class _SetupPageState extends State<SetupPage> {
                   child: Text(
                     "Theme",
                     style: GoogleFonts.poppins(
-                        color: constants.textColor,
+                        color: sharedState.theme.textColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 26.0),
                   ),
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: constants.textColor.withAlpha(200),
+                    color: sharedState.theme.textColor.withAlpha(200),
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                         vertical: 0.0, horizontal: 15.0),
                     child: DropdownButton<String>(
-                      value: theme,
+                      value: themeName,
                       icon: Icon(Icons.keyboard_arrow_down),
                       iconSize: 24,
                       elevation: 16,
-                      style: TextStyle(color: constants.invertedTextColor),
+                      style: TextStyle(color: sharedState.theme.invertedTextColor),
                       underline: Container(),
-                      dropdownColor: constants.textColor.withAlpha(255),
+                      dropdownColor: sharedState.theme.textColor.withAlpha(255),
                       onChanged: (String newValue) {
                         setState(() {
-                          theme = newValue;
-                          setState(() {
-                            constants.setThemeAsString = newValue;
-                          });
+                          themeName = newValue;
                         });
                       },
                       items:
@@ -227,7 +219,7 @@ class _SetupPageState extends State<SetupPage> {
                       horizontal: 80.0, vertical: 4.0),
                   child: Divider(
                     thickness: 2.0,
-                    color: constants.textColor.withAlpha(200),
+                    color: sharedState.theme.textColor.withAlpha(200),
                   ),
                 ),
                 Padding(
@@ -235,20 +227,20 @@ class _SetupPageState extends State<SetupPage> {
                   child: Text(
                     "Kurse",
                     style: GoogleFonts.poppins(
-                        color: constants.textColor,
+                        color: sharedState.theme.textColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 26.0),
                   ),
                 ),
                 CourseSelectList(
-                  constants,
+                  sharedState,
                   courses,
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
                     decoration: BoxDecoration(
-                        color: constants.textColor,
+                        color: sharedState.theme.textColor,
                         borderRadius: BorderRadius.circular(100)),
                     child: InkWell(
                       onTap: () {
@@ -260,7 +252,7 @@ class _SetupPageState extends State<SetupPage> {
                         padding: EdgeInsets.all(10.0),
                         child: Icon(
                           Icons.add,
-                          color: constants.subjectColor,
+                          color: sharedState.theme.subjectColor,
                           size: 50,
                         ),
                       ),
@@ -278,7 +270,7 @@ class _SetupPageState extends State<SetupPage> {
                       child: Text(
                         "Fertig",
                         style: GoogleFonts.poppins(
-                            color: constants.textColor,
+                            color: sharedState.theme.textColor,
                             fontSize: 25.0,
                             fontWeight: FontWeight.bold),
                       ),
@@ -286,7 +278,7 @@ class _SetupPageState extends State<SetupPage> {
                     onPressed: () {
                       saveDataAndGotToMain();
                     },
-                    color: constants.subjectColor,
+                    color: sharedState.theme.subjectColor,
                   ),
                 ),
               ],

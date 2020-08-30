@@ -5,16 +5,17 @@ import 'package:html/parser.dart'; // Contains HTML parsers to generate a Docume
 import 'package:http/http.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
-import 'package:stundenplan/parsing/parsing_util.dart'; // Contains a client for making API calls
+import 'package:stundenplan/parsing/parsing_util.dart';
+import 'package:stundenplan/shared_state.dart'; // Contains a client for making API calls
 
-Future<void> overwriteContentWithSubsitutionPlan(Constants constants, Client client, Content content, List<String> subjects, String schoolClassName) async {
+Future<void> overwriteContentWithSubsitutionPlan(SharedState sharedState, Client client, Content content, List<String> subjects, String schoolClassName) async {
   var weekDay = DateTime.now().weekday;
   if (weekDay > 5) {
     weekDay = 1;
   }
 
-  List<HashMap<String, String>> plan = await getCourseSubsitutionPlan(schoolClassName, constants.substitutionLinkBase, client);
-  List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("${constants.schoolGrade}K", constants.substitutionLinkBase, client);
+  List<HashMap<String, String>> plan = await getCourseSubsitutionPlan(schoolClassName, Constants.substitutionLinkBase, client);
+  List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("${sharedState.schoolGrade}K", Constants.substitutionLinkBase, client);
   plan.addAll(coursePlan);
   for (int i = 0; i < plan.length; i++) {
     var hours = strip(plan[i]["Stunde"]).split("-");
