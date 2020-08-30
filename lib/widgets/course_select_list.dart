@@ -45,6 +45,9 @@ class _CourseSelectListState extends State<CourseSelectList> {
             itemBuilder: (_, index) {
               return Dismissible(
                 key: Key(widget.courses[index]),
+                background: Container(
+                  color: Colors.red,
+                ),
                 onDismissed: (_) {
                   setState(() {
                     widget.courses.removeAt(index);
@@ -56,6 +59,16 @@ class _CourseSelectListState extends State<CourseSelectList> {
                     padding: const EdgeInsets.all(8.0),
                     child: Center(
                       child: TextField(
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(
+                            Icons.edit,
+                            color: widget.constants.textColor,
+                          ),
+                          border: new OutlineInputBorder(
+                            borderSide: new BorderSide(
+                                color: widget.constants.textColor),
+                          ),
+                        ),
                         onChanged: (text) {
                           widget.courses[index] = text;
                         },

@@ -16,12 +16,18 @@ class SetupPage extends StatefulWidget {
 }
 
 class _SetupPageState extends State<SetupPage> {
-  String subSchoolClass = "a";
   String schoolGrade = "11";
-  List<String> subClasses = [];
+  String subSchoolClass;
+  String theme = "dark";
+
   List<String> grades = [];
-  Constants constants;
+  List<String> themes = ["dark", "light"];
   List<String> courses = [];
+
+  TextEditingController subClassTextEdetingController =
+      new TextEditingController();
+
+  Constants constants;
   SharedPreferences prefs;
 
   @override
@@ -29,13 +35,10 @@ class _SetupPageState extends State<SetupPage> {
     super.initState();
     prefs = widget.prefs;
     constants = widget.constants ?? new Constants();
-    subSchoolClass = constants.subSchoolClass;
     schoolGrade = constants.schoolGrade.toString();
+    subClassTextEdetingController.text = constants.subSchoolClass;
     courses = constants.subjects;
 
-    for (int i = 0; i < 10; i++) {
-      subClasses.add(String.fromCharCode(i + 97));
-    }
     for (int i = 5; i <= 13; i++) {
       grades.add(i.toString());
     }
@@ -43,6 +46,8 @@ class _SetupPageState extends State<SetupPage> {
 
   void saveDataAndGotToMain() {
     setState(() {
+      if (!validateSubClassInput()) return; //TODO: Error handling
+
       constants.subjects = [];
       constants.subjects.addAll(courses);
       constants.schoolGrade = int.parse(schoolGrade);
@@ -65,6 +70,12 @@ class _SetupPageState extends State<SetupPage> {
     });
   }
 
+  bool validateSubClassInput() {
+    String text = subClassTextEdetingController.text;
+    RegExp regExp = new RegExp(r"^[a-zA-Z]\d{0,2}$");
+    return regExp.hasMatch(text);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -72,6 +83,16 @@ class _SetupPageState extends State<SetupPage> {
       child: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                "Klasse",
+                style: GoogleFonts.poppins(
+                    color: constants.textColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 26.0),
+              ),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -91,7 +112,7 @@ class _SetupPageState extends State<SetupPage> {
                         iconSize: 24,
                         elevation: 16,
                         dropdownColor: constants.textColor.withAlpha(255),
-                        style: TextStyle(color: constants.subjectColor),
+                        style: TextStyle(color: constants.invertedTextColor),
                         underline: Container(),
                         onChanged: (String newValue) {
                           setState(() {
@@ -116,6 +137,7 @@ class _SetupPageState extends State<SetupPage> {
                   ),
                 ),
                 Container(
+                  width: 60,
                   decoration: BoxDecoration(
                     color: constants.textColor.withAlpha(200),
                     borderRadius: BorderRadius.circular(15),
@@ -123,60 +145,61 @@ class _SetupPageState extends State<SetupPage> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                         vertical: 0.0, horizontal: 15.0),
-                    child: DropdownButton<String>(
-                      value: subSchoolClass,
-                      icon: Icon(Icons.keyboard_arrow_down),
-                      iconSize: 24,
-                      elevation: 16,
-                      style: TextStyle(color: constants.subjectColor),
-                      underline: Container(),
-                      dropdownColor: constants.textColor.withAlpha(255),
-                      onChanged: (String newValue) {
-                        setState(() {
-                          subSchoolClass = newValue;
-                        });
-                      },
-                      items: subClasses
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 16.0),
-                            child: Text(
-                              value,
-                              style: GoogleFonts.poppins(fontSize: 16.0),
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                    child: TextField(
+                      controller: subClassTextEdetingController,
+                      decoration: InputDecoration(hintText: "a"),
                     ),
                   ),
                 ),
               ],
             ),
-            Container(
-              child: InkWell(
-                child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 18.0, vertical: 10.0),
-                  child: Text(
-                    constants.themeAsString,
-                    style: GoogleFonts.poppins(
-                        color: constants.invertedTextColor, fontSize: 20.0),
-                  ),
-                ),
-                onTap: () {
-                  setState(() {
-                    if (constants.theme == constants.lightTheme)
-                      constants.theme = constants.darkTheme;
-                    else
-                      constants.theme = constants.lightTheme;
-                  });
-                },
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0, bottom: 12.0),
+              child: Text(
+                "Theme",
+                style: GoogleFonts.poppins(
+                    color: constants.textColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 26.0),
               ),
+            ),
+            Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
                 color: constants.textColor.withAlpha(200),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Padding(
+                padding:
+                const EdgeInsets.symmetric(vertical: 0.0, horizontal: 15.0),
+                child: DropdownButton<String>(
+                  value: theme,
+                  icon: Icon(Icons.keyboard_arrow_down),
+                  iconSize: 24,
+                  elevation: 16,
+                  style: TextStyle(color: constants.invertedTextColor),
+                  underline: Container(),
+                  dropdownColor: constants.textColor.withAlpha(255),
+                  onChanged: (String newValue) {
+                    setState(() {
+                      theme = newValue;
+                      setState(() {
+                        constants.setThemeAsString = newValue;
+                      });
+                    });
+                  },
+                  items: themes.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16.0),
+                        child: Text(
+                          value,
+                          style: GoogleFonts.poppins(fontSize: 16.0),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
             Expanded(
@@ -188,24 +211,25 @@ class _SetupPageState extends State<SetupPage> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Container(
-                  decoration: BoxDecoration(
-                      color: constants.textColor,
-                      borderRadius: BorderRadius.circular(100)),
-                  child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        courses.add("");
-                      });
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.all(10.0),
-                      child: Icon(
-                        Icons.add,
-                        color: constants.subjectColor,
-                        size: 50,
-                      ),
+                decoration: BoxDecoration(
+                    color: constants.textColor,
+                    borderRadius: BorderRadius.circular(100)),
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      courses.add("");
+                    });
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.all(10.0),
+                    child: Icon(
+                      Icons.add,
+                      color: constants.subjectColor,
+                      size: 50,
                     ),
-                  )),
+                  ),
+                ),
+              ),
             ),
             RaisedButton(
               child: Text(
