@@ -5,8 +5,9 @@ import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
-import 'package:stundenplan/parse.dart';
 import 'package:stundenplan/widgets/grid.dart';
+
+import 'file:///D:/Programming/Apps/FLUTTER/stundenplan/lib/parsing/parse.dart';
 
 import 'content.dart';
 

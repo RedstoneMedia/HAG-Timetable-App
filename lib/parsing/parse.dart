@@ -1,8 +1,9 @@
 import 'dart:collection';
 import 'dart:math';
-import 'package:http/http.dart'; // Contains a client for making API calls
-import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
+
 import 'package:html/dom.dart' as dom;
+import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
+import 'package:http/http.dart'; // Contains a client for making API calls
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart'; // Contains DOM related classes for extracting data from elements
 
