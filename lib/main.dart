@@ -15,11 +15,9 @@ import 'content.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences.getInstance().then((prefs) {
-    SharedState sharedState = new SharedState(prefs);
-
     runApp(
       MaterialApp(
-        home: MyApp(sharedState),
+        home: MyApp(new SharedState(prefs)),
       ),
     );
   });
@@ -30,7 +28,7 @@ class MyApp extends StatefulWidget {
   _MyAppState createState() => _MyAppState();
 
   final Content content = new Content(Constants.width, Constants.height);
-  final SharedState sharedState;
+  SharedState sharedState;
 
   MyApp(this.sharedState);
 }
@@ -41,8 +39,7 @@ class _MyAppState extends State<MyApp> {
   DateTime date;
   String day;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  RefreshController _refreshController = RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -51,19 +48,19 @@ class _MyAppState extends State<MyApp> {
     date = DateTime.now();
     day = DateFormat('EEEE').format(date);
 
-    Future.delayed(Duration(milliseconds: 10), () {
-      if (sharedState.loadStateAndCheckIfFirstTime()) {
+
+    if (sharedState.loadStateAndCheckIfFirstTime()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
-        );
-        return;
-      }
-    });
-    parsePlans(widget.content, sharedState).then((value) => setState(() {
-      print("State was set to : ${widget.content}");
-      loading = false;
-    }));
+        );});
+    } else {
+      parsePlans(widget.content, sharedState).then((value) => setState(() {
+        print("State was set to : ${widget.content}");
+        loading = false;
+      }));
+    }
   }
 
   void showSettingsWindow() {
