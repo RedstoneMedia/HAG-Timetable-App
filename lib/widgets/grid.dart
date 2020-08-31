@@ -58,7 +58,7 @@ class ClassGridObject extends StatelessWidget {
   final context;
 
   Future<void> _showMyDialog(Cell cell) async {
-    bool showFootnotes = cell.footnotes != null;
+    bool showFootnotes = cell.footnotes == null ? false : cell.footnotes.length > 1;
 
     return showDialog<void>(
       context: context,
@@ -69,8 +69,7 @@ class ClassGridObject extends StatelessWidget {
           child: AlertDialog(
             title: Text('Informationen'),
             content: SingleChildScrollView(
-              child: showFootnotes
-                  ? SizedBox(
+              child: showFootnotes ? SizedBox(
                 height: 200,
                 width: 200,
                 child: ListView.builder(
@@ -100,36 +99,20 @@ class ClassGridObject extends StatelessWidget {
                     );
                   },
                 ),
-              )
-                  : ListBody(
-                children: cell.isDropped
-                    ? [
-                  Text(
-                    "Orginal-Fach:   ${cell.originalSubject}",
-                    textAlign: TextAlign.left,
-                  ),
-                  Text("Fach:           ${cell.subject}\n",
-                      textAlign: TextAlign.left),
-                  Text("Orginal-Raum:   ${cell.originalRoom}",
-                      textAlign: TextAlign.left),
-                  Text("Raum:           ${cell.room}\n",
-                      textAlign: TextAlign.left),
-                  Text("Orginal-Lehrer: ${cell.originalTeacher}",
-                      textAlign: TextAlign.left),
-                  Text("Lehrer:         ${cell.teacher}\n",
-                      textAlign: TextAlign.left),
-                  cell.isSubstitute
-                      ? Text("Text:           ${cell.text}",
-                      textAlign: TextAlign.left)
-                      : Container(),
-                ]
-                    : [
+              ) : ListBody(
+                children: cell.isSubstitute || cell.isDropped ? [
+                  cell.originalSubject != "---" ? Text("Orginal-Fach:   ${cell.originalSubject}", textAlign: TextAlign.left,) : Container(),
+                  cell.subject         != "---" ? Text("Fach:           ${cell.subject}\n", textAlign: TextAlign.left)        : Container(),
+                  cell.originalRoom    != "---" ? Text("Orginal-Raum:   ${cell.originalRoom}", textAlign: TextAlign.left)     : Container(),
+                  cell.room            != "---" ? Text("Raum:           ${cell.room}\n", textAlign: TextAlign.left)           : Container(),
+                  cell.originalTeacher != "---" ? Text("Orginal-Lehrer: ${cell.originalTeacher}", textAlign: TextAlign.left)  : Container(),
+                  cell.teacher         != "---" ? Text("Lehrer:         ${cell.teacher}\n", textAlign: TextAlign.left)        : Container(),
+                  cell.isDropped                ? Text("Fällt aus:           Ja", textAlign: TextAlign.left)                  : Container(),
+                  cell.text            != " "   ? Text("Text:           ${cell.text}", textAlign: TextAlign.left)             : Container(),
+                ] : [
                   Text("Fach:      ${cell.subject}"),
                   Text("Raum:     ${cell.room}"),
-                  Text("Lehrer:    ${cell.teacher}"),
-                  cell.isSubstitute
-                      ? Text("Text:      ${cell.text}")
-                      : Container(),
+                  Text("Lehrer:    ${cell.teacher}")
                 ],
               ),
             ),
@@ -202,6 +185,11 @@ class ClassGridObject extends StatelessWidget {
           },
           child: Container(
             decoration: BoxDecoration(
+                color: !content.cells[y][x].isDropped ?
+                  content.cells[y][x].isSubstitute ?
+                    sharedState.theme.subjectSubstitutionColor
+                    : sharedState.theme.subjectColor
+                : sharedState.theme.subjectDropOutColor,
                 border: Border(
                     bottom: BorderSide(
                         width: 1.0,
@@ -210,11 +198,7 @@ class ClassGridObject extends StatelessWidget {
                             : Colors.black26),
                     right: BorderSide(width: 0.5, color: Colors.black26),
                     left: BorderSide(width: 0.5, color: Colors.black26)),
-                color: !content.cells[y][x].isDropped
-                    ? sharedState.theme.subjectColor
-                          : content.cells[y][x].isSubstitute
-                              ? sharedState.theme.subjectSubstitutionColor
-                              : sharedState.theme.subjectDropOutColor),
+            ),
                   child: Column(
                     children: content.cells[y][x].isDropped
                         ? [

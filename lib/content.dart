@@ -42,7 +42,7 @@ class Footnote {
   String teacher;
   String subject;
   String room;
-  String schoolClass;
+  List<String> schoolClasses;
   String schoolWeek;
   String text;
 

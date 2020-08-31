@@ -6,19 +6,23 @@ import 'package:http/http.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
 import 'package:stundenplan/parsing/parsing_util.dart';
-import 'package:stundenplan/shared_state.dart'; // Contains a client for making API calls
+import 'package:stundenplan/shared_state.dart';
+import 'package:tuple/tuple.dart'; // Contains a client for making API calls
 
 Future<void> overwriteContentWithSubsitutionPlan(SharedState sharedState, Client client, Content content, List<String> subjects, String schoolClassName) async {
-  var weekDay = DateTime.now().weekday;
-  if (weekDay > 5) {
-    weekDay = 1;
-  }
-
-  List<HashMap<String, String>> plan = await getCourseSubsitutionPlan(schoolClassName, Constants.substitutionLinkBase, client);
+  Tuple2<List<HashMap<String, String>>, int> ret = await getCourseSubstitutionPlan(schoolClassName, Constants.substitutionLinkBase, client);
+  List<HashMap<String, String>> mainPlan = ret.item1;
+  int weekDayMain = ret.item2;
+  writeSubstitutionPlan(mainPlan, weekDayMain, content, subjects);
   if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.schoolGrade)) {
-    List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("${sharedState.schoolGrade}K", Constants.substitutionLinkBase, client);
-    plan.addAll(coursePlan);
+    Tuple2<List<HashMap<String, String>>, int> courseRet = await getCourseSubstitutionPlan("${sharedState.schoolGrade}K", Constants.substitutionLinkBase, client);
+    List<HashMap<String, String>> coursePlan = courseRet.item1;
+    int weekDayCourse = ret.item2;
+    writeSubstitutionPlan(coursePlan, weekDayCourse, content, subjects);
   }
+}
+
+writeSubstitutionPlan(List<HashMap<String, String>> plan, int weekDay, Content content, List<String> subjects) {
   for (int i = 0; i < plan.length; i++) {
     var hours = strip(plan[i]["Stunde"]).split("-");
 
@@ -42,23 +46,33 @@ Future<void> overwriteContentWithSubsitutionPlan(SharedState sharedState, Client
     if (hours.length == 1) {
       // No hour range (5)
       var hour = int.parse(hours[0]);
+      cell.footnotes = content.cells[hour-1][weekDay].footnotes;
       content.setCell(hour-1, weekDay, cell);
     } else if (hours.length == 2) {
       // Hour range (5-6)
       var hourStart = int.parse(hours[0]);
       var hourEnd = int.parse(hours[1]);
       for (var i = hourStart; i < hourEnd + 1; i++) {
+        cell.footnotes = content.cells[i-1][weekDay].footnotes;
         content.setCell(i-1, weekDay, cell);
       }
     }
   }
 }
 
-Future<List<HashMap<String, String>>> getCourseSubsitutionPlan(String course, String linkBase, client) async {
+Future<Tuple2<List<HashMap<String, String>>, int>> getCourseSubstitutionPlan(String course, String linkBase, client) async {
   Response response = await client.get('${linkBase}_${course}.htm');
-  if (response.statusCode != 200) return new List<HashMap<String, String>>();
+  if (response.statusCode != 200) return Tuple2(new List<HashMap<String, String>>(), 1);
 
   var document = parse(response.body);
+
+  // Get weekday for that substitute table
+  String headerText = strip(document.getElementsByTagName("body")[0].children[0].children[0].children[2].text);
+  print(headerText);
+  var regexp = RegExp(r"^\w+(?<day>\d).(?<month>\d).");
+  RegExpMatch match = regexp.firstMatch(headerText);
+  var substituteWeekday = DateTime(DateTime.now().year, int.parse(match.namedGroup("month")), int.parse(match.namedGroup("day"))).weekday;
+
   List<dom.Element> tables = document.getElementsByTagName("table");
   for (int i = 0; i < tables.length; i++) {
     if (!tables[i].attributes.containsKey("rules")) {
@@ -92,5 +106,5 @@ Future<List<HashMap<String, String>>> getCourseSubsitutionPlan(String course, St
     subsituions.add(substituion);
   }
 
-  return subsituions;
+  return Tuple2(subsituions, substituteWeekday);
 }

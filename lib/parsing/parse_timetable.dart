@@ -30,8 +30,8 @@ Future<void> fillTimeTable(String course, String linkBase, client, Content conte
   if (tables.length > 1) {
     var mainTimeTable = tables[0];
     var footnoteTable = tables[1];
-    var footnoteMap = parseFootnoteTable(subjects, footnoteTable);  // Parse the footnote table
-    parseMainTimeTable(content, subjects, mainTimeTable, footnoteMap); // Parse the main timetable
+    var footnoteMap = parseFootnoteTable(footnoteTable);  // Parse the footnote table
+    parseMainTimeTable(content, subjects, mainTimeTable, footnoteMap, course); // Parse the main timetable
   }
 }
 
@@ -49,7 +49,7 @@ class Area {
 }
 
 /// Creates a map that maps Footnotes indexes example : [1), 2)] to a Footnote object based on parsing the html footnote table.
-HashMap<String,List<Footnote>> parseFootnoteTable(List<String> subjects, dom.Element footnoteTable) {
+HashMap<String,List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
   List<dom.Element> rows = footnoteTable.children[0].children;
 
   List<String> headerColumnsText = new List<String>();
@@ -176,11 +176,11 @@ HashMap<String,List<Footnote>> parseFootnoteTable(List<String> subjects, dom.Ele
               footnotes[rowIndex].room = splitValue[2];
             }
             break;
-          case "Kla":
-            footnotes[rowIndex].schoolClass = value;
+          case "Kla.":
+            footnotes[rowIndex].schoolClasses = strip(value).split(",");
             break;
           case "Schulwoche":
-            footnotes[rowIndex].schoolWeek = value;
+            footnotes[rowIndex].schoolWeek = strip(value);
             break;
           case "Text":
             footnotes[rowIndex].text = value;
@@ -203,7 +203,7 @@ HashMap<String,List<Footnote>> parseFootnoteTable(List<String> subjects, dom.Ele
 }
 
 
-void parseMainTimeTable(Content content, List<String> subjects, dom.Element mainTimeTable, HashMap<String,List<Footnote>> footnoteMap) {
+void parseMainTimeTable(Content content, List<String> subjects, dom.Element mainTimeTable, HashMap<String,List<Footnote>> footnoteMap, String course) {
   List<dom.Element> rows = mainTimeTable.children[0].children;  // Gets all <tr> elements of the main table
   rows.removeAt(0);  // Removes header
 
@@ -220,7 +220,7 @@ void parseMainTimeTable(Content content, List<String> subjects, dom.Element main
     for (var x = 0; x <= 5; x++) {
       // If in first column (sidebar)
       if (x == 0) {
-        parseOneCell(columns[x], x, y, content, subjects, footnoteMap);
+        parseOneCell(columns[x], x, y, content, subjects, footnoteMap, course);
         tableX++;
       } else {
         var doParseCell = true;  // If this is false that cell will not be parsed
@@ -236,7 +236,7 @@ void parseMainTimeTable(Content content, List<String> subjects, dom.Element main
           }
         }
         if (doParseCell) {
-          parseOneCell(columns[tableX], x, y, content, subjects, footnoteMap);
+          parseOneCell(columns[tableX], x, y, content, subjects, footnoteMap, course);
           tableX++;
         }
       }
@@ -244,7 +244,7 @@ void parseMainTimeTable(Content content, List<String> subjects, dom.Element main
   }
 }
 
-void parseOneCell(dom.Element cellDom, int x, int y, Content content, List<String> subjects, HashMap<String,List<Footnote>> footnoteMap) {
+void parseOneCell(dom.Element cellDom, int x, int y, Content content, List<String> subjects, HashMap<String,List<Footnote>> footnoteMap, String course) {
   var cell = new Cell();
 
   // Ignore the sidebar
@@ -272,7 +272,7 @@ void parseOneCell(dom.Element cellDom, int x, int y, Content content, List<Strin
       // Filter out footnotes that don't matter to the user
       var requiredFootnotes = new List<Footnote>();
       for (var footnote in footnotes) {
-        if (subjects.contains(footnote.subject)) {
+        if (subjects.contains(footnote.subject) && footnote.schoolClasses.contains(course)) {
           requiredFootnotes.add(footnote);
         }
       }
