@@ -34,6 +34,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   SharedState sharedState;
+  Constants constants = new Constants();
 
   DateTime date;
   bool loading = true;
@@ -58,11 +59,10 @@ class _MyAppState extends State<MyApp> {
     } else {
       widget.content = new Content(Constants.width, sharedState.height);
       parsePlans(widget.content, sharedState).then((value) => setState(() {
-        print(
-            "State was set to : ${widget
-                .content}"); //TODO: Remove Debug Message
-        loading = false;
-      }));
+            print(
+                "State was set to : ${widget.content}"); //TODO: Remove Debug Message
+            loading = false;
+          }));
     }
   }
 
@@ -122,7 +122,7 @@ class _MyAppState extends State<MyApp> {
                   ),
                   child: TimeTable(
                       sharedState: sharedState,
-                      constants: Constants(),
+                      constants: constants,
                       content: widget.content),
                 ),
               ],
