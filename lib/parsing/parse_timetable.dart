@@ -85,8 +85,7 @@ HashMap<String,List<Footnote>> parseFootnoteTable(List<String> subjects, dom.Ele
   }
 
   // Find footnote areas
-  List<Area> areas = new List<Area>();
-  List<String> areaFootnotes = new List<String>();
+  LinkedHashMap<String, Area> footnoteAreaMap = new LinkedHashMap<String, Area>();
 
   // Loop over all columns with the header Nr.
   var nrList = headerColumnStringIndexMap["Nr."];
@@ -119,10 +118,9 @@ HashMap<String,List<Footnote>> parseFootnoteTable(List<String> subjects, dom.Ele
       if (currentValue == " " || currentValue == currentFootnoteIndex) {  // No start of a new area
         continue;
       } else {  // Start of new area
-        // Add old area to list
+        // Add old area to map
         currentArea.rowEnd = j-1;
-        areaFootnotes.add(currentFootnoteIndex);
-        areas.add(currentArea);
+        footnoteAreaMap[currentFootnoteIndex] = currentArea;
 
         // Init new area
         currentFootnoteIndex = column[j];
@@ -132,19 +130,17 @@ HashMap<String,List<Footnote>> parseFootnoteTable(List<String> subjects, dom.Ele
         currentArea.columnEnd = columnEnd;
       }
     }
-    // Add last area to list
+    // Add last area to map
     currentArea.rowEnd = lastJ;
-    areaFootnotes.add(currentFootnoteIndex);
-    areas.add(currentArea);
+    footnoteAreaMap[currentFootnoteIndex] = currentArea;
   }
 
 
   // Parse footnote areas
   var lastFootnoteKey = "1)";
   HashMap<String,List<Footnote>> footnotesMap = new HashMap<String,List<Footnote>>();
-  for (var i = 0; i < areas.length; i++) {
-    var footnoteKey = areaFootnotes[i];
-    var area = areas[i];
+  for (var footnoteKey in footnoteAreaMap.keys) {
+    var area = footnoteAreaMap[footnoteKey];
     var relevantColumns = new List<List<String>>();
 
     // Get relevant columns within area

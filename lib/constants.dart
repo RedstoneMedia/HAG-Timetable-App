@@ -16,7 +16,7 @@ class Constants {
     "Po"
   ];
   static const Map<List<String>, List<String>> defaultSubjectsMap = {
-    ["5", "6", "7", "8", "9", "10"] : ["Bi", "Ch", "Ph" ,"Ku"],
+    ["5", "6", "7", "8", "9", "10"] : ["Bi", "Ch", "Ph" ,"Ku", "En"],
     ["11", "Q1", "Q2"] : []
   };
 
