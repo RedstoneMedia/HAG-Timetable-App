@@ -17,7 +17,7 @@ Future<void> overwriteContentWithSubsitutionPlan(SharedState sharedState, Client
   if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.schoolGrade)) {
     Tuple2<List<HashMap<String, String>>, int> courseRet = await getCourseSubstitutionPlan("${sharedState.schoolGrade}K", Constants.substitutionLinkBase, client);
     List<HashMap<String, String>> coursePlan = courseRet.item1;
-    int weekDayCourse = ret.item2;
+    int weekDayCourse = courseRet.item2;
     writeSubstitutionPlan(coursePlan, weekDayCourse, content, subjects);
   }
 }
@@ -68,7 +68,6 @@ Future<Tuple2<List<HashMap<String, String>>, int>> getCourseSubstitutionPlan(Str
 
   // Get weekday for that substitute table
   String headerText = strip(document.getElementsByTagName("body")[0].children[0].children[0].children[2].text);
-  print(headerText);
   var regexp = RegExp(r"^\w+(?<day>\d).(?<month>\d).");
   RegExpMatch match = regexp.firstMatch(headerText);
   var substituteWeekday = DateTime(DateTime.now().year, int.parse(match.namedGroup("month")), int.parse(match.namedGroup("day"))).weekday;
