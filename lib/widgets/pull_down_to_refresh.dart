@@ -36,7 +36,3 @@ class PullDownToRefresh extends StatelessWidget {
   }
 }
 
-//() {
-//    parsePlans(widget.content, sharedState)
-//        .then((value) => _refreshController.refreshCompleted());
-//    },
