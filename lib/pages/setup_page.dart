@@ -24,10 +24,12 @@ class _SetupPageState extends State<SetupPage> {
   List<String> themeNames = MyTheme.Theme.getThemeNames();
   List<String> courses = [];
 
-  TextEditingController subClassTextEdetingController = new TextEditingController();
+  TextEditingController subClassTextEdetingController =
+      new TextEditingController();
 
   SharedState sharedState;
   bool subSchoolClassEnabled;
+  bool subSchoolClassIsCorrect = true;
 
   @override
   void initState() {
@@ -37,12 +39,13 @@ class _SetupPageState extends State<SetupPage> {
     schoolGrade = sharedState.schoolGrade.toString();
     subClassTextEdetingController.text = sharedState.subSchoolClass;
     courses = sharedState.subjects;
-    subSchoolClassEnabled = !Constants.displayFullHeightSchoolGrades.contains(schoolGrade);
+    subSchoolClassEnabled =
+    !Constants.displayFullHeightSchoolGrades.contains(schoolGrade);
   }
 
   void saveDataAndGotToMain() {
     setState(() {
-      if (!validateSubClassInput()) return; //TODO: Error handling
+      if (!validateSubClassInput()) return;
 
       sharedState.subjects = [];
       sharedState.subjects.addAll(courses);
@@ -76,7 +79,18 @@ class _SetupPageState extends State<SetupPage> {
     }
     String text = subClassTextEdetingController.text;
     RegExp regExp = new RegExp(r"^[a-zA-Z]\d{0,2}$");
-    return regExp.hasMatch(text);
+    bool hasMatch = regExp.hasMatch(text);
+    if (hasMatch) {
+      setState(() {
+        subSchoolClassIsCorrect = true;
+      });
+      return true;
+    } else {
+      setState(() {
+        subSchoolClassIsCorrect = false;
+      });
+      return false;
+    }
   }
 
   void setSchoolGrade(String schoolGrade) {
@@ -130,9 +144,10 @@ class _SetupPageState extends State<SetupPage> {
                             icon: Icon(Icons.keyboard_arrow_down),
                             iconSize: 24,
                             elevation: 16,
-                            dropdownColor: sharedState.theme.textColor.withAlpha(255),
-                            style:
-                                TextStyle(color: sharedState.theme.invertedTextColor),
+                            dropdownColor:
+                            sharedState.theme.textColor.withAlpha(255),
+                            style: TextStyle(
+                                color: sharedState.theme.invertedTextColor),
                             underline: Container(),
                             onChanged: (String newValue) {
                               setSchoolGrade(newValue);
@@ -157,8 +172,14 @@ class _SetupPageState extends State<SetupPage> {
                     Container(
                       width: 60,
                       decoration: BoxDecoration(
-                        color: sharedState.theme.textColor.withAlpha(200),
+                        color: subSchoolClassEnabled
+                            ? sharedState.theme.textColor.withAlpha(200)
+                            : sharedState.theme.textColor.withAlpha(100),
                         borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: subSchoolClassIsCorrect
+                            ? Colors.transparent
+                            : Colors.red,
+                            width: subSchoolClassIsCorrect ? 0 : 2.0),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -171,8 +192,8 @@ class _SetupPageState extends State<SetupPage> {
                           decoration: InputDecoration(
                             hintText: "a",
                             hintStyle: GoogleFonts.poppins(
-                                color:
-                                sharedState.theme.invertedTextColor.withAlpha(80)),
+                                color: sharedState.theme.invertedTextColor
+                                    .withAlpha(80)),
                           ),
                         ),
                       ),
@@ -210,7 +231,8 @@ class _SetupPageState extends State<SetupPage> {
                       icon: Icon(Icons.keyboard_arrow_down),
                       iconSize: 24,
                       elevation: 16,
-                      style: TextStyle(color: sharedState.theme.invertedTextColor),
+                      style:
+                      TextStyle(color: sharedState.theme.invertedTextColor),
                       underline: Container(),
                       dropdownColor: sharedState.theme.textColor.withAlpha(255),
                       onChanged: (String newValue) {
@@ -219,8 +241,8 @@ class _SetupPageState extends State<SetupPage> {
                           sharedState.setThemeFromThemeName(themeName);
                         });
                       },
-                      items:
-                          themeNames.map<DropdownMenuItem<String>>((String value) {
+                      items: themeNames
+                          .map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Padding(

@@ -26,17 +26,17 @@ class WeekdayGridObject extends StatelessWidget {
               topRight: Radius.circular(needsRightBorder ? 5 : 0),
             ),
             border: Border.all(width: 0.75, color: Colors.black26),
-            color: x + 1 == weekdayToday
+            color: x == weekdayToday
                 ? sharedState.theme.textColor
                 : sharedState.theme.textColor.withAlpha(25)),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Center(
               child: Text(
-                weekday,
-                style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold,
-                color: x + 1 == weekdayToday
+            weekday,
+            style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                color: x == weekdayToday
                     ? sharedState.theme.invertedTextColor
                     : sharedState.theme.textColor),
           )),
@@ -104,8 +104,10 @@ class ClassGridObject extends StatelessWidget {
                   : ListBody(
                 children: cell.isDropped
                     ? [
-                  Text("Orginal-Fach:   ${cell.originalSubject}",
-                    textAlign: TextAlign.left,),
+                  Text(
+                    "Orginal-Fach:   ${cell.originalSubject}",
+                    textAlign: TextAlign.left,
+                  ),
                   Text("Fach:           ${cell.subject}\n",
                       textAlign: TextAlign.left),
                   Text("Orginal-Raum:   ${cell.originalRoom}",
@@ -117,8 +119,8 @@ class ClassGridObject extends StatelessWidget {
                   Text("Lehrer:         ${cell.teacher}\n",
                       textAlign: TextAlign.left),
                   cell.isSubstitute
-                      ? Text(
-                      "Text:           ${cell.text}", textAlign: TextAlign.left)
+                      ? Text("Text:           ${cell.text}",
+                      textAlign: TextAlign.left)
                       : Container(),
                 ]
                     : [
@@ -214,68 +216,68 @@ class ClassGridObject extends StatelessWidget {
                               ? sharedState.theme.subjectSubstitutionColor
                               : sharedState.theme.subjectDropOutColor),
                   child: Column(
-              children: content.cells[y][x].isDropped
-                  ? [
-                Text(
-                  content.cells[y][x].originalSubject,
-                  style: TextStyle(
-                      color: sharedState.theme.textColor
-                          .withAlpha(214),
-                      decoration: TextDecoration.lineThrough,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16.0),
-                ),
-                Text(
-                  content.cells[y][x].subject,
-                  style:
-                  TextStyle(color: sharedState.theme.textColor),
-                ),
-                Text(
-                  content.cells[y][x].room,
-                  style:
-                  TextStyle(color: sharedState.theme.textColor),
-                ),
-                Text(
-                  content.cells[y][x].teacher,
-                  style:
-                  TextStyle(color: sharedState.theme.textColor),
-                ),
-              ]
-                  : [
-                Text(
-                  content.cells[y][x].originalSubject,
-                  style: TextStyle(
-                    color: Colors.transparent,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 8.5,
+                    children: content.cells[y][x].isDropped
+                        ? [
+                      Text(
+                        content.cells[y][x].originalSubject,
+                        style: TextStyle(
+                            color: sharedState.theme.textColor
+                                .withAlpha(214),
+                            decoration: TextDecoration.lineThrough,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16.0),
+                      ),
+                      Text(
+                        content.cells[y][x].subject,
+                        style:
+                        TextStyle(color: sharedState.theme.textColor),
+                      ),
+                      Text(
+                        content.cells[y][x].room,
+                        style:
+                        TextStyle(color: sharedState.theme.textColor),
+                      ),
+                      Text(
+                        content.cells[y][x].teacher,
+                        style:
+                        TextStyle(color: sharedState.theme.textColor),
+                      ),
+                    ]
+                        : [
+                      Text(
+                        content.cells[y][x].originalSubject,
+                        style: TextStyle(
+                          color: Colors.transparent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 8.5,
+                        ),
+                      ),
+                      Text(
+                        content.cells[y][x].subject,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: sharedState.theme.textColor),
+                      ),
+                      Text(
+                        content.cells[y][x].room,
+                        style:
+                        TextStyle(color: sharedState.theme.textColor),
+                      ),
+                      Text(
+                        content.cells[y][x].teacher,
+                        style:
+                        TextStyle(color: sharedState.theme.textColor),
+                      ),
+                      Text(
+                        content.cells[y][x].originalSubject,
+                        style: TextStyle(
+                          color: Colors.transparent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 8.5,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                Text(
-                  content.cells[y][x].subject,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: sharedState.theme.textColor),
-                ),
-                Text(
-                  content.cells[y][x].room,
-                  style:
-                  TextStyle(color: sharedState.theme.textColor),
-                ),
-                Text(
-                  content.cells[y][x].teacher,
-                  style:
-                  TextStyle(color: sharedState.theme.textColor),
-                ),
-                Text(
-                  content.cells[y][x].originalSubject,
-                  style: TextStyle(
-                    color: Colors.transparent,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 8.5,
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ),
