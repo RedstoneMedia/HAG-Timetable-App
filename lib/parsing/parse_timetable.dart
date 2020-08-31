@@ -267,12 +267,12 @@ void parseOneCell(dom.Element cellDom, int x, int y, Content content, List<Strin
     cell.teacher = strip(teacherAndRoom[0].text);
     cell.room = strip(teacherAndRoom[1].text);
     cell.subject = strip(subjectAndFootnote[0].text);
-
     // Check if footnote exists
     if (subjectAndFootnote.length > 1) {
       // Get footnotes from footnoteMap
       var footnoteKey = strip(subjectAndFootnote[1].text);
       var footnotes = footnoteMap[footnoteKey];
+      print(footnotes);
 
       // Filter out footnotes that don't matter to the user
       var requiredFootnotes = new List<Footnote>();
@@ -282,12 +282,14 @@ void parseOneCell(dom.Element cellDom, int x, int y, Content content, List<Strin
         }
       }
 
-      // If only one required footnote set the subject room and teacher
-      if (requiredFootnotes.length == 1) {
+      // If only one required footnote, or the current subject is not required.
+      // Set the subject room and teacher to the first element in the requiredFootnotes list.
+      if (requiredFootnotes.length == 1 || (!subjects.contains(cell.subject) && requiredFootnotes.length > 0)) {
         cell.subject = requiredFootnotes[0].subject;
         cell.room = requiredFootnotes[0].room;
         cell.teacher = requiredFootnotes[0].teacher;
       }
+
       cell.footnotes = requiredFootnotes;  // Set footnotes of cell
     }
   }

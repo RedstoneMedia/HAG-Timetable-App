@@ -67,7 +67,7 @@ class Cell {
   bool isDoubleClass = false;
 
   String toString() {
-    return "{Cell isDropped : ${isDropped}, subject : ${subject}, room : ${room}}";
+    return "{Cell isDropped : ${isDropped}, subject : ${subject}, room : ${room}  original subject : ${originalSubject}}";
   }
 
   bool isEmpty() {

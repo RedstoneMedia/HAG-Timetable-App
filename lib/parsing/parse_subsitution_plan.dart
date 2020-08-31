@@ -42,7 +42,7 @@ Future<void> overwriteContentWithSubsitutionPlan(SharedState sharedState, Client
     if (hours.length == 1) {
       // No hour range (5)
       var hour = int.parse(hours[0]);
-      content.setCell(hour, weekDay, cell);
+      content.setCell(hour-1, weekDay, cell);
     } else if (hours.length == 2) {
       // Hour range (5-6)
       var hourStart = int.parse(hours[0]);
