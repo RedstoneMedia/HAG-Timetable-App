@@ -7,7 +7,7 @@ class Constants {
   static const List<String> weekDays = ["", "Mo", "Di", "Mi", "Do", "Fr"];
   static const String substitutionLinkBase = "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
   static const String timeTableLinkBase = "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
-  static const List<String> defaultSubjects = [
+  static const List<String> alwaysDefaultSubjects = [
     "De",
     "Ma",
     "Sp",
@@ -15,6 +15,11 @@ class Constants {
     "Ek",
     "Po"
   ];
+  static const Map<List<String>, List<String>> defaultSubjectsMap = {
+    ["5", "6", "7", "8", "9", "10"] : ["Bi", "Ch", "Ph" ,"Ku"],
+    ["11", "Q1", "Q2"] : []
+  };
+
   static const List<String> startTimes = [
     "7:55",
     "8:45",

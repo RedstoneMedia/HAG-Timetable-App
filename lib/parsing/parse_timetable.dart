@@ -272,7 +272,6 @@ void parseOneCell(dom.Element cellDom, int x, int y, Content content, List<Strin
       // Get footnotes from footnoteMap
       var footnoteKey = strip(subjectAndFootnote[1].text);
       var footnotes = footnoteMap[footnoteKey];
-      print(footnotes);
 
       // Filter out footnotes that don't matter to the user
       var requiredFootnotes = new List<Footnote>();

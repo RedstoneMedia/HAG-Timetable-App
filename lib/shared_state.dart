@@ -39,5 +39,16 @@ class SharedState {
   void setThemeFromThemeName(String themeName) {
     this.theme = Theme.getThemeFromThemeName(themeName);
   }
+
+  List<String> get defaultSubjects {
+    for (var schoolGradeList in Constants.defaultSubjectsMap.keys) {
+      if (schoolGradeList.contains(schoolGrade)) {
+        var defaultSubjects = new List<String>.from(Constants.defaultSubjectsMap[schoolGradeList]);
+        defaultSubjects.addAll(Constants.alwaysDefaultSubjects);
+        return defaultSubjects;
+      }
+    }
+    return Constants.alwaysDefaultSubjects;
+  }
 }
 

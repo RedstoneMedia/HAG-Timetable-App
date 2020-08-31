@@ -15,7 +15,7 @@ Future<void> parsePlans(Content content, SharedState sharedState) async {
     allSubjects.add(subject);
   }
   // Add the default subjects that can not be changed by the user
-  for (var defaultSubject in Constants.defaultSubjects) {
+  for (var defaultSubject in sharedState.defaultSubjects) {
     allSubjects.add(defaultSubject);
   }
 
