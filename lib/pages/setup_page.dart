@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/main.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/theme.dart' as MyTheme;
@@ -19,13 +20,14 @@ class _SetupPageState extends State<SetupPage> {
   String subSchoolClass;
   String themeName = "dark";
 
-  List<String> grades = [];
+  List<String> grades = Constants.schoolGrades;
   List<String> themeNames = MyTheme.Theme.getThemeNames();
   List<String> courses = [];
 
   TextEditingController subClassTextEdetingController = new TextEditingController();
 
   SharedState sharedState;
+  bool subSchoolClassEnabled;
 
   @override
   void initState() {
@@ -35,9 +37,7 @@ class _SetupPageState extends State<SetupPage> {
     schoolGrade = sharedState.schoolGrade.toString();
     subClassTextEdetingController.text = sharedState.subSchoolClass;
     courses = sharedState.subjects;
-    for (int i = 5; i <= 13; i++) {
-      grades.add(i.toString());
-    }
+    subSchoolClassEnabled = !Constants.displayFullHeightSchoolGrades.contains(schoolGrade);
   }
 
   void saveDataAndGotToMain() {
@@ -46,8 +46,16 @@ class _SetupPageState extends State<SetupPage> {
 
       sharedState.subjects = [];
       sharedState.subjects.addAll(courses);
-      sharedState.schoolGrade = int.parse(schoolGrade);
-      sharedState.subSchoolClass = subClassTextEdetingController.text;
+      sharedState.schoolGrade = schoolGrade;
+
+      if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
+        sharedState.subSchoolClass = "";
+        sharedState.height = Constants.fullHeight;
+      } else {
+        sharedState.subSchoolClass = subClassTextEdetingController.text;
+        sharedState.height = Constants.defaultHeight;
+      }
+
       sharedState.saveState();
 
       Navigator.push(
@@ -63,9 +71,24 @@ class _SetupPageState extends State<SetupPage> {
   }
 
   bool validateSubClassInput() {
+    if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
+      return true;
+    }
     String text = subClassTextEdetingController.text;
     RegExp regExp = new RegExp(r"^[a-zA-Z]\d{0,2}$");
     return regExp.hasMatch(text);
+  }
+
+  void setSchoolGrade(String schoolGrade) {
+    setState(() {
+      this.schoolGrade = schoolGrade;
+      if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
+        subClassTextEdetingController.text = "";
+        subSchoolClassEnabled = false;
+      } else {
+        subSchoolClassEnabled = true;
+      }
+    });
   }
 
   @override
@@ -112,9 +135,7 @@ class _SetupPageState extends State<SetupPage> {
                                 TextStyle(color: sharedState.theme.invertedTextColor),
                             underline: Container(),
                             onChanged: (String newValue) {
-                              setState(() {
-                                schoolGrade = newValue;
-                              });
+                              setSchoolGrade(newValue);
                             },
                             items: grades
                                 .map<DropdownMenuItem<String>>((String value) {
@@ -143,6 +164,7 @@ class _SetupPageState extends State<SetupPage> {
                         padding: const EdgeInsets.symmetric(
                             vertical: 0.0, horizontal: 15.0),
                         child: TextField(
+                          enabled: subSchoolClassEnabled,
                           controller: subClassTextEdetingController,
                           style: GoogleFonts.poppins(
                               color: sharedState.theme.invertedTextColor),

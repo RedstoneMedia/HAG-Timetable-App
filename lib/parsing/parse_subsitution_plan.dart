@@ -15,8 +15,10 @@ Future<void> overwriteContentWithSubsitutionPlan(SharedState sharedState, Client
   }
 
   List<HashMap<String, String>> plan = await getCourseSubsitutionPlan(schoolClassName, Constants.substitutionLinkBase, client);
-  List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("${sharedState.schoolGrade}K", Constants.substitutionLinkBase, client);
-  plan.addAll(coursePlan);
+  if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.schoolGrade)) {
+    List<HashMap<String, String>> coursePlan = await getCourseSubsitutionPlan("${sharedState.schoolGrade}K", Constants.substitutionLinkBase, client);
+    plan.addAll(coursePlan);
+  }
   for (int i = 0; i < plan.length; i++) {
     var hours = strip(plan[i]["Stunde"]).split("-");
 

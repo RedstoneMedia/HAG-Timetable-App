@@ -154,9 +154,9 @@ class ClassGridObject extends StatelessWidget {
             color: sharedState.theme.textColor.withAlpha(10),
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(
-                  (y == Constants.height - 2 && x == 1) ? 5 : 0),
+                  (y == sharedState.height - 2 && x == 1) ? 5 : 0),
               bottomRight: Radius.circular(
-                  (y == Constants.height - 2 && x == Constants.width - 1)
+                  (y == sharedState.height - 2 && x == Constants.width - 1)
                       ? 5
                       : 0),
             ),

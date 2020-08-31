@@ -22,11 +22,13 @@ Future<void> parsePlans(Content content, SharedState sharedState) async {
   var schoolClassName ="${sharedState.schoolGrade}${sharedState.subSchoolClass}";
   print("Parsing main time table");
   await fillTimeTable(schoolClassName, Constants.timeTableLinkBase, client, content, allSubjects);
-  print("Parsing course only time table");
-  var courseTimeTableContent = new Content(Constants.width, Constants.height);
-  await fillTimeTable("${sharedState.schoolGrade}K", Constants.timeTableLinkBase, client, courseTimeTableContent, allSubjects);
-  print("Combining both tables");
-  content.combine(courseTimeTableContent);
+
+  if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.schoolGrade)) {
+    print("Parsing course only time table");
+    var courseTimeTableContent = new Content(Constants.width, sharedState.height);
+    await fillTimeTable("${sharedState.schoolGrade}K", Constants.timeTableLinkBase, client, courseTimeTableContent, allSubjects);print("Combining both tables");
+    content.combine(courseTimeTableContent);
+  }
   print("Parsing substitution plan");
   await overwriteContentWithSubsitutionPlan(sharedState, client, content, allSubjects, schoolClassName);
 }

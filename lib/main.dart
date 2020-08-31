@@ -27,10 +27,13 @@ class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
 
-  final Content content = new Content(Constants.width, Constants.height);
+  Content content;
   SharedState sharedState;
 
-  MyApp(this.sharedState);
+  MyApp(SharedState sharedState) {
+    this.sharedState = sharedState;
+    this.content = new Content(Constants.width, Constants.defaultHeight);
+  }
 }
 
 class _MyAppState extends State<MyApp> {
@@ -39,8 +42,7 @@ class _MyAppState extends State<MyApp> {
   DateTime date;
   String day;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  RefreshController _refreshController = RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -57,6 +59,7 @@ class _MyAppState extends State<MyApp> {
         );
       });
     } else {
+      widget.content = new Content(Constants.width, sharedState.height);
       parsePlans(widget.content, sharedState).then((value) => setState(() {
         print("State was set to : ${widget.content}");
         loading = false;
@@ -141,7 +144,7 @@ class _MyAppState extends State<MyApp> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      for (int y = 0; y < Constants.height; y++)
+                      for (int y = 0; y < sharedState.height; y++)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
