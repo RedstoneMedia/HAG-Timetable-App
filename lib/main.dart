@@ -1,16 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/pages/setup_page.dart';
 import 'package:stundenplan/parsing/parse.dart';
 import 'package:stundenplan/shared_state.dart';
-import 'package:stundenplan/widgets/grid.dart';
 
 import 'content.dart';
+import 'widgets/custom_widgets.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,29 +26,28 @@ class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
 
+  MyApp(this.sharedState);
+
   Content content;
   SharedState sharedState;
-
-  MyApp(SharedState sharedState) {
-    this.sharedState = sharedState;
-    this.content = new Content(Constants.width, Constants.defaultHeight);
-  }
 }
 
 class _MyAppState extends State<MyApp> {
   SharedState sharedState;
-  bool loading = true;
+  Constants constants = new Constants();
+
   DateTime date;
+  bool loading = true;
   String day;
-  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  RefreshController _refreshController = RefreshController(initialRefresh: false);
+
+  GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
 
   @override
   void initState() {
     super.initState();
     sharedState = widget.sharedState;
-    date = DateTime.now();
-    day = DateFormat('EEEE').format(date);
 
     if (sharedState.loadStateAndCheckIfFirstTime()) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -61,9 +59,10 @@ class _MyAppState extends State<MyApp> {
     } else {
       widget.content = new Content(Constants.width, sharedState.height);
       parsePlans(widget.content, sharedState).then((value) => setState(() {
-        print("State was set to : ${widget.content}");
-        loading = false;
-      }));
+            print(
+                "State was set to : ${widget.content}"); //TODO: Remove Debug Message
+            loading = false;
+          }));
     }
   }
 
@@ -103,35 +102,15 @@ class _MyAppState extends State<MyApp> {
         child: SafeArea(
           child: loading
               ? Center(
-            child: SizedBox(
-              width: 80,
-              height: 80,
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(
-                    sharedState.theme.subjectColor),
-                backgroundColor: Colors.transparent,
-                strokeWidth: 6.0,
-              ),
-            ),
+            child: Loader(sharedState),
           )
-              : SmartRefresher(
-            enablePullDown: true,
-            controller: _refreshController,
-            header: WaterDropHeader(
-              refresh: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(
-                    sharedState.theme.subjectColor),
-              ),
-              waterDropColor: sharedState.theme.subjectColor,
-              complete: Icon(
-                Icons.done,
-                color: sharedState.theme.subjectColor,
-              ),
-            ),
+              : PullDownToRefresh(
             onRefresh: () {
               parsePlans(widget.content, sharedState)
                   .then((value) => _refreshController.refreshCompleted());
             },
+            sharedState: sharedState,
+            refreshController: _refreshController,
             child: ListView(
               physics: BouncingScrollPhysics(),
               children: [
@@ -141,39 +120,10 @@ class _MyAppState extends State<MyApp> {
                     top: 8.0,
                     right: 8.0,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      for (int y = 0; y < sharedState.height; y++)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            for (int x = 0; x < Constants.width; x++)
-                              if (x == 0)
-                                if (y == 0)
-                                  PlaceholderGridObject()
-                                else
-                                  TimeGridObject(y, sharedState)
-                              else
-                                if (y == 0)
-                                  WeekdayGridObject(
-                                      Constants.weekDays[x],
-                                      x,
-                                      x == 1,
-                                      x == Constants.width - 1,
-                                      sharedState)
-                                else
-                                  ClassGridObject(
-                                      widget.content,
-                                          sharedState,
-                                          x,
-                                          y - 1,
-                                          x == 1,
-                                          context)
-                                ],
-                        ),
-                    ],
-                  ),
+                  child: TimeTable(
+                      sharedState: sharedState,
+                      constants: constants,
+                      content: widget.content),
                 ),
               ],
             ),
