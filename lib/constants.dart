@@ -7,6 +7,7 @@ class Constants {
   static const List<String> weekDays = ["", "Mo", "Di", "Mi", "Do", "Fr"];
   static const String substitutionLinkBase = "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
   static const String timeTableLinkBase = "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
+  static const String newestVersionPubspecUrl = "https://raw.githubusercontent.com/RedstoneMedia/HAG-Crappy-Timetable-App/master/pubspec.yaml";
   static const List<String> alwaysDefaultSubjects = [
     "De",
     "Ma",

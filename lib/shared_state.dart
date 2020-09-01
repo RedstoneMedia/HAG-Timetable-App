@@ -3,7 +3,7 @@ import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/theme.dart';
 import 'dart:convert';
 
-import 'Profile.dart';
+import 'profile.dart';
 
 class SharedState {
   SharedPreferences preferences;
