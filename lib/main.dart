@@ -7,6 +7,7 @@ import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/pages/setup_page.dart';
 import 'package:stundenplan/parsing/parse.dart';
 import 'package:stundenplan/shared_state.dart';
+import 'package:stundenplan/update_notify.dart';
 
 import 'content.dart';
 import 'widgets/custom_widgets.dart';
@@ -34,7 +35,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   SharedState sharedState;
-  Constants constants = new Constants();
+  var updateNotifier = UpdateNotifier();
 
   DateTime date;
   bool loading = true;
@@ -57,6 +58,13 @@ class _MyAppState extends State<MyApp> {
         );
       });
     } else {
+      updateNotifier.init().then((value) {
+        updateNotifier.getNewestVersion().then((newestVersion) {
+          if (updateNotifier.currentVersion.isOtherVersionGreater(newestVersion)) {
+            print("A newer version was found : $newestVersion");
+          }
+        });
+      });
       widget.content = new Content(Constants.width, sharedState.height);
       parsePlans(widget.content, sharedState).then((value) => setState(() {
             print(
@@ -122,7 +130,6 @@ class _MyAppState extends State<MyApp> {
                   ),
                   child: TimeTable(
                       sharedState: sharedState,
-                      constants: constants,
                       content: widget.content),
                 ),
               ],

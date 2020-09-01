@@ -8,11 +8,9 @@ import 'grid.dart';
 class TimeTable extends StatelessWidget {
   TimeTable(
       {@required this.sharedState,
-      @required this.constants,
       @required this.content});
 
   final SharedState sharedState;
-  final Constants constants;
   final Content content;
 
   @override

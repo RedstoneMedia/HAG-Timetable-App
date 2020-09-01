@@ -20,6 +20,8 @@ dependencies:
   shared_preferences: ^0.5.10
   flutter_launcher_icons: "^0.7.3"
   pull_to_refresh: ^1.6.1
+  package_info: ^0.4.0+16
+  yaml : 2.2.1
 
 flutter_icons:
   android: "launcher_icon"
