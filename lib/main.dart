@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -35,7 +37,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   SharedState sharedState;
-  var updateNotifier = UpdateNotifier();
+  UpdateNotifier updateNotifier = new UpdateNotifier();
 
   DateTime date;
   bool loading = true;
@@ -60,18 +62,36 @@ class _MyAppState extends State<MyApp> {
     } else {
       updateNotifier.init().then((value) {
         updateNotifier.getNewestVersion().then((newestVersion) {
-          if (updateNotifier.currentVersion.isOtherVersionGreater(newestVersion)) {
+          if (updateNotifier.currentVersion
+              .isOtherVersionGreater(newestVersion)) {
             print("A newer version was found : $newestVersion");
           }
         });
       });
       widget.content = new Content(Constants.width, sharedState.height);
+      loadCachedCells();
       parsePlans(widget.content, sharedState).then((value) => setState(() {
             print(
                 "State was set to : ${widget.content}"); //TODO: Remove Debug Message
+            cacheCells();
             loading = false;
           }));
     }
+  }
+
+  void cacheCells() {
+    var encoded = jsonEncode(widget.content.toJsonData());
+    sharedState.preferences
+        .setString("content", encoded);
+  }
+
+  void loadCachedCells() {
+    String content = sharedState.preferences.get("content");
+    print("Getting: $content");
+    if (content == null) return;
+    setState(() {
+      widget.content = Content.fromJsonData(jsonDecode(content));
+    });
   }
 
   void showSettingsWindow() {
@@ -110,31 +130,30 @@ class _MyAppState extends State<MyApp> {
         child: SafeArea(
           child: loading
               ? Center(
-            child: Loader(sharedState),
-          )
+                  child: Loader(sharedState),
+                )
               : PullDownToRefresh(
-            onRefresh: () {
-              parsePlans(widget.content, sharedState)
-                  .then((value) => _refreshController.refreshCompleted());
-            },
-            sharedState: sharedState,
-            refreshController: _refreshController,
-            child: ListView(
-              physics: BouncingScrollPhysics(),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: 8.0,
-                    top: 8.0,
-                    right: 8.0,
+                  onRefresh: () {
+                    parsePlans(widget.content, sharedState)
+                        .then((value) => _refreshController.refreshCompleted());
+                  },
+                  sharedState: sharedState,
+                  refreshController: _refreshController,
+                  child: ListView(
+                    physics: BouncingScrollPhysics(),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: 8.0,
+                          top: 8.0,
+                          right: 8.0,
+                        ),
+                        child: TimeTable(
+                            sharedState: sharedState, content: widget.content),
+                      ),
+                    ],
                   ),
-                  child: TimeTable(
-                      sharedState: sharedState,
-                      content: widget.content),
                 ),
-              ],
-            ),
-          ),
         ),
       ),
     );
