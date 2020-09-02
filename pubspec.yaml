@@ -22,7 +22,7 @@ dependencies:
   pull_to_refresh: ^1.6.1
   package_info: ^0.4.0+16
   yaml : ^2.2.1
-  connectivity : ^0.4.9
+  connectivity : ^0.4.9+2
 
 flutter_icons:
   android: "launcher_icon"
