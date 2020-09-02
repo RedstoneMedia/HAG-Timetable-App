@@ -1,5 +1,5 @@
-import 'dart:convert';
-
+import 'dart:async';
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -31,26 +31,26 @@ class MyApp extends StatefulWidget {
 
   MyApp(this.sharedState);
 
-  Content content;
   SharedState sharedState;
 }
 
 class _MyAppState extends State<MyApp> {
   SharedState sharedState;
   UpdateNotifier updateNotifier = new UpdateNotifier();
+  Connectivity connectivity = new Connectivity();
 
   DateTime date;
   bool loading = true;
   String day;
 
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  RefreshController _refreshController = RefreshController(initialRefresh: false);
 
   @override
   void initState() {
     super.initState();
     sharedState = widget.sharedState;
+    sharedState.content = new Content(Constants.width, sharedState.height);
 
     if (sharedState.loadStateAndCheckIfFirstTime()) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -60,38 +60,40 @@ class _MyAppState extends State<MyApp> {
         );
       });
     } else {
-      updateNotifier.init().then((value) {
-        updateNotifier.getNewestVersion().then((newestVersion) {
-          if (updateNotifier.currentVersion
-              .isOtherVersionGreater(newestVersion)) {
-            print("A newer version was found : $newestVersion");
+      isInternetAvailable().then((result) {
+        if (result) {
+          updateNotifier.init().then((value) {
+            updateNotifier.getNewestVersion().then((newestVersion) {
+              if (updateNotifier.currentVersion.isOtherVersionGreater(newestVersion)) {
+                print("A newer version was found : $newestVersion");
+              }
+            });
+          });
+          try {
+            parsePlans(sharedState.content, sharedState).then((value) => setState(() {
+              print("State was set to : ${sharedState.content}"); //TODO: Remove Debug Message
+              sharedState.saveContent();
+              loading = false;
+            }));
+          } on TimeoutException catch (_) {
+            setState(() {
+              print("Timeout !");
+              loading = false;
+            });
           }
-        });
-      });
-      widget.content = new Content(Constants.width, sharedState.height);
-      loadCachedCells();
-      parsePlans(widget.content, sharedState).then((value) => setState(() {
-            print(
-                "State was set to : ${widget.content}"); //TODO: Remove Debug Message
-            cacheCells();
+        } else {
+          setState(() {
+            print("No connection !");
             loading = false;
-          }));
+          });
+        }
+      });
     }
   }
 
-  void cacheCells() {
-    var encoded = jsonEncode(widget.content.toJsonData());
-    sharedState.preferences
-        .setString("content", encoded);
-  }
-
-  void loadCachedCells() {
-    String content = sharedState.preferences.get("content");
-    print("Getting: $content");
-    if (content == null) return;
-    setState(() {
-      widget.content = Content.fromJsonData(jsonDecode(content));
-    });
+  Future<bool> isInternetAvailable() async {
+    var result = await connectivity.checkConnectivity();
+    return result == ConnectivityResult.mobile || result == ConnectivityResult.wifi;
   }
 
   void showSettingsWindow() {
@@ -134,8 +136,19 @@ class _MyAppState extends State<MyApp> {
                 )
               : PullDownToRefresh(
                   onRefresh: () {
-                    parsePlans(widget.content, sharedState)
-                        .then((value) => _refreshController.refreshCompleted());
+                    isInternetAvailable().then((value) {
+                      if (value) {
+                        try {
+                          parsePlans(sharedState.content, sharedState).then((value) => _refreshController.refreshCompleted());
+                        } on TimeoutException catch (_) {
+                          print("Timeout !");
+                          _refreshController.refreshFailed();
+                        }
+                      } else {
+                        print("no connection !");
+                        _refreshController.refreshFailed();
+                      }
+                    });
                   },
                   sharedState: sharedState,
                   refreshController: _refreshController,
@@ -149,7 +162,8 @@ class _MyAppState extends State<MyApp> {
                           right: 8.0,
                         ),
                         child: TimeTable(
-                            sharedState: sharedState, content: widget.content),
+                            sharedState: sharedState, content: sharedState.content
+                        ),
                       ),
                     ],
                   ),

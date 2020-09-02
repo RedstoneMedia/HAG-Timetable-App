@@ -4,6 +4,7 @@ class Constants {
   static const int width = 6;
   static const int defaultHeight = 10;
   static const int fullHeight = 12;
+  static const Duration clientTimeout = Duration(seconds: 15);
   static const List<String> weekDays = ["", "Mo", "Di", "Mi", "Do", "Fr"];
   static const String substitutionLinkBase = "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
   static const String timeTableLinkBase = "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";

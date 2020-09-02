@@ -1,4 +1,4 @@
-import 'dart:io';
+
 
 class Content {
   Content(int width, int height) {
@@ -24,10 +24,11 @@ class Content {
   }
 
   static Content fromJsonData(List<dynamic> jsonData) {
-    Content newContent = new Content(jsonData.length, jsonData[0].length);
+    Content newContent = new Content(jsonData[0].length, jsonData.length);
     for (int y = 0; y < jsonData.length; y++) {
       for (int x = 0; x < jsonData[0].length; x++) {
-        newContent.cells[y][x] = Cell.fromJsonData(jsonData[y][x]);
+        Cell cell = Cell.fromJsonData(jsonData[y][x]);
+        newContent.setCell(y, x, cell);
       }
     }
     return newContent;
@@ -35,7 +36,7 @@ class Content {
 
   List<List<Cell>> cells = List<List<Cell>>();
   void setCell(int y, int x, Cell value) {
-    print("Seting cell at y:${y}, x:${x} to ${value}");
+    print("Setting cell at y:$y, x:$x to $value");
     cells[y][x] = value;
   }
 
@@ -80,6 +81,19 @@ class Footnote {
     };
   }
 
+  static Footnote fromJsonData(Map<String, dynamic> jsonData) {
+    Footnote newFootnote = new Footnote();
+    newFootnote.teacher = jsonData["teacher"] ?? "";
+    newFootnote.subject = jsonData["subject"] ?? "";
+    newFootnote.room = jsonData["room"] ?? "";
+    newFootnote.schoolClasses = [];
+    for (String schoolClass in jsonData["schoolClasses"] ?? new List<String>()) {
+      newFootnote.schoolClasses.add(schoolClass);
+    }
+    newFootnote.schoolWeek = jsonData["schoolWeek"] ?? " ";
+    newFootnote.text = jsonData["text"] ?? " ";
+  }
+
   @override
   String toString() {
     return "{Footnote teacher:${teacher}, subject:${subject}, room:${room}}";
@@ -87,19 +101,7 @@ class Footnote {
 }
 
 class Cell {
-  Cell(
-      {subject,
-      originalSubject,
-      room,
-      originalRoom,
-      teacher,
-      originalTeacher,
-      text,
-      footNoteTextId,
-      footnotes,
-      isSubstitute,
-      isDropped,
-      isDoubleClass});
+  Cell({subject, originalSubject, room, originalRoom, teacher, originalTeacher, text, footNoteTextId, footnotes, isSubstitute, isDropped, isDoubleClass});
 
   String subject = "---";
   String originalSubject = "---";
@@ -119,35 +121,38 @@ class Cell {
   }
 
   bool isEmpty() {
-    return subject == "---" &&
-        room == "---" &&
-        teacher == "---" &&
-        isDropped == false &&
-        isSubstitute == false;
+    return subject == "---" && room == "---" && teacher == "---" && isDropped == false && isSubstitute == false;
   }
 
   factory Cell.fromJsonData(Map<String, dynamic> parsedJson) {
-    return new Cell(
-      subject: parsedJson["subject"] ?? "---",
-      originalSubject: parsedJson["originalSubject"] ?? "---",
-      room: parsedJson["room"] ?? "---",
-      originalRoom: parsedJson["originalRoom"] ?? "---",
-      teacher: parsedJson["teacher"] ?? "---",
-      originalTeacher: parsedJson["originalTeacher"] ?? "---",
-      text: parsedJson["text"] ?? "---",
-      footNoteTextId: parsedJson["footNoteTextId"] ?? "",
-      footnotes: parsedJson["footnotes"] ?? [],
-      isSubstitute: parsedJson["isSubstitute"] ?? false,
-      isDropped: parsedJson["isDropped"] ?? false,
-      isDoubleClass: parsedJson["isDoubleClass"] ?? false,
-    );
+    Cell newCell = Cell();
+    newCell.subject = parsedJson["subject"] ?? "---";
+    newCell.originalSubject = parsedJson["originalSubject"] ?? "---";
+    newCell.room = parsedJson["room"] ?? "---";
+    newCell.originalRoom = parsedJson["originalRoom"] ?? "---";
+    newCell.teacher = parsedJson["teacher"] ?? "---";
+    newCell.originalTeacher = parsedJson["originalTeacher"] ?? "---";
+    newCell.text = parsedJson["text"] ?? "---";
+    newCell.footNoteTextId = parsedJson["footNoteTextId"] ?? "";
+    var footnotes = parsedJson["footnotes"];
+    if (footnotes != null) {
+      newCell.footnotes = [];
+      for (var footnoteJsonData in footnotes) {
+        newCell.footnotes.add(Footnote.fromJsonData(footnoteJsonData));
+      }
+    }
+
+    newCell.isSubstitute = parsedJson["isSubstitute"] ?? false;
+    newCell.isDropped = parsedJson["isDropped"] ?? false;
+    return newCell;
   }
 
   Map<String, dynamic> toJsonData() {
-    List<Map<String, dynamic>> footnotesMap = [{}];
+    List<dynamic> footnotesJsonDataList;
     if (this.footnotes != null) {
+      footnotesJsonDataList = new List<dynamic>();
       this.footnotes.forEach((footnote) {
-        footnotesMap.add(footnote.toJsonData());
+        footnotesJsonDataList.add(footnote.toJsonData());
       });
     }
 
@@ -160,10 +165,9 @@ class Cell {
       "originalTeacher": this.originalTeacher,
       "text": this.text,
       "footNoteTextId": this.footNoteTextId,
-      "footnotes": footnotesMap,
+      "footnotes": footnotesJsonDataList,
       "isSubstitute": this.isSubstitute,
-      "isDropped": this.isDropped,
-      "isDoubleClass": this.isDoubleClass,
+      "isDropped": this.isDropped
     };
   }
 }

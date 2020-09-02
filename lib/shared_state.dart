@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
+import 'package:stundenplan/content.dart';
 import 'package:stundenplan/theme.dart';
 import 'dart:convert';
 
@@ -11,6 +12,7 @@ class SharedState {
   Theme theme = darkTheme;
   int height = Constants.defaultHeight;
   int currentProfileIndex = 0;
+  Content content;
   List<Profile> profiles = [Profile()];
 
   SharedState(this.preferences);
@@ -24,6 +26,17 @@ class SharedState {
     }
     preferences.setString("jsonProfileData", jsonEncode(jsonProfileData));
     preferences.setInt("height", height);
+  }
+
+  void saveContent() {
+    var encoded = jsonEncode(content.toJsonData());
+    preferences.setString("cachedContent", encoded);
+  }
+
+  void loadContent() {
+    String contentJsonString = preferences.get("cachedContent");
+    if (contentJsonString == null) return;
+    content = Content.fromJsonData(jsonDecode(contentJsonString));
   }
 
   bool loadStateAndCheckIfFirstTime() {
@@ -41,6 +54,7 @@ class SharedState {
     for (var jsonProfileData in jsonProfilesData) {
       profiles.add(Profile.fromJsonData(jsonProfileData));
     }
+    loadContent();
     return false;
   }
 
