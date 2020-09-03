@@ -1,5 +1,4 @@
 import 'dart:collection';
-import 'dart:convert';
 
 import 'package:stundenplan/profile.dart';
 
@@ -8,8 +7,8 @@ class ProfileManager {
   String currentProfileName = "11e";
   LinkedHashMap<String, Profile> profiles = {"11e" : Profile()} as LinkedHashMap<String, Profile>;
 
-  Map<String, Map> getJsonData() {
-    Map<String, dynamic> jsonProfileManagerData = new Map<String, Map>();
+  Map<String, dynamic> getJsonData() {
+    Map<String, dynamic> jsonProfileManagerData = new Map<String, dynamic>();
     Map<String, Map> jsonProfilesData = new Map<String, Map>();
     for (String profileName in profiles.keys) {
       Profile profile = profiles[profileName];
@@ -20,10 +19,9 @@ class ProfileManager {
     return jsonProfileManagerData;
   }
 
-  static void fromJsonData(dynamic jsonData) {
+  static void fromJsonData(dynamic jsonProfileManagerData) {
     ProfileManager profileManager = new ProfileManager();
     profileManager.profiles = new LinkedHashMap<String, Profile>();
-    var jsonProfileManagerData = jsonDecode(jsonData);
     profileManager.currentProfileName = jsonProfileManagerData["currentProfileName"];
     var jsonProfilesData = jsonProfileManagerData["profiles"];
     for (var profileName in jsonProfilesData.keys) {
