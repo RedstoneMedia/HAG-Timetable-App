@@ -36,25 +36,25 @@ class _SetupPageState extends State<SetupPage> {
     super.initState();
     sharedState = widget.sharedState;
     themeName = sharedState.theme.themeName;
-    profileName = sharedState.currentProfileName;
-    schoolGrade = sharedState.schoolGrade.toString();
-    subClassTextEdetingController.text = sharedState.subSchoolClass;
-    courses = sharedState.subjects;
+    profileName = sharedState.profileManager.currentProfileName;
+    schoolGrade = sharedState.profileManager.schoolGrade.toString();
+    subClassTextEdetingController.text = sharedState.profileManager.subSchoolClass;
+    courses = sharedState.profileManager.subjects;
     subSchoolClassEnabled = !Constants.displayFullHeightSchoolGrades.contains(schoolGrade);
   }
 
   void setSharedStateFromInputs() {
     if (!validateSubClassInput()) return;
 
-    sharedState.subjects = [];
-    sharedState.subjects.addAll(courses);
-    sharedState.schoolGrade = schoolGrade;
+    sharedState.profileManager.subjects = [];
+    sharedState.profileManager.subjects.addAll(courses);
+    sharedState.profileManager.schoolGrade = schoolGrade;
 
     if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
-      sharedState.subSchoolClass = "";
+      sharedState.profileManager.subSchoolClass = "";
       sharedState.height = Constants.fullHeight;
     } else {
-      sharedState.subSchoolClass = subClassTextEdetingController.text;
+      sharedState.profileManager.subSchoolClass = subClassTextEdetingController.text;
       sharedState.height = Constants.defaultHeight;
     }
   }
@@ -64,7 +64,7 @@ class _SetupPageState extends State<SetupPage> {
 
     setSharedStateFromInputs();
     sharedState.saveState();
-    profileName = sharedState.currentProfileName;
+    profileName = sharedState.profileManager.currentProfileName;
 
     Navigator.push(
       context,
@@ -113,10 +113,10 @@ class _SetupPageState extends State<SetupPage> {
     setState(() {
       setSharedStateFromInputs();
       this.profileName = profileName;
-      sharedState.currentProfileName = profileName;
-      subClassTextEdetingController.text = sharedState.currentProfile.subSchoolClass;
-      schoolGrade = sharedState.currentProfile.schoolGrade;
-      courses = sharedState.currentProfile.subjects;
+      sharedState.profileManager.currentProfileName = profileName;
+      subClassTextEdetingController.text = sharedState.profileManager.currentProfile.subSchoolClass;
+      schoolGrade = sharedState.profileManager.currentProfile.schoolGrade;
+      courses = sharedState.profileManager.currentProfile.subjects;
     });
   }
 
@@ -161,7 +161,7 @@ class _SetupPageState extends State<SetupPage> {
                         onChanged: (String profileName) {
                           setProfile(profileName);
                         },
-                        items: sharedState.profiles.keys.map<DropdownMenuItem<String>>((String profileName) {
+                        items: sharedState.profileManager.profiles.keys.map<DropdownMenuItem<String>>((String profileName) {
                           return DropdownMenuItem<String>(
                             value: profileName,
                             child: Padding(
@@ -186,8 +186,8 @@ class _SetupPageState extends State<SetupPage> {
                     child: InkWell(
                       onTap: () {
                         setState(() {
-                          profileName = sharedState.findProfileName("Neues Profil");
-                          sharedState.addAndSwitchToProfileWithName(profileName);
+                          profileName = sharedState.profileManager.findProfileName("Neues Profil");
+                          sharedState.profileManager.addAndSwitchToProfileWithName(profileName);
                         });
                       },
                       child: Padding(
@@ -211,14 +211,14 @@ class _SetupPageState extends State<SetupPage> {
                     child: InkWell(
                       onTap: () {
                         setState(() {
-                          if (sharedState.profiles.length > 1) {
+                          if (sharedState.profileManager.profiles.length > 1) {
                             String toDeleteProfileName = profileName;
-                            this.profileName = sharedState.profiles.keys.toList()[sharedState.profiles.keys.length-2];
-                            sharedState.currentProfileName = profileName;
-                            subClassTextEdetingController.text = sharedState.currentProfile.subSchoolClass;
-                            schoolGrade = sharedState.currentProfile.schoolGrade;
-                            courses = sharedState.currentProfile.subjects;
-                            sharedState.profiles.remove(toDeleteProfileName);
+                            this.profileName = sharedState.profileManager.profiles.keys.toList()[sharedState.profileManager.profiles.keys.length-2];
+                            sharedState.profileManager.currentProfileName = profileName;
+                            subClassTextEdetingController.text = sharedState.profileManager.currentProfile.subSchoolClass;
+                            schoolGrade = sharedState.profileManager.currentProfile.schoolGrade;
+                            courses = sharedState.profileManager.currentProfile.subjects;
+                            sharedState.profileManager.profiles.remove(toDeleteProfileName);
                           }
                         });
                       },

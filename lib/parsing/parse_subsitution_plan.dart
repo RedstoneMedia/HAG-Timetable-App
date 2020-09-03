@@ -14,8 +14,8 @@ Future<void> overwriteContentWithSubsitutionPlan(SharedState sharedState, Client
   List<HashMap<String, String>> mainPlan = ret.item1;
   int weekDayMain = ret.item2;
   writeSubstitutionPlan(mainPlan, weekDayMain, content, subjects);
-  if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.schoolGrade)) {
-    Tuple2<List<HashMap<String, String>>, int> courseRet = await getCourseSubstitutionPlan("${sharedState.schoolGrade}K", Constants.substitutionLinkBase, client);
+  if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
+    Tuple2<List<HashMap<String, String>>, int> courseRet = await getCourseSubstitutionPlan("${sharedState.profileManager.schoolGrade}K", Constants.substitutionLinkBase, client);
     List<HashMap<String, String>> coursePlan = courseRet.item1;
     int weekDayCourse = courseRet.item2;
     writeSubstitutionPlan(coursePlan, weekDayCourse, content, subjects);
