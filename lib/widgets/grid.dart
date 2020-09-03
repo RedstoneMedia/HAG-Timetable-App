@@ -47,8 +47,7 @@ class WeekdayGridObject extends StatelessWidget {
 }
 
 class ClassGridObject extends StatelessWidget {
-  ClassGridObject(this.content, this.sharedState, this.x, this.y,
-      this.needsLeftBorder, this.context);
+  ClassGridObject(this.content, this.sharedState, this.x, this.y, this.needsLeftBorder, this.context);
 
   final Content content;
   final SharedState sharedState;
@@ -67,7 +66,8 @@ class ClassGridObject extends StatelessWidget {
         return ConstrainedBox(
           constraints: BoxConstraints(maxHeight: 500),
           child: AlertDialog(
-            title: Text('Informationen'),
+            backgroundColor: sharedState.theme.backgroundColor,
+            title: Text('Informationen', style: TextStyle(color: sharedState.theme.textColor)),
             content: SingleChildScrollView(
               child: showFootnotes ? SizedBox(
                 height: 200,
@@ -81,18 +81,22 @@ class ClassGridObject extends StatelessWidget {
                               Text(
                                 "Fach:   ${cell.footnotes[i].subject}",
                                 textAlign: TextAlign.left,
+                                style: TextStyle(color: sharedState.theme.textColor)
                               ),
                               Text(
-                                "Raum:   ${cell.footnotes[i].room}",
-                                textAlign: TextAlign.left,
+                                  "Raum:   ${cell.footnotes[i].room}",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(color: sharedState.theme.textColor)
                               ),
                               Text(
-                                "Lehrer: ${cell.footnotes[i].teacher}",
-                                textAlign: TextAlign.left,
+                                  "Lehrer: ${cell.footnotes[i].teacher}",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(color: sharedState.theme.textColor)
                               ),
                               Text(
-                                "Text:   ${cell.footnotes[i].text}",
-                                textAlign: TextAlign.left,
+                                  "Text:   ${cell.footnotes[i].text}",
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(color: sharedState.theme.textColor)
                               ),
                               Divider(),
                             ],
@@ -101,24 +105,24 @@ class ClassGridObject extends StatelessWidget {
                 ),
               ) : ListBody(
                 children: cell.isSubstitute || cell.isDropped ? [
-                  cell.originalSubject != "---" ? Text("Orginal-Fach:   ${cell.originalSubject}", textAlign: TextAlign.left,) : Container(),
-                  cell.subject         != "---" ? Text("Fach:           ${cell.subject}\n", textAlign: TextAlign.left)        : Container(),
-                  cell.originalRoom    != "---" ? Text("Orginal-Raum:   ${cell.originalRoom}", textAlign: TextAlign.left)     : Container(),
-                  cell.room            != "---" ? Text("Raum:           ${cell.room}\n", textAlign: TextAlign.left)           : Container(),
-                  cell.originalTeacher != "---" ? Text("Orginal-Lehrer: ${cell.originalTeacher}", textAlign: TextAlign.left)  : Container(),
-                  cell.teacher         != "---" ? Text("Lehrer:         ${cell.teacher}\n", textAlign: TextAlign.left)        : Container(),
-                  cell.isDropped                ? Text("Fällt aus:           Ja", textAlign: TextAlign.left)                  : Container(),
-                  cell.text            != " "   ? Text("Text:           ${cell.text}", textAlign: TextAlign.left)             : Container(),
+                  cell.originalSubject != "---" ? Text("Orginal-Fach:   ${cell.originalSubject}", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))  : Container(),
+                  cell.subject         != "---" ? Text("Fach:           ${cell.subject}\n", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))        : Container(),
+                  cell.originalRoom    != "---" ? Text("Orginal-Raum:   ${cell.originalRoom}", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))     : Container(),
+                  cell.room            != "---" ? Text("Raum:           ${cell.room}\n", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))           : Container(),
+                  cell.originalTeacher != "---" ? Text("Orginal-Lehrer: ${cell.originalTeacher}", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))  : Container(),
+                  cell.teacher         != "---" ? Text("Lehrer:         ${cell.teacher}\n", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))        : Container(),
+                  cell.isDropped                ? Text("Fällt aus:           Ja", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))                  : Container(),
+                  cell.text            != " "   ? Text("Text:           ${cell.text}", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))             : Container(),
                 ] : [
-                  Text("Fach:      ${cell.subject}"),
-                  Text("Raum:     ${cell.room}"),
-                  Text("Lehrer:    ${cell.teacher}")
+                  Text("Fach:      ${cell.subject}", style: TextStyle(color: sharedState.theme.textColor)),
+                  Text("Raum:      ${cell.room}", style: TextStyle(color: sharedState.theme.textColor)),
+                  Text("Lehrer:    ${cell.teacher}", style: TextStyle(color: sharedState.theme.textColor))
                 ],
               ),
             ),
             actions: <Widget>[
               FlatButton(
-                child: Text('Schließen'),
+                child: Text('Schließen', style: TextStyle(color: sharedState.theme.subjectSubstitutionColor)),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
