@@ -92,6 +92,7 @@ class Footnote {
     }
     newFootnote.schoolWeek = jsonData["schoolWeek"] ?? " ";
     newFootnote.text = jsonData["text"] ?? " ";
+    return newFootnote;
   }
 
   @override
