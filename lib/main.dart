@@ -63,11 +63,7 @@ class _MyAppState extends State<MyApp> {
       isInternetAvailable().then((result) {
         if (result) {
           updateNotifier.init().then((value) {
-            updateNotifier.getNewestVersion().then((newestVersion) {
-              if (updateNotifier.currentVersion.isOtherVersionGreater(newestVersion)) {
-                print("A newer version was found : $newestVersion");
-              }
-            });
+            updateNotifier.checkForNewestVersionAndShowDialog(context, sharedState);
           });
           try {
             parsePlans(sharedState.content, sharedState).then((value) => setState(() {

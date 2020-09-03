@@ -1,6 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:package_info/package_info.dart';
 import 'package:http/http.dart';
 import 'package:stundenplan/constants.dart';
+import 'package:stundenplan/shared_state.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:yaml/yaml.dart'; // Contains a client for making API calls
 
 class Version {
@@ -33,6 +36,7 @@ class Version {
 
 }
 
+
 class UpdateNotifier {
 
   Version currentVersion;
@@ -51,6 +55,51 @@ class UpdateNotifier {
     return Version(pubspecYamlData["version"]);
   }
 
-  //Todo impl push notification
+  Future<void> checkForNewestVersionAndShowDialog(BuildContext context, SharedState sharedState) async {
+    Version newestVersion = await getNewestVersion();
+    if (currentVersion.isOtherVersionGreater(newestVersion)) {
+      await showNewVersionDialog(context, sharedState, newestVersion);
+    }
+  }
+
+
+  Future<void> showNewVersionDialog(BuildContext context, SharedState sharedState, Version newVersion) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: sharedState.theme.backgroundColor,
+          title: Text('Neue Version verfügbar', style: TextStyle(color: sharedState.theme.textColor)),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Es ist eine neue Version verfügbar : $newVersion', style: TextStyle(color: sharedState.theme.textColor))
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            RaisedButton(
+              color: sharedState.theme.subjectColor.withOpacity(0.9),
+              child: Text('Ok', style: TextStyle(color: sharedState.theme.textColor)),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            RaisedButton(
+                color: sharedState.theme.subjectColor,
+                child: Text('Herunterladen', style: TextStyle(color: sharedState.theme.textColor)),
+                onPressed: () async {
+                  if (await canLaunch(Constants.newestReleaseUrl)) {
+                    await launch(Constants.newestReleaseUrl);
+                  }
+                  Navigator.of(context).pop();
+                }
+            )
+          ],
+        );
+      },
+    );
+  }
 
 }
