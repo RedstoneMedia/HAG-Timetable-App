@@ -13,6 +13,10 @@ class Profile {
     return jsonData;
   }
 
+  String toString() {
+    return "$schoolGrade$subSchoolClass";
+  }
+
   static Profile fromJsonData(dynamic jsonData) {
     Profile newProfile = new Profile();
     newProfile.schoolGrade = jsonData["schoolGrade"];

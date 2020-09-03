@@ -74,12 +74,14 @@ class _MyAppState extends State<MyApp> {
           } on TimeoutException catch (_) {
             setState(() {
               print("Timeout !");
+              sharedState.loadContent();
               loading = false;
             });
           }
         } else {
           setState(() {
             print("No connection !");
+            sharedState.loadContent();
             loading = false;
           });
         }

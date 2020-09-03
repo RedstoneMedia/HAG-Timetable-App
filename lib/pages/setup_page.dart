@@ -17,6 +17,7 @@ class SetupPage extends StatefulWidget {
 
 class _SetupPageState extends State<SetupPage> {
   String schoolGrade = "11";
+  String profileName = "11e";
   String subSchoolClass;
   String themeName = "dark";
 
@@ -24,8 +25,7 @@ class _SetupPageState extends State<SetupPage> {
   List<String> themeNames = MyTheme.Theme.getThemeNames();
   List<String> courses = [];
 
-  TextEditingController subClassTextEdetingController =
-      new TextEditingController();
+  TextEditingController subClassTextEdetingController = new TextEditingController();
 
   SharedState sharedState;
   bool subSchoolClassEnabled;
@@ -36,41 +36,45 @@ class _SetupPageState extends State<SetupPage> {
     super.initState();
     sharedState = widget.sharedState;
     themeName = sharedState.theme.themeName;
+    profileName = sharedState.currentProfileName;
     schoolGrade = sharedState.schoolGrade.toString();
     subClassTextEdetingController.text = sharedState.subSchoolClass;
     courses = sharedState.subjects;
-    subSchoolClassEnabled =
-    !Constants.displayFullHeightSchoolGrades.contains(schoolGrade);
+    subSchoolClassEnabled = !Constants.displayFullHeightSchoolGrades.contains(schoolGrade);
+  }
+
+  void setSharedStateFromInputs() {
+    if (!validateSubClassInput()) return;
+
+    sharedState.subjects = [];
+    sharedState.subjects.addAll(courses);
+    sharedState.schoolGrade = schoolGrade;
+
+    if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
+      sharedState.subSchoolClass = "";
+      sharedState.height = Constants.fullHeight;
+    } else {
+      sharedState.subSchoolClass = subClassTextEdetingController.text;
+      sharedState.height = Constants.defaultHeight;
+    }
   }
 
   void saveDataAndGotToMain() {
-    setState(() {
-      if (!validateSubClassInput()) return;
+    if (!validateSubClassInput()) return;
 
-      sharedState.subjects = [];
-      sharedState.subjects.addAll(courses);
-      sharedState.schoolGrade = schoolGrade;
+    setSharedStateFromInputs();
+    sharedState.saveState();
+    profileName = sharedState.currentProfileName;
 
-      if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
-        sharedState.subSchoolClass = "";
-        sharedState.height = Constants.fullHeight;
-      } else {
-        sharedState.subSchoolClass = subClassTextEdetingController.text;
-        sharedState.height = Constants.defaultHeight;
-      }
-
-      sharedState.saveState();
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => WillPopScope(
-            onWillPop: () async => false,
-            child: MyApp(sharedState),
-          ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WillPopScope(
+          onWillPop: () async => false,
+          child: MyApp(sharedState),
         ),
-      );
-    });
+      ),
+    );
   }
 
   bool validateSubClassInput() {
@@ -105,6 +109,17 @@ class _SetupPageState extends State<SetupPage> {
     });
   }
 
+  void setProfile(String profileName) {
+    setState(() {
+      setSharedStateFromInputs();
+      this.profileName = profileName;
+      sharedState.currentProfileName = profileName;
+      subClassTextEdetingController.text = sharedState.currentProfile.subSchoolClass;
+      schoolGrade = sharedState.currentProfile.schoolGrade;
+      courses = sharedState.currentProfile.subjects;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -116,6 +131,108 @@ class _SetupPageState extends State<SetupPage> {
           children: [
             Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text("Profile",
+                    style: GoogleFonts.poppins(
+                        color: sharedState.theme.textColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 26.0),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: sharedState.theme.textColor.withAlpha(200),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 15.0),
+                      child: DropdownButton<String>(
+                        value: profileName,
+                        icon: Icon(Icons.keyboard_arrow_down),
+                        iconSize: 24,
+                        elevation: 16,
+                        dropdownColor:
+                        sharedState.theme.textColor.withAlpha(255),
+                        style: TextStyle(color: sharedState.theme.invertedTextColor),
+                        underline: Container(),
+                        onChanged: (String profileName) {
+                          setProfile(profileName);
+                        },
+                        items: sharedState.profiles.keys.map<DropdownMenuItem<String>>((String profileName) {
+                          return DropdownMenuItem<String>(
+                            value: profileName,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 16.0),
+                              child: Text(
+                                profileName,
+                                style: GoogleFonts.poppins(fontSize: 16.0),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                        color: sharedState.theme.textColor,
+                        borderRadius: BorderRadius.circular(100)),
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          profileName = sharedState.findProfileName("Neues Profil");
+                          sharedState.addAndSwitchToProfileWithName(profileName);
+                        });
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.all(10.0),
+                        child: Icon(
+                          Icons.add,
+                          color: sharedState.theme.subjectColor,
+                          size: 30,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // TODO: Put this remove button on same row as add button
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                        color: sharedState.theme.textColor,
+                        borderRadius: BorderRadius.circular(100)),
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          if (sharedState.profiles.length > 1) {
+                            String toDeleteProfileName = profileName;
+                            this.profileName = sharedState.profiles.keys.toList()[sharedState.profiles.keys.length-2];
+                            sharedState.currentProfileName = profileName;
+                            subClassTextEdetingController.text = sharedState.currentProfile.subSchoolClass;
+                            schoolGrade = sharedState.currentProfile.schoolGrade;
+                            courses = sharedState.currentProfile.subjects;
+                            sharedState.profiles.remove(toDeleteProfileName);
+                          }
+                        });
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.all(10.0),
+                        child: Icon(
+                          Icons.remove,
+                          color: sharedState.theme.subjectSubstitutionColor,
+                          size: 30,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(

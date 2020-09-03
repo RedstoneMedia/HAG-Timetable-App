@@ -152,7 +152,9 @@ class Cell {
     if (this.footnotes != null) {
       footnotesJsonDataList = new List<dynamic>();
       this.footnotes.forEach((footnote) {
-        footnotesJsonDataList.add(footnote.toJsonData());
+        if (footnote != null) {
+          footnotesJsonDataList.add(footnote.toJsonData());
+        }
       });
     }
 

@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
@@ -11,32 +13,26 @@ class SharedState {
 
   Theme theme = darkTheme;
   int height = Constants.defaultHeight;
-  int currentProfileIndex = 0;
+  String currentProfileName = "11e";
   Content content;
-  List<Profile> profiles = [Profile()];
+  LinkedHashMap<String, Profile> profiles = {"11e" : Profile()} as LinkedHashMap<String, Profile>;
 
   SharedState(this.preferences);
 
   void saveState() {
     preferences.setString("theme", theme.themeName);
-    preferences.setInt("currentProfileIndex", currentProfileIndex);
-    List<Map> jsonProfileData = new List<Map>();
-    for (Profile profile in profiles) {
-      jsonProfileData.add(profile.getJsonData());
+
+    // Profiles
+    renameAllProfiles();
+    Map<String, Map> jsonProfileData = new Map<String, Map>();
+    for (String profileName in profiles.keys) {
+      Profile profile = profiles[profileName];
+      jsonProfileData[profileName] = profile.getJsonData();
     }
     preferences.setString("jsonProfileData", jsonEncode(jsonProfileData));
+    preferences.setString("currentProfileName", currentProfileName);
+
     preferences.setInt("height", height);
-  }
-
-  void saveContent() {
-    var encoded = jsonEncode(content.toJsonData());
-    preferences.setString("cachedContent", encoded);
-  }
-
-  void loadContent() {
-    String contentJsonString = preferences.get("cachedContent");
-    if (contentJsonString == null) return;
-    content = Content.fromJsonData(jsonDecode(contentJsonString));
   }
 
   bool loadStateAndCheckIfFirstTime() {
@@ -49,33 +45,60 @@ class SharedState {
       return true;
     }
 
-    profiles = [];
+    currentProfileName = preferences.getString("currentProfileName");
+    profiles = new LinkedHashMap<String, Profile>();
     var jsonProfilesData = jsonDecode(preferences.getString("jsonProfileData"));
-    for (var jsonProfileData in jsonProfilesData) {
-      profiles.add(Profile.fromJsonData(jsonProfileData));
+    for (var profileName in jsonProfilesData.keys) {
+      var jsonProfileData = jsonProfilesData[profileName];
+      profiles[profileName] = Profile.fromJsonData(jsonProfileData);
     }
-    loadContent();
     return false;
   }
 
+  // Content
 
-  void setThemeFromThemeName(String themeName) {
-    this.theme = Theme.getThemeFromThemeName(themeName);
+  void saveContent() {
+    var encoded = jsonEncode(content.toJsonData());
+    preferences.setString("cachedContent", encoded);
   }
 
-  List<String> get defaultSubjects {
-    for (var schoolGradeList in Constants.defaultSubjectsMap.keys) {
-      if (schoolGradeList.contains(schoolGrade)) {
-        var defaultSubjects = new List<String>.from(Constants.defaultSubjectsMap[schoolGradeList]);
-        defaultSubjects.addAll(Constants.alwaysDefaultSubjects);
-        return defaultSubjects;
-      }
+  void loadContent() {
+    String contentJsonString = preferences.get("cachedContent");
+    if (contentJsonString == null) return;
+    content = Content.fromJsonData(jsonDecode(contentJsonString));
+  }
+
+  // Profiles
+
+  String findProfileName(String profileName) {
+    int counter = 1;
+    String currentProfileName = profileName;
+    while (profiles.containsKey(currentProfileName)) {
+      currentProfileName = "$profileName-$counter";
+      counter++;
     }
-    return Constants.alwaysDefaultSubjects;
+    return currentProfileName;
+  }
+
+  void addAndSwitchToProfileWithName(String profileName) {
+    profiles[profileName] = new Profile();
+    currentProfileName = profileName;
+  }
+
+  void renameAllProfiles() {
+    for (String profileName in List.from(profiles.keys)) {
+      Profile profile = profiles[profileName];
+      String newProfileName = findProfileName(profile.toString());
+      if (profileName == currentProfileName) {
+        currentProfileName = newProfileName;
+      }
+      profiles[newProfileName] = profile;
+      profiles.remove(profileName);
+    }
   }
 
   Profile get currentProfile {
-    return profiles[currentProfileIndex];
+    return profiles[currentProfileName];
   }
 
   String get schoolGrade {
@@ -100,6 +123,25 @@ class SharedState {
 
   set subjects(List<String> subjects) {
     currentProfile.subjects = subjects;
+  }
+
+  // Theme
+
+  void setThemeFromThemeName(String themeName) {
+    this.theme = Theme.getThemeFromThemeName(themeName);
+  }
+
+  // Default subjects
+
+  List<String> get defaultSubjects {
+    for (var schoolGradeList in Constants.defaultSubjectsMap.keys) {
+      if (schoolGradeList.contains(schoolGrade)) {
+        var defaultSubjects = new List<String>.from(Constants.defaultSubjectsMap[schoolGradeList]);
+        defaultSubjects.addAll(Constants.alwaysDefaultSubjects);
+        return defaultSubjects;
+      }
+    }
+    return Constants.alwaysDefaultSubjects;
   }
 }
 
