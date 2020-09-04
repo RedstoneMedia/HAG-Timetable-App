@@ -35,7 +35,7 @@ class SharedState {
       return true;
     }
 
-    ProfileManager.fromJsonData(jsonDecode(preferences.getString("jsonProfileManagerData")));
+    profileManager = ProfileManager.fromJsonData(jsonDecode(preferences.getString("jsonProfileManagerData")));
     return false;
   }
 

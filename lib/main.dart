@@ -137,7 +137,10 @@ class _MyAppState extends State<MyApp> {
                     isInternetAvailable().then((value) {
                       if (value) {
                         try {
-                          parsePlans(sharedState.content, sharedState).then((value) => _refreshController.refreshCompleted());
+                          parsePlans(sharedState.content, sharedState).then((value) {
+                            sharedState.saveContent();
+                            _refreshController.refreshCompleted();
+                          });
                         } on TimeoutException catch (_) {
                           print("Timeout !");
                           _refreshController.refreshFailed();

@@ -20,7 +20,6 @@ class _CourseSelectListState extends State<CourseSelectList> {
     super.initState();
     for (int i = 0; i < widget.courses.length; i++) {
       controllers.add(new TextEditingController());
-      controllers[i].text = widget.courses[i];
     }
   }
 
@@ -28,11 +27,20 @@ class _CourseSelectListState extends State<CourseSelectList> {
     controllers.add(new TextEditingController());
   }
 
+  void setCoursesText() {
+    setState(() {
+      for (int i = 0; i < widget.courses.length; i++) {
+        controllers[i].text = widget.courses[i];
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (widget.courses.length != controllers.length) {
+    while (widget.courses.length > controllers.length) {
       addController();
     }
+    setCoursesText();
 
     return Padding(
       padding: const EdgeInsets.all(8.0),

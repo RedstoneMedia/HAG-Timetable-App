@@ -19,7 +19,7 @@ class ProfileManager {
     return jsonProfileManagerData;
   }
 
-  static void fromJsonData(dynamic jsonProfileManagerData) {
+  static ProfileManager fromJsonData(dynamic jsonProfileManagerData) {
     ProfileManager profileManager = new ProfileManager();
     profileManager.profiles = new LinkedHashMap<String, Profile>();
     profileManager.currentProfileName = jsonProfileManagerData["currentProfileName"];
@@ -28,32 +28,32 @@ class ProfileManager {
       var jsonProfileData = jsonProfilesData[profileName];
       profileManager.profiles[profileName] = Profile.fromJsonData(jsonProfileData);
     }
+    return profileManager;
   }
 
-  String findProfileName(String profileName) {
+  String findNewProfileName(String profileName) {
     int counter = 1;
     String currentProfileName = profileName;
-    while (profiles.containsKey(currentProfileName)) {
+    while (profiles.keys.contains(currentProfileName)) {
       currentProfileName = "$profileName-$counter";
       counter++;
     }
     return currentProfileName;
   }
 
-  void addAndSwitchToProfileWithName(String profileName) {
+  void addProfileWithName(String profileName) {
     profiles[profileName] = new Profile();
-    currentProfileName = profileName;
   }
 
   void renameAllProfiles() {
     for (String profileName in List.from(profiles.keys)) {
       Profile profile = profiles[profileName];
-      String newProfileName = findProfileName(profile.toString());
+      profiles.remove(profileName);
+      String newProfileName = findNewProfileName(profile.toString());
       if (profileName == currentProfileName) {
         currentProfileName = newProfileName;
       }
       profiles[newProfileName] = profile;
-      profiles.remove(profileName);
     }
   }
 
