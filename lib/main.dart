@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
+import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/pages/setup_page.dart';
 import 'package:stundenplan/parsing/parse.dart';
 import 'package:stundenplan/shared_state.dart';
@@ -31,7 +32,7 @@ class MyApp extends StatefulWidget {
 
   MyApp(this.sharedState);
 
-  SharedState sharedState;
+  final SharedState sharedState;
 }
 
 class _MyAppState extends State<MyApp> {
@@ -60,7 +61,7 @@ class _MyAppState extends State<MyApp> {
         );
       });
     } else {
-      isInternetAvailable().then((result) {
+      isInternetAvailable(connectivity).then((result) {
         if (result) {
           updateNotifier.init().then((value) {
             updateNotifier.checkForNewestVersionAndShowDialog(context, sharedState);
@@ -89,18 +90,6 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<bool> isInternetAvailable() async {
-    var result = await connectivity.checkConnectivity();
-    return result == ConnectivityResult.mobile || result == ConnectivityResult.wifi;
-  }
-
-  void showSettingsWindow() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,7 +109,7 @@ class _MyAppState extends State<MyApp> {
               color: sharedState.theme.textColor,
             ),
             onPressed: () {
-              showSettingsWindow();
+              showSettingsWindow(context, sharedState);
             },
           ),
         ],
@@ -134,7 +123,7 @@ class _MyAppState extends State<MyApp> {
                 )
               : PullDownToRefresh(
                   onRefresh: () {
-                    isInternetAvailable().then((value) {
+                    isInternetAvailable(connectivity).then((value) {
                       if (value) {
                         try {
                           parsePlans(sharedState.content, sharedState).then((value) {
