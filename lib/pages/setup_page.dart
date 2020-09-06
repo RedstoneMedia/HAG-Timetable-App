@@ -208,43 +208,33 @@ class _SetupPageState extends State<SetupPage> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                            color: sharedState.theme.textColor,
-                            borderRadius: BorderRadius.circular(100)),
-                        child: InkWell(
-                          onTap: () {
-                            addProfile();
-                          },
-                          child: Padding(
-                            padding: EdgeInsets.all(10.0),
-                            child: Icon(
-                              Icons.add,
-                              color: sharedState.theme.subjectColor,
-                              size: 30,
-                            ),
-                          ),
+                      child: MaterialButton(
+                        onPressed: () {
+                          addProfile();
+                        },
+                        color: sharedState.theme.textColor,
+                        padding: EdgeInsets.all(15.0),
+                        shape: CircleBorder(),
+                        child: Icon(
+                          Icons.add,
+                          color: sharedState.theme.subjectColor,
+                          size: 30,
                         ),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                            color: sharedState.theme.textColor,
-                            borderRadius: BorderRadius.circular(100)),
-                        child: InkWell(
-                          onTap: () {
-                            removeProfile();
-                          },
-                          child: Padding(
-                            padding: EdgeInsets.all(10.0),
-                            child: Icon(
-                              Icons.remove,
-                              color: sharedState.theme.subjectSubstitutionColor,
-                              size: 30,
-                            ),
-                          ),
+                      child: MaterialButton(
+                        onPressed: () {
+                          removeProfile();
+                        },
+                        color: sharedState.theme.textColor,
+                        padding: EdgeInsets.all(15.0),
+                        shape: CircleBorder(),
+                        child: Icon(
+                          Icons.remove,
+                          color: sharedState.theme.subjectSubstitutionColor,
+                          size: 30,
                         ),
                       ),
                     )
@@ -366,24 +356,19 @@ class _SetupPageState extends State<SetupPage> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                        color: sharedState.theme.textColor,
-                        borderRadius: BorderRadius.circular(100)),
-                    child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          courses.add("");
-                        });
-                      },
-                      child: Padding(
-                        padding: EdgeInsets.all(10.0),
-                        child: Icon(
-                          Icons.add,
-                          color: sharedState.theme.subjectColor,
-                          size: 50,
-                        ),
-                      ),
+                  child: MaterialButton(
+                    onPressed: () {
+                      setState(() {
+                        courses.add("");
+                      });
+                    },
+                    color: sharedState.theme.textColor,
+                    padding: EdgeInsets.all(15.0),
+                    shape: CircleBorder(),
+                    child: Icon(
+                      Icons.add,
+                      color: sharedState.theme.subjectColor,
+                      size: 50,
                     ),
                   ),
                 ),
