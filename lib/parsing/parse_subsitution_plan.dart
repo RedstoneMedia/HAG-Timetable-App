@@ -8,6 +8,7 @@ import 'package:stundenplan/content.dart';
 import 'package:stundenplan/parsing/parsing_util.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:tuple/tuple.dart'; // Contains a client for making API calls
+import 'dart:math';
 
 Future<void> overwriteContentWithSubsitutionPlan(SharedState sharedState, Client client, Content content, List<String> subjects, String schoolClassName) async {
   Tuple2<List<HashMap<String, String>>, int> ret = await getCourseSubstitutionPlan(schoolClassName, Constants.substitutionLinkBase, client);
@@ -71,6 +72,9 @@ Future<Tuple2<List<HashMap<String, String>>, int>> getCourseSubstitutionPlan(Str
   var regexp = RegExp(r"^\w+(?<day>\d).(?<month>\d).");
   RegExpMatch match = regexp.firstMatch(headerText);
   var substituteWeekday = DateTime(DateTime.now().year, int.parse(match.namedGroup("month")), int.parse(match.namedGroup("day"))).weekday;
+  if (substituteWeekday > 5) {
+    substituteWeekday = min(DateTime.now().weekday, 5);
+  }
 
   List<dom.Element> tables = document.getElementsByTagName("table");
   for (int i = 0; i < tables.length; i++) {
