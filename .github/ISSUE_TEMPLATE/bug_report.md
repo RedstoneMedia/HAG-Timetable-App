@@ -1,11 +1,13 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Help us fix bugs in our app
 title: ''
 labels: bug
 assignees: GreenOpposite, RedstoneMedia
 
 ---
+
+**Severity (Low, Medium, High)**
 
 **Describe the bug and what you did in the app when the bug happened**
 
