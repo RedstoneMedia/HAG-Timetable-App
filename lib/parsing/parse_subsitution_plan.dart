@@ -73,7 +73,6 @@ Future<Tuple2<List<HashMap<String, String>>, int>> getCourseSubstitutionPlan(Str
   RegExpMatch match = regexp.firstMatch(headerText);
   print("${DateTime.now().year}.${int.parse(match.namedGroup("month"))}.${int.parse(match.namedGroup("day"))}");
   var substituteWeekday = DateTime(DateTime.now().year, int.parse(match.namedGroup("month")), int.parse(match.namedGroup("day"))).weekday;
-  print(substituteWeekday);
   if (substituteWeekday > 5) {
     substituteWeekday = min(DateTime.now().weekday, 5);
   }
