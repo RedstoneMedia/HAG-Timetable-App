@@ -7,8 +7,6 @@ assignees: GreenOpposite, RedstoneMedia
 
 ---
 
-**Severity (Low, Medium, High)**
-
 **Describe the bug and what you did in the app when the bug happened**
 
 **Expected behaviour**
@@ -20,3 +18,5 @@ assignees: GreenOpposite, RedstoneMedia
  - Android version: 
 
 **Additional context**
+
+**Please don't forget to add a severity label (Low, Medium or High)**
