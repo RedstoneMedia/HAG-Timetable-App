@@ -97,7 +97,7 @@ class Footnote {
 
   @override
   String toString() {
-    return "{Footnote teacher:${teacher}, subject:${subject}, room:${room}}";
+    return "{Footnote teacher:${teacher}, subject:${subject}, room:${room}, text: '${text}'";
   }
 }
 

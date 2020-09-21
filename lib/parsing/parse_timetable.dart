@@ -183,7 +183,7 @@ HashMap<String,List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
             footnotes[rowIndex].schoolWeek = strip(value);
             break;
           case "Text":
-            footnotes[rowIndex].text = value;
+            footnotes[rowIndex].text = strip(value);
             break;
           default:
             break;

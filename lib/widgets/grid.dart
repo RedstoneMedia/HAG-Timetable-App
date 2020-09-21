@@ -105,18 +105,19 @@ class ClassGridObject extends StatelessWidget {
                 ),
               ) : ListBody(
                 children: cell.isSubstitute || cell.isDropped ? [
-                  cell.originalSubject != "---" ? Text("Orginal-Fach:   ${cell.originalSubject}", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))  : Container(),
-                  cell.subject         != "---" ? Text("Fach:           ${cell.subject}\n", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))        : Container(),
-                  cell.originalRoom    != "---" ? Text("Orginal-Raum:   ${cell.originalRoom}", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))     : Container(),
-                  cell.room            != "---" ? Text("Raum:           ${cell.room}\n", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))           : Container(),
-                  cell.originalTeacher != "---" ? Text("Orginal-Lehrer: ${cell.originalTeacher}", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))  : Container(),
-                  cell.teacher         != "---" ? Text("Lehrer:         ${cell.teacher}\n", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))        : Container(),
-                  cell.isDropped                ? Text("Fällt aus:           Ja", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))                  : Container(),
-                  cell.text            != " "   ? Text("Text:           ${cell.text}", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))             : Container(),
+                  cell.originalSubject    != "---" ? Text("Orginal-Fach:   ${cell.originalSubject}", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))  : Container(),
+                  cell.subject            != "---" ? Text("Fach:           ${cell.subject}\n", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))        : Container(),
+                  cell.originalRoom       != "---" ? Text("Orginal-Raum:   ${cell.originalRoom}", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))     : Container(),
+                  cell.room               != "---" ? Text("Raum:           ${cell.room}\n", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))           : Container(),
+                  cell.originalTeacher    != "---" ? Text("Orginal-Lehrer: ${cell.originalTeacher}", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))  : Container(),
+                  cell.teacher            != "---" ? Text("Lehrer:         ${cell.teacher}\n", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))        : Container(),
+                  cell.isDropped                   ? Text("Fällt aus:           Ja", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))                  : Container(),
+                  cell.text.codeUnitAt(0) != 160   ? Text("Text:           ${cell.text}", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor))             : Container(),
                 ] : [
                   Text("Fach:      ${cell.subject}", style: TextStyle(color: sharedState.theme.textColor)),
                   Text("Raum:      ${cell.room}", style: TextStyle(color: sharedState.theme.textColor)),
-                  Text("Lehrer:    ${cell.teacher}", style: TextStyle(color: sharedState.theme.textColor))
+                  Text("Lehrer:    ${cell.teacher}", style: TextStyle(color: sharedState.theme.textColor)),
+                  cell.footnotes != null ? cell.footnotes[0].text.codeUnitAt(0) != 160 ? Text("Text:      ${cell.footnotes[0].text}", textAlign: TextAlign.left, style: TextStyle(color: sharedState.theme.textColor)) : Container() : Container()
                 ],
               ),
             ),
