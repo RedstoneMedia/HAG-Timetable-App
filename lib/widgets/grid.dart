@@ -353,31 +353,40 @@ class PlaceholderGridObject extends StatelessWidget {
 
 class TimeGridObject extends StatelessWidget {
   TimeGridObject(this.y, this.sharedState) {
-    startHour = int.parse(Constants.startTimes[y - 1].split(":")[0]);
-    startMinute = int.parse(Constants.startTimes[y - 1].split(":")[1]);
+    // Get start hour and start minute
+    List<String> startTime = Constants.startTimes[y - 1].split(":");
+    int startHour = int.parse(startTime[0]);
+    int startMinute = int.parse(startTime[1]);
 
-    endHour = int.parse(Constants.endTimes[y - 1].split(":")[0]);
-    endMinute = int.parse(Constants.endTimes[y - 1].split(":")[1]);
+    // Get end hour and end minute
+    List<String> endTime = Constants.endTimes[y - 1].split(":");
+    int endHour = int.parse(endTime[0]);
+    int endMinute = int.parse(endTime[1]);
 
+    // Construct TimeOfDay objects
     startCellTime = TimeOfDay(hour: startHour, minute: startMinute);
     endCellTime = TimeOfDay(hour: endHour, minute: endMinute);
+  }
+
+  void setIsActive() {
+    // Check if current time of day falls into start time and end time range
+    if (timeToDouble(startCellTime) <= timeToDouble(timeOfDay) && timeToDouble(endCellTime) > timeToDouble(timeOfDay)) {
+      isActive = true;
+    } else {
+      isActive = false;
+    }
   }
 
   final int y;
   final SharedState sharedState;
   final TimeOfDay timeOfDay = TimeOfDay.now();
   bool isActive = false;
-  int startHour;
-  int endHour;
-  int startMinute;
-  int endMinute;
   TimeOfDay startCellTime;
   TimeOfDay endCellTime;
 
   @override
   Widget build(BuildContext context) {
-    if (timeToDouble(startCellTime) < timeToDouble(timeOfDay) &&
-        timeToDouble(endCellTime) > timeToDouble(timeOfDay)) isActive = true;
+    setIsActive();
 
     return Container(
       decoration: BoxDecoration(
