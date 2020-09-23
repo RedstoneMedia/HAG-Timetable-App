@@ -351,7 +351,11 @@ class PlaceholderGridObject extends StatelessWidget {
   }
 }
 
-class TimeGridObject extends StatelessWidget {
+
+class TimeGridObject extends StatefulWidget {
+  @override
+  _TimeGridObjectState createState() => _TimeGridObjectState();
+
   TimeGridObject(this.y, this.sharedState) {
     // Get start hour and start minute
     List<String> startTime = Constants.startTimes[y - 1].split(":");
@@ -368,21 +372,31 @@ class TimeGridObject extends StatelessWidget {
     endCellTime = TimeOfDay(hour: endHour, minute: endMinute);
   }
 
+  final int y;
+  final SharedState sharedState;
+  TimeOfDay startCellTime;
+  TimeOfDay endCellTime;
+}
+
+class _TimeGridObjectState extends State<TimeGridObject> {
+  TimeOfDay timeOfDay = TimeOfDay.now();
+  bool isActive = false;
+  SharedState sharedState;
+
+  void initState() {
+    sharedState = widget.sharedState;
+    setIsActive();
+  }
+
   void setIsActive() {
+    timeOfDay = TimeOfDay.now();
     // Check if current time of day falls into start time and end time range
-    if (timeToDouble(startCellTime) <= timeToDouble(timeOfDay) && timeToDouble(endCellTime) > timeToDouble(timeOfDay)) {
+    if (timeToDouble(widget.startCellTime) <= timeToDouble(timeOfDay) && timeToDouble(widget.endCellTime) > timeToDouble(timeOfDay)) {
       isActive = true;
     } else {
       isActive = false;
     }
   }
-
-  final int y;
-  final SharedState sharedState;
-  final TimeOfDay timeOfDay = TimeOfDay.now();
-  bool isActive = false;
-  TimeOfDay startCellTime;
-  TimeOfDay endCellTime;
 
   @override
   Widget build(BuildContext context) {
@@ -415,7 +429,7 @@ class TimeGridObject extends StatelessWidget {
                 ),
               ),
               Text(
-                Constants.startTimes[y - 1],
+                Constants.startTimes[widget.y - 1],
                 style: GoogleFonts.poppins(
                     color: isActive
                         ? sharedState.theme.backgroundColor
@@ -423,7 +437,7 @@ class TimeGridObject extends StatelessWidget {
                     fontWeight: FontWeight.w200),
               ),
               Text(
-                "$y.",
+                "${widget.y}",
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.bold,
                   color: isActive
@@ -432,7 +446,7 @@ class TimeGridObject extends StatelessWidget {
                 ),
               ),
               Text(
-                Constants.endTimes[y - 1],
+                Constants.endTimes[widget.y - 1],
                 style: GoogleFonts.poppins(
                     color: isActive
                         ? sharedState.theme.backgroundColor

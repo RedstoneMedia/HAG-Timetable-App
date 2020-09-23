@@ -43,6 +43,7 @@ class _MyAppState extends State<MyApp> {
   DateTime date;
   bool loading = true;
   String day;
+  Timer everyMinute;
 
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   RefreshController _refreshController = RefreshController(initialRefresh: false);
@@ -52,6 +53,11 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     sharedState = widget.sharedState;
     sharedState.content = new Content(Constants.width, sharedState.height);
+
+    // Calls set state every minute to update current school hour if changed
+    everyMinute = Timer.periodic(Duration(minutes: 1), (Timer timer) {
+      setState(() {});
+    });
 
     if (sharedState.loadStateAndCheckIfFirstTime()) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -126,9 +132,11 @@ class _MyAppState extends State<MyApp> {
                     isInternetAvailable(connectivity).then((value) {
                       if (value) {
                         try {
-                          parsePlans(sharedState.content, sharedState).then((value) {
-                            sharedState.saveContent();
-                            _refreshController.refreshCompleted();
+                          setState(() {
+                            parsePlans(sharedState.content, sharedState).then((value) {
+                              sharedState.saveContent();
+                              _refreshController.refreshCompleted();
+                            });
                           });
                         } on TimeoutException catch (_) {
                           print("Timeout !");
