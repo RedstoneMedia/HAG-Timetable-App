@@ -101,6 +101,7 @@ class _MyAppState extends State<MyApp> {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
+        leading: Container(),
         title: Text(
           "Stundenplan",
           style: GoogleFonts.poppins(
