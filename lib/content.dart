@@ -1,5 +1,3 @@
-
-
 class Content {
   Content(int width, int height) {
     for (int y = 0; y < height; y++) {
@@ -11,8 +9,16 @@ class Content {
     }
   }
 
+  DateTime lastUpdated;
+
+  void updateLastUpdated() {
+    lastUpdated = DateTime.now();
+    print("UPDATED LASTUPDATED");
+  }
+
   List<List<Map<String, dynamic>>> toJsonData() {
-    List<List<Map<String, dynamic>>> jsonData = new List<List<Map<String, dynamic>>>();
+    List<List<Map<String, dynamic>>> jsonData =
+        new List<List<Map<String, dynamic>>>();
     for (int y = 0; y < cells.length; y++) {
       List<Map<String, dynamic>> row = new List<Map<String, dynamic>>();
       for (int x = 0; x < cells[0].length; x++) {
@@ -20,17 +26,21 @@ class Content {
       }
       jsonData.add(row);
     }
+    jsonData.add([
+      {"lastUpdated": lastUpdated.toIso8601String()}
+    ]);
     return jsonData;
   }
 
   static Content fromJsonData(List<dynamic> jsonData) {
     Content newContent = new Content(jsonData[0].length, jsonData.length);
-    for (int y = 0; y < jsonData.length; y++) {
+    for (int y = 0; y < jsonData.length-1; y++) {
       for (int x = 0; x < jsonData[0].length; x++) {
         Cell cell = Cell.fromJsonData(jsonData[y][x]);
         newContent.setCell(y, x, cell);
       }
     }
+    newContent.lastUpdated = DateTime.parse(jsonData[jsonData.length-1][0]["lastUpdated"]);
     return newContent;
   }
 
@@ -87,7 +97,8 @@ class Footnote {
     newFootnote.subject = jsonData["subject"] ?? "";
     newFootnote.room = jsonData["room"] ?? "";
     newFootnote.schoolClasses = [];
-    for (String schoolClass in jsonData["schoolClasses"] ?? new List<String>()) {
+    for (String schoolClass
+        in jsonData["schoolClasses"] ?? new List<String>()) {
       newFootnote.schoolClasses.add(schoolClass);
     }
     newFootnote.schoolWeek = jsonData["schoolWeek"] ?? " ";
@@ -102,7 +113,19 @@ class Footnote {
 }
 
 class Cell {
-  Cell({subject, originalSubject, room, originalRoom, teacher, originalTeacher, text, footNoteTextId, footnotes, isSubstitute, isDropped, isDoubleClass});
+  Cell(
+      {subject,
+      originalSubject,
+      room,
+      originalRoom,
+      teacher,
+      originalTeacher,
+      text,
+      footNoteTextId,
+      footnotes,
+      isSubstitute,
+      isDropped,
+      isDoubleClass});
 
   String subject = "---";
   String originalSubject = "---";
@@ -122,7 +145,11 @@ class Cell {
   }
 
   bool isEmpty() {
-    return subject == "---" && room == "---" && teacher == "---" && isDropped == false && isSubstitute == false;
+    return subject == "---" &&
+        room == "---" &&
+        teacher == "---" &&
+        isDropped == false &&
+        isSubstitute == false;
   }
 
   factory Cell.fromJsonData(Map<String, dynamic> parsedJson) {

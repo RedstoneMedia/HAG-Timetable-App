@@ -42,14 +42,17 @@ class SharedState {
   // Content
 
   void saveContent() {
-    var encoded = jsonEncode(content.toJsonData());
-    preferences.setString("cachedContent", encoded);
+    content.updateLastUpdated();
+    print("[SAVED] lastUpdated: ${content.lastUpdated}");
+    var encodedContent = jsonEncode(content.toJsonData());
+    preferences.setString("cachedContent", encodedContent);
   }
 
   void loadContent() {
     String contentJsonString = preferences.get("cachedContent");
     if (contentJsonString == null) return;
     content = Content.fromJsonData(jsonDecode(contentJsonString));
+    print("[LOADED] lastUpdated: ${content.lastUpdated}");
   }
 
   // Theme

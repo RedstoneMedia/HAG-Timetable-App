@@ -1,7 +1,8 @@
+import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:time_ago_provider/time_ago_provider.dart' as timeAgo;
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,7 +47,8 @@ class _MyAppState extends State<MyApp> {
   Timer everyMinute;
 
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  RefreshController _refreshController = RefreshController(initialRefresh: false);
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -70,14 +72,17 @@ class _MyAppState extends State<MyApp> {
       isInternetAvailable(connectivity).then((result) {
         if (result) {
           updateNotifier.init().then((value) {
-            updateNotifier.checkForNewestVersionAndShowDialog(context, sharedState);
+            updateNotifier.checkForNewestVersionAndShowDialog(
+                context, sharedState);
           });
           try {
-            parsePlans(sharedState.content, sharedState).then((value) => setState(() {
-              print("State was set to : ${sharedState.content}"); //TODO: Remove Debug Message
-              sharedState.saveContent();
-              loading = false;
-            }));
+            parsePlans(sharedState.content, sharedState)
+                .then((value) => setState(() {
+                      print(
+                          "State was set to : ${sharedState.content}"); //TODO: Remove Debug Message
+                      sharedState.saveContent();
+                      loading = false;
+                    }));
           } on TimeoutException catch (_) {
             setState(() {
               print("Timeout !");
@@ -134,7 +139,8 @@ class _MyAppState extends State<MyApp> {
                       if (value) {
                         try {
                           setState(() {
-                            parsePlans(sharedState.content, sharedState).then((value) {
+                            parsePlans(sharedState.content, sharedState)
+                                .then((value) {
                               sharedState.saveContent();
                               _refreshController.refreshCompleted();
                             });
@@ -161,7 +167,29 @@ class _MyAppState extends State<MyApp> {
                           right: 8.0,
                         ),
                         child: TimeTable(
-                            sharedState: sharedState, content: sharedState.content
+                            sharedState: sharedState,
+                            content: sharedState.content),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          children: [
+                            Text(
+                              "Zuletzt aktualisiert: ",
+                              style: GoogleFonts.poppins(
+                                  color: sharedState.theme.textColor
+                                      .withAlpha(200),
+                                  fontWeight: FontWeight.w300),
+                            ),
+                            Text(
+                              timeAgo.format(sharedState.content.lastUpdated,
+                                  locale: "de"),
+                              style: GoogleFonts.poppins(
+                                  color: sharedState.theme.textColor
+                                      .withAlpha(200),
+                                  fontWeight: FontWeight.w200),
+                            ),
+                          ],
                         ),
                       ),
                     ],
