@@ -1,28 +1,29 @@
-
 class Profile {
   String schoolGrade = "11";
   String subSchoolClass = "e";
   List<String> subjects = [];
 
   Map getJsonData() {
-    Map jsonData = {
-      "schoolGrade" : schoolGrade,
-      "subSchoolClass" : subSchoolClass,
-      "subjects" : subjects
+    final jsonData = {
+      "schoolGrade": schoolGrade,
+      "subSchoolClass": subSchoolClass,
+      "subjects": subjects
     };
     return jsonData;
   }
 
+  @override
   String toString() {
     return "$schoolGrade$subSchoolClass";
   }
 
+  // ignore: prefer_constructors_over_static_methods
   static Profile fromJsonData(dynamic jsonData) {
-    Profile newProfile = new Profile();
-    newProfile.schoolGrade = jsonData["schoolGrade"];
-    newProfile.subSchoolClass = jsonData["subSchoolClass"];
-    for (String subject in jsonData["subjects"]) {
-      newProfile.subjects.add(subject);
+    final newProfile = Profile();
+    newProfile.schoolGrade = jsonData["schoolGrade"].toString();
+    newProfile.subSchoolClass = jsonData["subSchoolClass"].toString();
+    for (final subject in jsonData["subjects"]) {
+      newProfile.subjects.add(subject.toString());
     }
     return newProfile;
   }

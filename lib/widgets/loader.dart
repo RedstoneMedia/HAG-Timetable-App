@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stundenplan/shared_state.dart';
 
 class Loader extends StatelessWidget {
-  Loader(this.sharedState);
+  const Loader(this.sharedState);
 
   final SharedState sharedState;
 

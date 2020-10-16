@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import '../content.dart';
 import '../shared_state.dart';
 
-Future<void> showInfoDialog(Cell cell, context, SharedState sharedState) async {
-  bool showFootnotes =
-      cell.footnotes == null ? false : cell.footnotes.length > 1;
+// This is ridiculously long for a simple info-dialog.
+//
+// You could probably remove the 'flexible' widgets.
+// Not quite sure what else can be done. I have to look into this.
+//TODO: fix this mess
+
+Future<void> showInfoDialog(
+    Cell cell, BuildContext context, SharedState sharedState) async {
+  final showFootnotes = cell.footnotes != null && cell.footnotes.length > 1;
 
   return showDialog<void>(
     context: context,
@@ -28,7 +34,6 @@ Future<void> showInfoDialog(Cell cell, context, SharedState sharedState) async {
                       return Row(
                         children: [
                           Flexible(
-                            flex: 1,
                             child: Column(
                               children: [
                                 Text("Fach:",
@@ -47,12 +52,11 @@ Future<void> showInfoDialog(Cell cell, context, SharedState sharedState) async {
                                     textAlign: TextAlign.left,
                                     style: TextStyle(
                                         color: sharedState.theme.textColor)),
-                                Divider(),
+                                const Divider(),
                               ],
                             ),
                           ),
                           Flexible(
-                            flex: 1,
                             child: Column(
                               children: [
                                 Text(cell.footnotes[i].subject,
@@ -71,7 +75,7 @@ Future<void> showInfoDialog(Cell cell, context, SharedState sharedState) async {
                                     textAlign: TextAlign.left,
                                     style: TextStyle(
                                         color: sharedState.theme.textColor)),
-                                Divider(),
+                                const Divider(),
                               ],
                             ),
                           ),
@@ -86,130 +90,112 @@ Future<void> showInfoDialog(Cell cell, context, SharedState sharedState) async {
                           Row(
                             children: [
                               Flexible(
-                                flex: 1,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    cell.originalSubject != "---"
-                                        ? Text("Orginal-Fach:",
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.subject != "---"
-                                        ? Text("Fach:",
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.originalRoom != "---"
-                                        ? Text("Orginal-Raum:",
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.room != "---"
-                                        ? Text("Raum:",
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.originalTeacher != "---"
-                                        ? Text("Orginal-Lehrer:",
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.teacher != "---"
-                                        ? Text("Lehrer:",
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.isDropped
-                                        ? Text("Fällt aus:",
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.text.codeUnitAt(0) != 160
-                                        ? Text("Text:",
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
+                                    if (cell.originalSubject != "---")
+                                      Text("Orginal-Fach:",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.subject != "---")
+                                      Text("Fach:",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.originalRoom != "---")
+                                      Text("Orginal-Raum:",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.room != "---")
+                                      Text("Raum:",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.originalTeacher != "---")
+                                      Text("Orginal-Lehrer:",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.teacher != "---")
+                                      Text("Lehrer:",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.isDropped)
+                                      Text("Fällt aus:",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.text.codeUnitAt(0) != 160)
+                                      Text("Text:",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
                                   ],
                                 ),
                               ),
                               Flexible(
-                                flex: 1,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    cell.originalSubject != "---"
-                                        ? Text(cell.originalSubject,
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.subject != "---"
-                                        ? Text(cell.subject,
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.originalRoom != "---"
-                                        ? Text(cell.originalRoom,
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.room != "---"
-                                        ? Text(cell.room,
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.originalTeacher != "---"
-                                        ? Text(cell.originalTeacher,
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.teacher != "---"
-                                        ? Text(cell.teacher,
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.isDropped
-                                        ? Text("Ja",
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
-                                    cell.text.codeUnitAt(0) != 160
-                                        ? Text("Text:           ${cell.text}",
-                                            textAlign: TextAlign.left,
-                                            style: TextStyle(
-                                                color: sharedState
-                                                    .theme.textColor))
-                                        : Container(),
+                                    if (cell.originalSubject != "---")
+                                      Text(cell.originalSubject,
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.subject != "---")
+                                      Text(cell.subject,
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.originalRoom != "---")
+                                      Text(cell.originalRoom,
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.room != "---")
+                                      Text(cell.room,
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.originalTeacher != "---")
+                                      Text(cell.originalTeacher,
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.teacher != "---")
+                                      Text(cell.teacher,
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.isDropped)
+                                      Text("Ja",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
+                                    if (cell.text.codeUnitAt(0) != 160)
+                                      Text("Text:           ${cell.text}",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor)),
                                   ],
                                 ),
                               ),
@@ -220,7 +206,6 @@ Future<void> showInfoDialog(Cell cell, context, SharedState sharedState) async {
                           Row(
                             children: [
                               Flexible(
-                                flex: 1,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -236,22 +221,18 @@ Future<void> showInfoDialog(Cell cell, context, SharedState sharedState) async {
                                         style: TextStyle(
                                             color:
                                                 sharedState.theme.textColor)),
-                                    cell.footnotes != null
-                                        ? cell.footnotes[0].text
-                                                    .codeUnitAt(0) !=
-                                                160
-                                            ? Text("Text:",
-                                                textAlign: TextAlign.left,
-                                                style: TextStyle(
-                                                    color: sharedState
-                                                        .theme.textColor))
-                                            : Container()
-                                        : Container()
+                                    if (cell.footnotes != null &&
+                                        cell.footnotes[0].text.codeUnitAt(0) !=
+                                            160)
+                                      Text("Text:",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor))
                                   ],
                                 ),
                               ),
                               Flexible(
-                                flex: 1,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
@@ -267,17 +248,14 @@ Future<void> showInfoDialog(Cell cell, context, SharedState sharedState) async {
                                         style: TextStyle(
                                             color:
                                                 sharedState.theme.textColor)),
-                                    cell.footnotes != null
-                                        ? cell.footnotes[0].text
-                                                    .codeUnitAt(0) !=
-                                                160
-                                            ? Text(cell.footnotes[0].text,
-                                                textAlign: TextAlign.left,
-                                                style: TextStyle(
-                                                    color: sharedState
-                                                        .theme.textColor))
-                                            : Container()
-                                        : Container()
+                                    if (cell.footnotes != null &&
+                                        cell.footnotes[0].text.codeUnitAt(0) !=
+                                            160)
+                                      Text(cell.footnotes[0].text,
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              color:
+                                                  sharedState.theme.textColor))
                                   ],
                                 ),
                               ),
@@ -288,12 +266,12 @@ Future<void> showInfoDialog(Cell cell, context, SharedState sharedState) async {
         ),
         actions: <Widget>[
           FlatButton(
-            child: Text('Schließen',
-                style: TextStyle(
-                    color: sharedState.theme.subjectSubstitutionColor)),
             onPressed: () {
               Navigator.of(context).pop();
             },
+            child: Text('Schließen',
+                style: TextStyle(
+                    color: sharedState.theme.subjectSubstitutionColor)),
           ),
         ],
       );

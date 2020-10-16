@@ -5,31 +5,45 @@ import 'package:stundenplan/parsing/parse_subsitution_plan.dart';
 import 'package:stundenplan/parsing/parse_timetable.dart';
 import 'package:stundenplan/shared_state.dart';
 
-
 Future<void> parsePlans(Content content, SharedState sharedState) async {
-  var client = Client();
-  var allSubjects = new List<String>();
+  final client = Client();
+  final allSubjects = <String>[];
   // Add the subject that the user selected
-  for (var subject in sharedState.profileManager.subjects) {
+  for (final subject in sharedState.profileManager.subjects) {
     allSubjects.add(subject);
   }
   // Add the default subjects that can not be changed by the user
-  for (var defaultSubject in sharedState.defaultSubjects) {
+  for (final defaultSubject in sharedState.defaultSubjects) {
     allSubjects.add(defaultSubject);
   }
 
-  var schoolClassName ="${sharedState.profileManager.schoolGrade}${sharedState.profileManager.subSchoolClass}";
+  final schoolClassName =
+      "${sharedState.profileManager.schoolGrade}${sharedState.profileManager.subSchoolClass}";
+  // ignore: avoid_print
   print("Parsing main time table");
-  await fillTimeTable(schoolClassName, Constants.timeTableLinkBase, client, content, allSubjects).timeout(Constants.clientTimeout);
+  await fillTimeTable(schoolClassName, Constants.timeTableLinkBase, client,
+          content, allSubjects)
+      .timeout(Constants.clientTimeout);
 
-  if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
+  if (!Constants.displayFullHeightSchoolGrades
+      .contains(sharedState.profileManager.schoolGrade)) {
+    // ignore: avoid_print
     print("Parsing course only time table");
-    var courseTimeTableContent = new Content(Constants.width, sharedState.height);
-    await fillTimeTable("${sharedState.profileManager.schoolGrade}K", Constants.timeTableLinkBase, client, courseTimeTableContent, allSubjects).timeout(Constants.clientTimeout);
+    final courseTimeTableContent = Content(Constants.width, sharedState.height);
+    await fillTimeTable(
+            "${sharedState.profileManager.schoolGrade}K",
+            Constants.timeTableLinkBase,
+            client,
+            courseTimeTableContent,
+            allSubjects)
+        .timeout(Constants.clientTimeout);
+    // ignore: avoid_print
     print("Combining both tables");
     content.combine(courseTimeTableContent);
   }
+  // ignore: avoid_print
   print("Parsing substitution plan");
-  await overwriteContentWithSubsitutionPlan(sharedState, client, content, allSubjects, schoolClassName).timeout(Constants.clientTimeout);
+  await overwriteContentWithSubsitutionPlan(
+          sharedState, client, content, allSubjects, schoolClassName)
+      .timeout(Constants.clientTimeout);
 }
-

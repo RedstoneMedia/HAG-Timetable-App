@@ -3,7 +3,7 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:stundenplan/shared_state.dart';
 
 class PullDownToRefresh extends StatelessWidget {
-  PullDownToRefresh(
+  const PullDownToRefresh(
       {@required this.refreshController,
       @required this.sharedState,
       @required this.onRefresh,
@@ -11,13 +11,12 @@ class PullDownToRefresh extends StatelessWidget {
 
   final RefreshController refreshController;
   final SharedState sharedState;
-  final Function onRefresh;
+  final VoidCallback onRefresh;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return SmartRefresher(
-      enablePullDown: true,
       controller: refreshController,
       header: WaterDropHeader(
         refresh: CircularProgressIndicator(
@@ -35,4 +34,3 @@ class PullDownToRefresh extends StatelessWidget {
     );
   }
 }
-

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/shared_state.dart';
 
+// ignore: must_be_immutable
 class CourseSelectList extends StatefulWidget {
   @override
   _CourseSelectListState createState() => _CourseSelectListState();
@@ -18,18 +19,18 @@ class _CourseSelectListState extends State<CourseSelectList> {
   @override
   void initState() {
     super.initState();
-    for (int i = 0; i < widget.courses.length; i++) {
-      controllers.add(new TextEditingController());
+    for (var i = 0; i < widget.courses.length; i++) {
+      controllers.add(TextEditingController());
     }
   }
 
   void addController() {
-    controllers.add(new TextEditingController());
+    controllers.add(TextEditingController());
   }
 
   void setCoursesText() {
     setState(() {
-      for (int i = 0; i < widget.courses.length; i++) {
+      for (var i = 0; i < widget.courses.length; i++) {
         controllers[i].text = widget.courses[i];
       }
     });
@@ -49,7 +50,7 @@ class _CourseSelectListState extends State<CourseSelectList> {
             color: widget.sharedState.theme.textColor.withAlpha(15),
             borderRadius: BorderRadius.circular(5)),
         child: ListView.builder(
-            physics: BouncingScrollPhysics(),
+            physics: const BouncingScrollPhysics(),
             shrinkWrap: true,
             itemCount: widget.courses.length,
             itemBuilder: (_, index) {
@@ -64,29 +65,27 @@ class _CourseSelectListState extends State<CourseSelectList> {
                     controllers.removeAt(index);
                   });
                 },
-                child: Container(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Center(
-                      child: TextField(
-                        decoration: InputDecoration(
-                          prefixIcon: Icon(
-                            Icons.edit,
-                            color: widget.sharedState.theme.textColor,
-                          ),
-                          border: new OutlineInputBorder(
-                            borderSide: new BorderSide(
-                                color: widget.sharedState.theme.textColor),
-                          ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Center(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(
+                          Icons.edit,
+                          color: widget.sharedState.theme.textColor,
                         ),
-                        onChanged: (text) {
-                          widget.courses[index] = text;
-                        },
-                        controller: controllers[index],
-                        style: GoogleFonts.poppins(
-                            color: widget.sharedState.theme.textColor,
-                            fontSize: 25),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: widget.sharedState.theme.textColor),
+                        ),
                       ),
+                      onChanged: (text) {
+                        widget.courses[index] = text;
+                      },
+                      controller: controllers[index],
+                      style: GoogleFonts.poppins(
+                          color: widget.sharedState.theme.textColor,
+                          fontSize: 25),
                     ),
                   ),
                 ),

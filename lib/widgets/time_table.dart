@@ -6,9 +6,7 @@ import 'package:stundenplan/shared_state.dart';
 import 'grid.dart';
 
 class TimeTable extends StatelessWidget {
-  TimeTable(
-      {@required this.sharedState,
-      @required this.content});
+  const TimeTable({@required this.sharedState, @required this.content});
 
   final SharedState sharedState;
   final Content content;
@@ -29,11 +27,20 @@ class TimeTable extends StatelessWidget {
                   else
                     TimeGridObject(y, sharedState)
                 else if (y == 0)
-                  WeekdayGridObject(Constants.weekDays[x], x, x == 1,
-                      x == Constants.width - 1, sharedState)
+                  WeekdayGridObject(
+                      weekday: Constants.weekDays[x],
+                      x: x,
+                      needsLeftBorder: x == 1,
+                      needsRightBorder: x == Constants.width - 1,
+                      sharedState: sharedState)
                 else
                   ClassGridObject(
-                      content, sharedState, x, y - 1, x == 1, context)
+                      content: content,
+                      sharedState: sharedState,
+                      x: x,
+                      y: y - 1,
+                      needsLeftBorder: x == 1,
+                      context: context)
             ],
           ),
       ],

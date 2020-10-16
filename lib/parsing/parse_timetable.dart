@@ -7,31 +7,36 @@ import 'package:stundenplan/parsing/parsing_util.dart'; // Contains parsing util
 import 'package:stundenplan/content.dart';
 
 /// This will fill the input content with a timetable based on the other arguments
-Future<void> fillTimeTable(String course, String linkBase, client, Content content, List<String> subjects) async {
+Future<void> fillTimeTable(String course, String linkBase, Client client,
+    Content content, List<String> subjects) async {
   // Get the html file
-  Response response = await client.get('${linkBase}_${course}.htm');
+  final response = await client.get('${linkBase}_$course.htm');
   if (response.statusCode != 200) {
+    // ignore: avoid_print
     print("Cannot get timetable");
     return;
   }
 
   // Init the parser
-  var document = parse(response.body);
+  final document = parse(response.body);
 
   // Find all elements with attr rules
-  List<dom.Element> tables = new List<dom.Element>();
-  List<dom.Element> elements = document.getElementsByTagName("body")[0].children[0].children;
-  for (int i = 0; i < elements.length; i++) {
+  final tables = <dom.Element>[];
+  final elements =
+      document.getElementsByTagName("body")[0].children[0].children;
+  for (var i = 0; i < elements.length; i++) {
     if (elements[i].attributes.containsKey("rules")) {
       tables.add(elements[i]);
     }
   }
   // Check if tables exists if not don't parse the table
   if (tables.length > 1) {
-    var mainTimeTable = tables[0];
-    var footnoteTable = tables[1];
-    var footnoteMap = parseFootnoteTable(footnoteTable);  // Parse the footnote table
-    parseMainTimeTable(content, subjects, mainTimeTable, footnoteMap, course); // Parse the main timetable
+    final mainTimeTable = tables[0];
+    final footnoteTable = tables[1];
+    final footnoteMap =
+        parseFootnoteTable(footnoteTable); // Parse the footnote table
+    parseMainTimeTable(content, subjects, mainTimeTable, footnoteMap,
+        course); // Parse the main timetable
   }
 }
 
@@ -44,67 +49,67 @@ class Area {
 
   @override
   String toString() {
-    return "{Area columnStart:${columnStart},columnEnd:${columnEnd}, rowStart:${rowStart}, rowEnd:${rowEnd}}";
+    return "{Area columnStart:$columnStart,columnEnd:$columnEnd, rowStart:$rowStart, rowEnd:$rowEnd}";
   }
 }
 
 /// Creates a map that maps Footnotes indexes example : [1), 2)] to a Footnote object based on parsing the html footnote table.
-HashMap<String,List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
-  List<dom.Element> rows = footnoteTable.children[0].children;
+HashMap<String, List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
+  final rows = footnoteTable.children[0].children;
 
-  List<String> headerColumnsText = new List<String>();
-  HashMap<String, List<int>> headerColumnStringIndexMap = new HashMap<String, List<int>>();
-  HashMap<int, List<String>> columnData = new HashMap<int, List<String>>();
+  final headerColumnsText = <String>[];
+  final headerColumnStringIndexMap = HashMap<String, List<int>>();
+  final columnData = HashMap<int, List<String>>();
 
   // Find column header text
-  var headerColumns = rows[0].children;
+  final headerColumns = rows[0].children;
   for (var i = 0; i < headerColumns.length; i++) {
-    var headerColumn = headerColumns[i];
+    final headerColumn = headerColumns[i];
     headerColumnsText.add(strip(headerColumn.text));
-    columnData[i] = new List<String>();
+    columnData[i] = <String>[];
   }
 
   // Map column text to column indexes
   for (var i = 0; i < headerColumnsText.length; i++) {
-    var headerColumnText = headerColumnsText[i];
+    final headerColumnText = headerColumnsText[i];
     if (headerColumnStringIndexMap.containsKey(headerColumnText)) {
       headerColumnStringIndexMap[headerColumnText].add(i);
     } else {
       headerColumnStringIndexMap[headerColumnText] = [i];
     }
   }
-  rows.removeAt(0);  // remove header from rows
+  rows.removeAt(0); // remove header from rows
 
   // Convert format to columns first instead of rows
   for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-    var row = rows[rowIndex];
-    var columns = row.children;
+    final row = rows[rowIndex];
+    final columns = row.children;
     for (var i = 0; i < columns.length; i++) {
       columnData[i].add(strip(columns[i].text).replaceAll("\n", ""));
     }
   }
 
   // Find footnote areas
-  LinkedHashMap<String, Area> footnoteAreaMap = new LinkedHashMap<String, Area>();
+  final footnoteAreaMap = <String, Area>{};
 
   // Loop over all columns with the header Nr.
-  var nrList = headerColumnStringIndexMap["Nr."];
+  final nrList = headerColumnStringIndexMap["Nr."];
   for (var i = 0; i < nrList.length; i++) {
-    var columnIndex = nrList[i];
-    var column = columnData[columnIndex];
+    final columnIndex = nrList[i];
+    final column = columnData[columnIndex];
     var currentFootnoteIndex = column[0];
 
     // Get the columnStart and End
-    var columnStart = columnIndex;
+    final columnStart = columnIndex;
     int columnEnd;
-    if (i >= nrList.length-1) {
-      columnEnd = columnData.length-1;
+    if (i >= nrList.length - 1) {
+      columnEnd = columnData.length - 1;
     } else {
-      columnEnd = nrList[i+1]-1;
+      columnEnd = nrList[i + 1] - 1;
     }
 
     // Setup first area
-    var currentArea = new Area();
+    var currentArea = Area();
     currentArea.rowStart = 0;
     currentArea.columnStart = columnStart;
     currentArea.columnEnd = columnEnd;
@@ -112,19 +117,21 @@ HashMap<String,List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
 
     // Loop over one column with the header Nr.
     for (var j = 0; j < column.length; j++) {
-      var currentValue = column[j];
+      final currentValue = column[j];
       lastJ = j;
 
-      if (currentValue == " " || currentValue == currentFootnoteIndex) {  // No start of a new area
+      if (currentValue == " " || currentValue == currentFootnoteIndex) {
+        // No start of a new area
         continue;
-      } else {  // Start of new area
+      } else {
+        // Start of new area
         // Add old area to map
-        currentArea.rowEnd = j-1;
+        currentArea.rowEnd = j - 1;
         footnoteAreaMap[currentFootnoteIndex] = currentArea;
 
         // Init new area
         currentFootnoteIndex = column[j];
-        currentArea = new Area();
+        currentArea = Area();
         currentArea.rowStart = j;
         currentArea.columnStart = columnStart;
         currentArea.columnEnd = columnEnd;
@@ -135,18 +142,17 @@ HashMap<String,List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
     footnoteAreaMap[currentFootnoteIndex] = currentArea;
   }
 
-
   // Parse footnote areas
   var lastFootnoteKey = "1)";
-  HashMap<String,List<Footnote>> footnotesMap = new HashMap<String,List<Footnote>>();
-  for (var footnoteKey in footnoteAreaMap.keys) {
-    var area = footnoteAreaMap[footnoteKey];
-    var relevantColumns = new List<List<String>>();
+  final footnotesMap = HashMap<String, List<Footnote>>();
+  for (final footnoteKey in footnoteAreaMap.keys) {
+    final area = footnoteAreaMap[footnoteKey];
+    final relevantColumns = <List<String>>[];
 
     // Get relevant columns within area
-    var columnTextList = new List<String>();
+    final columnTextList = <String>[];
     for (var i = area.columnStart; i < area.columnEnd + 1; i++) {
-      var relevantColumn = new List<String>();
+      final relevantColumn = <String>[];
       columnTextList.add(headerColumnsText[i]);
       for (var j = area.rowStart; j < area.rowEnd + 1; j++) {
         relevantColumn.add(columnData[i][j]);
@@ -155,21 +161,25 @@ HashMap<String,List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
     }
 
     // Init footnotes
-    var footnotes = new List<Footnote>();
-    for (var i = 0; i < area.rowEnd-area.rowStart + 1; i++) {
-      footnotes.add(new Footnote());
+    final footnotes = <Footnote>[];
+    for (var i = 0; i < area.rowEnd - area.rowStart + 1; i++) {
+      footnotes.add(Footnote());
     }
 
     // Loop over all columns
-    for (var columnIndex = 0; columnIndex < relevantColumns.length; columnIndex++) {
+    for (var columnIndex = 0;
+        columnIndex < relevantColumns.length;
+        columnIndex++) {
       // Loop over all rows
-      for (var rowIndex = 0; rowIndex < relevantColumns[columnIndex].length; rowIndex++) {
-        var value = relevantColumns[columnIndex][rowIndex];
+      for (var rowIndex = 0;
+          rowIndex < relevantColumns[columnIndex].length;
+          rowIndex++) {
+        final value = relevantColumns[columnIndex][rowIndex];
 
         // Switch on current column header and set footnotes
         switch (columnTextList[columnIndex]) {
           case "Le.,Fa.,Rm.":
-            var splitValue = value.split(",");
+            final splitValue = value.split(",");
             if (splitValue.length >= 3) {
               footnotes[rowIndex].teacher = splitValue[0];
               footnotes[rowIndex].subject = splitValue[1];
@@ -202,18 +212,24 @@ HashMap<String,List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
   return footnotesMap;
 }
 
-
-void parseMainTimeTable(Content content, List<String> subjects, dom.Element mainTimeTable, HashMap<String,List<Footnote>> footnoteMap, String course) {
-  List<dom.Element> rows = mainTimeTable.children[0].children;  // Gets all <tr> elements of the main table
-  rows.removeAt(0);  // Removes header
+void parseMainTimeTable(
+    Content content,
+    List<String> subjects,
+    dom.Element mainTimeTable,
+    HashMap<String, List<Footnote>> footnoteMap,
+    String course) {
+  final rows = mainTimeTable
+      .children[0].children; // Gets all <tr> elements of the main table
+  rows.removeAt(0); // Removes header
 
   // Loop over all rows
   for (var y = 0; y < rows.length; y++) {
-    var row = rows[y];
-    var columns = row.children;  // Gets the columns within that row
-    var tableX = 0;  // The next valid index of the next column within the html grid
+    final row = rows[y];
+    final columns = row.children; // Gets the columns within that row
+    var tableX =
+        0; // The next valid index of the next column within the html grid
     // Ignore this row if its empty
-    if (columns.length <= 0) {
+    if (columns.isEmpty) {
       continue;
     }
     // Loop over all days
@@ -223,20 +239,24 @@ void parseMainTimeTable(Content content, List<String> subjects, dom.Element main
         parseOneCell(columns[x], x, y, content, subjects, footnoteMap, course);
         tableX++;
       } else {
-        var doParseCell = true;  // If this is false that cell will not be parsed
+        var doParseCell = true; // If this is false that cell will not be parsed
         if (y != 0) {
-          var contentY = (y / 2).floor();  // Get the y pos in the content timetable from the html y pos
-          if (contentY >= content.cells.length) {  // If content to small break
+          final contentY = (y / 2)
+              .floor(); // Get the y pos in the content timetable from the html y pos
+          if (contentY >= content.cells.length) {
+            // If content to small break
             break;
           }
           // Check if a class is already at this position (Only happens if a double class is above the current class)
-          var isDoubleClass = content.cells[contentY][x].isDoubleClass;
+          final isDoubleClass = content.cells[contentY][x].isDoubleClass;
           if (isDoubleClass) {
-            doParseCell = false;  // Don't parse this cell since it dose not exist in the html
+            doParseCell =
+                false; // Don't parse this cell since it dose not exist in the html
           }
         }
         if (doParseCell) {
-          parseOneCell(columns[tableX], x, y, content, subjects, footnoteMap, course);
+          parseOneCell(
+              columns[tableX], x, y, content, subjects, footnoteMap, course);
           tableX++;
         }
       }
@@ -244,8 +264,15 @@ void parseMainTimeTable(Content content, List<String> subjects, dom.Element main
   }
 }
 
-void parseOneCell(dom.Element cellDom, int x, int y, Content content, List<String> subjects, HashMap<String,List<Footnote>> footnoteMap, String course) {
-  var cell = new Cell();
+void parseOneCell(
+    dom.Element cellDom,
+    int x,
+    int y,
+    Content content,
+    List<String> subjects,
+    HashMap<String, List<Footnote>> footnoteMap,
+    String course) {
+  var cell = Cell();
 
   // Ignore the sidebar
   if (x == 0) {
@@ -253,48 +280,50 @@ void parseOneCell(dom.Element cellDom, int x, int y, Content content, List<Strin
   }
 
   // Parse normal cell
-  var hours = int.parse(cellDom.attributes["rowspan"]) / 2;
+  final hours = int.parse(cellDom.attributes["rowspan"]) / 2;
   cell.isDoubleClass = hours == 2;
-  List<dom.Element> cellData = cellDom.children[0].children[0].children;
+  final cellData = cellDom.children[0].children[0].children;
   if (cellData.length >= 2) {
     // Store data from the html element into the cell
-    List<dom.Element> teacherAndRoom = cellData[0].children;
-    List<dom.Element> subjectAndFootnote = cellData[1].children;
+    final teacherAndRoom = cellData[0].children;
+    final subjectAndFootnote = cellData[1].children;
     cell.teacher = strip(teacherAndRoom[0].text);
     cell.room = strip(teacherAndRoom[1].text);
     cell.subject = strip(subjectAndFootnote[0].text);
     // Check if footnote exists
     if (subjectAndFootnote.length > 1) {
       // Get footnotes from footnoteMap
-      var footnoteKey = strip(subjectAndFootnote[1].text);
-      var footnotes = footnoteMap[footnoteKey];
+      final footnoteKey = strip(subjectAndFootnote[1].text);
+      final footnotes = footnoteMap[footnoteKey];
 
       // Filter out footnotes that don't matter to the user
-      var requiredFootnotes = new List<Footnote>();
-      for (var footnote in footnotes) {
-        if (subjects.contains(footnote.subject) && footnote.schoolClasses.contains(course)) {
+      final requiredFootnotes = <Footnote>[];
+      for (final footnote in footnotes) {
+        if (subjects.contains(footnote.subject) &&
+            footnote.schoolClasses.contains(course)) {
           requiredFootnotes.add(footnote);
         }
       }
 
       // If only one required footnote, or the current subject is not required.
       // Set the subject room and teacher to the first element in the requiredFootnotes list.
-      if (requiredFootnotes.length == 1 || (!subjects.contains(cell.subject) && requiredFootnotes.length > 0)) {
+      if (requiredFootnotes.length == 1 ||
+          (!subjects.contains(cell.subject) && requiredFootnotes.isNotEmpty)) {
         cell.subject = requiredFootnotes[0].subject;
         cell.room = requiredFootnotes[0].room;
         cell.teacher = requiredFootnotes[0].teacher;
       }
 
-      cell.footnotes = requiredFootnotes;  // Set footnotes of cell
+      cell.footnotes = requiredFootnotes; // Set footnotes of cell
     }
   }
-
 
   if (subjects.contains(cell.subject)) {
     for (var i = 0; i < hours; i++) {
       content.setCell((y / 2).floor() + i, x, cell);
     }
-  } else {  // If user dose not have that subject skip that class
+  } else {
+    // If user dose not have that subject skip that class
     for (var i = 0; i < hours; i++) {
       // Update class at current position and set it to be a double class
       cell = content.cells[(y / 2).floor() + i][x];

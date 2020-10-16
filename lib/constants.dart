@@ -1,4 +1,3 @@
-
 class Constants {
   //Grid Properties
   static const int width = 6;
@@ -7,10 +6,14 @@ class Constants {
 
   static const Duration clientTimeout = Duration(seconds: 15);
   static const List<String> weekDays = ["", "Mo", "Di", "Mi", "Do", "Fr"];
-  static const String newestReleaseUrl = "https://github.com/RedstoneMedia/HAG-Crappy-Timetable-App/releases";
-  static const String substitutionLinkBase = "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
-  static const String timeTableLinkBase = "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
-  static const String newestVersionPubspecUrl = "https://raw.githubusercontent.com/RedstoneMedia/HAG-Crappy-Timetable-App/master/pubspec.yaml";
+  static const String newestReleaseUrl =
+      "https://github.com/RedstoneMedia/HAG-Crappy-Timetable-App/releases";
+  static const String substitutionLinkBase =
+      "https://hag-iserv.de/iserv/public/plan/show/Sch%C3%BCler-Stundenpl%C3%A4ne/b006cb5cf72cba5c/svertretung/svertretungen";
+  static const String timeTableLinkBase =
+      "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
+  static const String newestVersionPubspecUrl =
+      "https://raw.githubusercontent.com/RedstoneMedia/HAG-Crappy-Timetable-App/master/pubspec.yaml";
   static const List<String> alwaysDefaultSubjects = [
     "De",
     "Ma",
@@ -20,8 +23,8 @@ class Constants {
     "Po"
   ];
   static const Map<List<String>, List<String>> defaultSubjectsMap = {
-    ["5", "6", "7", "8", "9", "10"] : ["Bi", "Ch", "Ph" ,"Ku", "En", "Mu"],
-    ["11", "Q1", "Q2"] : []
+    ["5", "6", "7", "8", "9", "10"]: ["Bi", "Ch", "Ph", "Ku", "En", "Mu"],
+    ["11", "Q1", "Q2"]: []
   };
 
   static const List<String> startTimes = [
@@ -61,8 +64,5 @@ class Constants {
     "Q1",
     "Q2"
   ];
-  static const List<String> displayFullHeightSchoolGrades = [
-    "Q1",
-    "Q2"
-  ];
+  static const List<String> displayFullHeightSchoolGrades = ["Q1", "Q2"];
 }

@@ -12,8 +12,8 @@ class Version {
   int microVersion;
 
   Version(String versionString) {
-    RegExp regExp = new RegExp(r"(?<major>\d).(?<minor>\d).(?<micro>\d)");
-    RegExpMatch match = regExp.firstMatch(versionString);
+    final regExp = RegExp(r"(?<major>\d).(?<minor>\d).(?<micro>\d)");
+    final match = regExp.firstMatch(versionString);
     majorVersion = int.parse(match.namedGroup("major"));
     minorVersion = int.parse(match.namedGroup("minor"));
     microVersion = int.parse(match.namedGroup("micro"));
@@ -25,81 +25,85 @@ class Version {
   }
 
   bool isOtherVersionGreater(Version other) {
-    if (other.majorVersion > this.majorVersion)
+    if (other.majorVersion > majorVersion) {
       return true;
-    if (other.minorVersion > this.minorVersion)
+    }
+    if (other.minorVersion > minorVersion) {
       return true;
-    if (other.microVersion > this.microVersion)
+    }
+    if (other.microVersion > microVersion) {
       return true;
+    }
     return false;
   }
-
 }
 
-
 class UpdateNotifier {
-
   Version currentVersion;
   Client client;
 
   Future<void> init() async {
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    String versionString = packageInfo.version;
+    final packageInfo = await PackageInfo.fromPlatform();
+    final versionString = packageInfo.version;
     currentVersion = Version(versionString);
-    client = new Client();
+    client = Client();
   }
 
   Future<Version> getNewestVersion() async {
-    Response response = await client.get(Constants.newestVersionPubspecUrl);
-    var pubspecYamlData = loadYaml(response.body);
-    return Version(pubspecYamlData["version"]);
+    final response = await client.get(Constants.newestVersionPubspecUrl);
+    final pubspecYamlData = loadYaml(response.body);
+    return Version(pubspecYamlData["version"].toString());
   }
 
-  Future<void> checkForNewestVersionAndShowDialog(BuildContext context, SharedState sharedState) async {
-    Version newestVersion = await getNewestVersion();
+  Future<void> checkForNewestVersionAndShowDialog(
+      BuildContext context, SharedState sharedState) async {
+    final newestVersion = await getNewestVersion();
     if (currentVersion.isOtherVersionGreater(newestVersion)) {
       await showNewVersionDialog(context, sharedState, newestVersion);
     }
   }
 
-
-  Future<void> showNewVersionDialog(BuildContext context, SharedState sharedState, Version newVersion) async {
+  Future<void> showNewVersionDialog(
+      BuildContext context, SharedState sharedState, Version newVersion) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: sharedState.theme.backgroundColor,
-          title: Text('Neue Version verfügbar', style: TextStyle(color: sharedState.theme.textColor)),
+          title: Text('Neue Version verfügbar',
+              style: TextStyle(color: sharedState.theme.textColor)),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('Es ist eine neue Version verfügbar : $newVersion', style: TextStyle(color: sharedState.theme.textColor))
+                Text('Es ist eine neue Version verfügbar : $newVersion',
+                    style: TextStyle(color: sharedState.theme.textColor))
               ],
             ),
           ),
           actions: <Widget>[
             RaisedButton(
               color: sharedState.theme.subjectColor.withOpacity(0.9),
-              child: Text('Ok', style: TextStyle(color: sharedState.theme.textColor)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
+              child: Text('Ok',
+                  style: TextStyle(color: sharedState.theme.textColor)),
             ),
             RaisedButton(
-                color: sharedState.theme.subjectColor,
-                child: Text('Herunterladen', style: TextStyle(color: sharedState.theme.textColor)),
-                onPressed: () async {
-                  if (await canLaunch(Constants.newestReleaseUrl)) {
-                    await launch(Constants.newestReleaseUrl);
-                  }
-                  Navigator.of(context).pop();
+              color: sharedState.theme.subjectColor,
+              onPressed: () async {
+                if (await canLaunch(Constants.newestReleaseUrl)) {
+                  await launch(Constants.newestReleaseUrl);
                 }
+                Navigator.of(context).pop();
+              },
+              child: Text('Herunterladen',
+                  style: TextStyle(color: sharedState.theme.textColor)),
             )
           ],
         );
       },
     );
   }
-
 }

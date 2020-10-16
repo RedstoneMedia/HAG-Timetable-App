@@ -7,8 +7,12 @@ import 'package:stundenplan/shared_state.dart';
 import 'info_dialog.dart';
 
 class WeekdayGridObject extends StatelessWidget {
-  WeekdayGridObject(this.weekday, this.x, this.needsLeftBorder,
-      this.needsRightBorder, this.sharedState);
+  WeekdayGridObject(
+      {@required this.weekday,
+      @required this.x,
+      @required this.needsLeftBorder,
+      @required this.needsRightBorder,
+      @required this.sharedState});
 
   final String weekday;
   final int x;
@@ -48,16 +52,20 @@ class WeekdayGridObject extends StatelessWidget {
 }
 
 class ClassGridObject extends StatelessWidget {
-  ClassGridObject(this.content, this.sharedState, this.x, this.y,
-      this.needsLeftBorder, this.context);
+  const ClassGridObject(
+      {@required this.content,
+      @required this.sharedState,
+      @required this.x,
+      @required this.y,
+      @required this.needsLeftBorder,
+      @required this.context});
 
   final Content content;
   final SharedState sharedState;
   final int x;
   final int y;
   final bool needsLeftBorder;
-  final context;
-
+  final BuildContext context;
 
   @override
   Widget build(BuildContext context) {
@@ -80,26 +88,26 @@ class ClassGridObject extends StatelessWidget {
               children: [
                 Text(
                   content.cells[y][x].originalSubject,
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: Colors.transparent,
                       fontWeight: FontWeight.bold,
                       fontSize: 16.0),
                 ),
                 Text(
                   content.cells[y][x].subject,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.transparent,
                   ),
                 ),
                 Text(
                   content.cells[y][x].room,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.transparent,
                   ),
                 ),
                 Text(
                   content.cells[y][x].teacher,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.transparent,
                   ),
                 ),
@@ -121,12 +129,13 @@ class ClassGridObject extends StatelessWidget {
                         : sharedState.theme.subjectDropOutColor,
                     border: Border(
                         bottom: BorderSide(
-                            width: 1.0,
                             color: (y - 1) % 2 == 0
                                 ? Colors.black54
                                 : Colors.black26),
-                        right: BorderSide(width: 0.5, color: Colors.black26),
-                        left: BorderSide(width: 0.5, color: Colors.black26)),
+                        right:
+                            const BorderSide(width: 0.5, color: Colors.black26),
+                        left: const BorderSide(
+                            width: 0.5, color: Colors.black26)),
                   ),
                   child: Column(
                     children: content.cells[y][x].isDropped
@@ -159,7 +168,7 @@ class ClassGridObject extends StatelessWidget {
                         : [
                             Text(
                               content.cells[y][x].originalSubject,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.transparent,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 8.5,
@@ -183,7 +192,7 @@ class ClassGridObject extends StatelessWidget {
                             ),
                             Text(
                               content.cells[y][x].originalSubject,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.transparent,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 8.5,
@@ -203,30 +212,29 @@ class PlaceholderGridObject extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Container(
-        child: Text(
-          "99:99",
-          style: GoogleFonts.poppins(color: Colors.transparent),
-        ),
+      child: Text(
+        "99:99",
+        style: GoogleFonts.poppins(color: Colors.transparent),
       ),
     );
   }
 }
 
+// ignore: must_be_immutable
 class TimeGridObject extends StatefulWidget {
   @override
   _TimeGridObjectState createState() => _TimeGridObjectState();
 
   TimeGridObject(this.y, this.sharedState) {
     // Get start hour and start minute
-    List<String> startTime = Constants.startTimes[y - 1].split(":");
-    int startHour = int.parse(startTime[0]);
-    int startMinute = int.parse(startTime[1]);
+    final startTime = Constants.startTimes[y - 1].split(":");
+    final startHour = int.parse(startTime[0]);
+    final startMinute = int.parse(startTime[1]);
 
     // Get end hour and end minute
-    List<String> endTime = Constants.endTimes[y - 1].split(":");
-    int endHour = int.parse(endTime[0]);
-    int endMinute = int.parse(endTime[1]);
+    final endTime = Constants.endTimes[y - 1].split(":");
+    final endHour = int.parse(endTime[0]);
+    final endMinute = int.parse(endTime[1]);
 
     // Construct TimeOfDay objects
     startCellTime = TimeOfDay(hour: startHour, minute: startMinute);
@@ -244,9 +252,11 @@ class _TimeGridObjectState extends State<TimeGridObject> {
   bool isActive = false;
   SharedState sharedState;
 
+  @override
   void initState() {
     sharedState = widget.sharedState;
     setIsActive();
+    super.initState();
   }
 
   void setIsActive() {
@@ -283,7 +293,7 @@ class _TimeGridObjectState extends State<TimeGridObject> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
+              SizedBox(
                 height: 0,
                 child: Text(
                   "99:99",

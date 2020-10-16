@@ -1,9 +1,9 @@
 class Content {
   Content(int width, int height) {
-    for (int y = 0; y < height; y++) {
-      List<Cell> row = new List<Cell>();
-      for (int x = 0; x < width; x++) {
-        row.add(new Cell());
+    for (var y = 0; y < height; y++) {
+      final row = <Cell>[];
+      for (var x = 0; x < width; x++) {
+        row.add(Cell());
       }
       cells.add(row);
     }
@@ -13,15 +13,15 @@ class Content {
 
   void updateLastUpdated() {
     lastUpdated = DateTime.now();
+    // ignore: avoid_print
     print("UPDATED LASTUPDATED");
   }
 
   List<List<Map<String, dynamic>>> toJsonData() {
-    List<List<Map<String, dynamic>>> jsonData =
-        new List<List<Map<String, dynamic>>>();
-    for (int y = 0; y < cells.length; y++) {
-      List<Map<String, dynamic>> row = new List<Map<String, dynamic>>();
-      for (int x = 0; x < cells[0].length; x++) {
+    final jsonData = <List<Map<String, dynamic>>>[];
+    for (var y = 0; y < cells.length; y++) {
+      final row = <Map<String, dynamic>>[];
+      for (var x = 0; x < cells[0].length; x++) {
         row.add(cells[y][x].toJsonData());
       }
       jsonData.add(row);
@@ -32,33 +32,37 @@ class Content {
     return jsonData;
   }
 
+  // ignore: prefer_constructors_over_static_methods
   static Content fromJsonData(List<dynamic> jsonData) {
-    Content newContent = new Content(jsonData[0].length, jsonData.length);
-    for (int y = 0; y < jsonData.length-1; y++) {
-      for (int x = 0; x < jsonData[0].length; x++) {
-        Cell cell = Cell.fromJsonData(jsonData[y][x]);
+    final newContent = Content(jsonData[0].length as int, jsonData.length);
+    for (var y = 0; y < jsonData.length - 1; y++) {
+      for (var x = 0; x < (jsonData[0].length as int); x++) {
+        final cell = Cell.fromJsonData(jsonData[y][x] as Map<String, dynamic>);
         newContent.setCell(y, x, cell);
       }
     }
-    newContent.lastUpdated = DateTime.parse(jsonData[jsonData.length-1][0]["lastUpdated"]);
+    newContent.lastUpdated = DateTime.parse(
+        jsonData[jsonData.length - 1][0]["lastUpdated"].toString());
     return newContent;
   }
 
-  List<List<Cell>> cells = List<List<Cell>>();
+  final cells = <List<Cell>>[];
   void setCell(int y, int x, Cell value) {
+    // ignore: avoid_print
     print("Setting cell at y:$y, x:$x to $value");
     cells[y][x] = value;
   }
 
+  @override
   String toString() {
     return cells.toString();
   }
 
   void combine(Content other) {
-    for (int y = 0; y < cells.length; y++) {
-      for (int x = 0; x < cells[y].length; x++) {
-        var myCell = cells[y][x];
-        var otherCell = other.cells[y][x];
+    for (var y = 0; y < cells.length; y++) {
+      for (var x = 0; x < cells[y].length; x++) {
+        final myCell = cells[y][x];
+        final otherCell = other.cells[y][x];
         // If current cell is empty set cell to other
         if (myCell.isEmpty()) {
           setCell(y, x, otherCell);
@@ -82,50 +86,38 @@ class Footnote {
 
   Map<String, dynamic> toJsonData() {
     return {
-      "teacher": this.teacher,
-      "subject": this.subject,
-      "room": this.room,
-      "schoolClasses": this.schoolClasses,
-      "schoolWeek": this.schoolWeek,
-      "text": this.text,
+      "teacher": teacher,
+      "subject": subject,
+      "room": room,
+      "schoolClasses": schoolClasses,
+      "schoolWeek": schoolWeek,
+      "text": text,
     };
   }
 
+  // ignore: prefer_constructors_over_static_methods
   static Footnote fromJsonData(Map<String, dynamic> jsonData) {
-    Footnote newFootnote = new Footnote();
-    newFootnote.teacher = jsonData["teacher"] ?? "";
-    newFootnote.subject = jsonData["subject"] ?? "";
-    newFootnote.room = jsonData["room"] ?? "";
+    final newFootnote = Footnote();
+    newFootnote.teacher = jsonData["teacher"].toString() ?? "";
+    newFootnote.subject = jsonData["subject"].toString() ?? "";
+    newFootnote.room = jsonData["room"].toString() ?? "";
     newFootnote.schoolClasses = [];
-    for (String schoolClass
-        in jsonData["schoolClasses"] ?? new List<String>()) {
-      newFootnote.schoolClasses.add(schoolClass);
+    for (final schoolClass in jsonData["schoolClasses"] ?? <String>[]) {
+      newFootnote.schoolClasses.add(schoolClass.toString());
     }
-    newFootnote.schoolWeek = jsonData["schoolWeek"] ?? " ";
-    newFootnote.text = jsonData["text"] ?? " ";
+    newFootnote.schoolWeek = jsonData["schoolWeek"].toString() ?? " ";
+    newFootnote.text = jsonData["text"].toString() ?? " ";
     return newFootnote;
   }
 
   @override
   String toString() {
-    return "{Footnote teacher:${teacher}, subject:${subject}, room:${room}, text: '${text}'";
+    return "{Footnote teacher:$teacher, subject:$subject, room:$room, text: '$text'}";
   }
 }
 
 class Cell {
-  Cell(
-      {subject,
-      originalSubject,
-      room,
-      originalRoom,
-      teacher,
-      originalTeacher,
-      text,
-      footNoteTextId,
-      footnotes,
-      isSubstitute,
-      isDropped,
-      isDoubleClass});
+  Cell();
 
   String subject = "---";
   String originalSubject = "---";
@@ -140,8 +132,9 @@ class Cell {
   bool isDropped = false;
   bool isDoubleClass = false;
 
+  @override
   String toString() {
-    return "{Cell isDropped : ${isDropped}, subject : ${subject}, room : ${room}  original subject : ${originalSubject}}";
+    return "{Cell isDropped : $isDropped, subject : $subject, room : $room  original subject : $originalSubject}";
   }
 
   bool isEmpty() {
@@ -153,51 +146,52 @@ class Cell {
   }
 
   factory Cell.fromJsonData(Map<String, dynamic> parsedJson) {
-    Cell newCell = Cell();
-    newCell.subject = parsedJson["subject"] ?? "---";
-    newCell.originalSubject = parsedJson["originalSubject"] ?? "---";
-    newCell.room = parsedJson["room"] ?? "---";
-    newCell.originalRoom = parsedJson["originalRoom"] ?? "---";
-    newCell.teacher = parsedJson["teacher"] ?? "---";
-    newCell.originalTeacher = parsedJson["originalTeacher"] ?? "---";
-    newCell.text = parsedJson["text"] ?? "---";
-    newCell.footNoteTextId = parsedJson["footNoteTextId"] ?? "";
-    var footnotes = parsedJson["footnotes"];
+    final newCell = Cell();
+    newCell.subject = parsedJson["subject"].toString() ?? "---";
+    newCell.originalSubject = parsedJson["originalSubject"].toString() ?? "---";
+    newCell.room = parsedJson["room"].toString() ?? "---";
+    newCell.originalRoom = parsedJson["originalRoom"].toString() ?? "---";
+    newCell.teacher = parsedJson["teacher"].toString() ?? "---";
+    newCell.originalTeacher = parsedJson["originalTeacher"].toString() ?? "---";
+    newCell.text = parsedJson["text"].toString() ?? "---";
+    newCell.footNoteTextId = parsedJson["footNoteTextId"].toString() ?? "";
+    final footnotes = parsedJson["footnotes"];
     if (footnotes != null) {
       newCell.footnotes = [];
-      for (var footnoteJsonData in footnotes) {
-        newCell.footnotes.add(Footnote.fromJsonData(footnoteJsonData));
+      for (final footnoteJsonData in footnotes) {
+        newCell.footnotes.add(
+            Footnote.fromJsonData(footnoteJsonData as Map<String, dynamic>));
       }
     }
 
-    newCell.isSubstitute = parsedJson["isSubstitute"] ?? false;
-    newCell.isDropped = parsedJson["isDropped"] ?? false;
+    newCell.isSubstitute = parsedJson["isSubstitute"] as bool ?? false;
+    newCell.isDropped = parsedJson["isDropped"] as bool ?? false;
     return newCell;
   }
 
   Map<String, dynamic> toJsonData() {
     List<dynamic> footnotesJsonDataList;
-    if (this.footnotes != null) {
-      footnotesJsonDataList = new List<dynamic>();
-      this.footnotes.forEach((footnote) {
+    if (footnotes != null) {
+      footnotesJsonDataList = <dynamic>[];
+      for (final footnote in footnotes) {
         if (footnote != null) {
           footnotesJsonDataList.add(footnote.toJsonData());
         }
-      });
+      }
     }
 
     return {
-      "subject": this.subject,
-      "originalSubject": this.originalSubject,
-      "room": this.room,
-      "originalRoom": this.originalRoom,
-      "teacher": this.teacher,
-      "originalTeacher": this.originalTeacher,
-      "text": this.text,
-      "footNoteTextId": this.footNoteTextId,
+      "subject": subject,
+      "originalSubject": originalSubject,
+      "room": room,
+      "originalRoom": originalRoom,
+      "teacher": teacher,
+      "originalTeacher": originalTeacher,
+      "text": text,
+      "footNoteTextId": footNoteTextId,
       "footnotes": footnotesJsonDataList,
-      "isSubstitute": this.isSubstitute,
-      "isDropped": this.isDropped
+      "isSubstitute": isSubstitute,
+      "isDropped": isDropped
     };
   }
 }

@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:time_ago_provider/time_ago_provider.dart' as timeAgo;
+import 'package:flutter/material.dart';
+import 'package:time_ago_provider/time_ago_provider.dart' as time_ago;
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,7 +21,7 @@ void main() {
   SharedPreferences.getInstance().then((prefs) {
     runApp(
       MaterialApp(
-        home: MyApp(new SharedState(prefs)),
+        home: MyApp(SharedState(prefs)),
       ),
     );
   });
@@ -31,15 +31,15 @@ class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
 
-  MyApp(this.sharedState);
+  const MyApp(this.sharedState);
 
   final SharedState sharedState;
 }
 
 class _MyAppState extends State<MyApp> {
   SharedState sharedState;
-  UpdateNotifier updateNotifier = new UpdateNotifier();
-  Connectivity connectivity = new Connectivity();
+  UpdateNotifier updateNotifier = UpdateNotifier();
+  Connectivity connectivity = Connectivity();
 
   DateTime date;
   bool loading = true;
@@ -47,17 +47,16 @@ class _MyAppState extends State<MyApp> {
   Timer everyMinute;
 
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  final RefreshController _refreshController = RefreshController();
 
   @override
   void initState() {
     super.initState();
     sharedState = widget.sharedState;
-    sharedState.content = new Content(Constants.width, sharedState.height);
+    sharedState.content = Content(Constants.width, sharedState.height);
 
     // Calls set state every minute to update current school hour if changed
-    everyMinute = Timer.periodic(Duration(minutes: 1), (Timer timer) {
+    everyMinute = Timer.periodic(const Duration(minutes: 1), (Timer timer) {
       setState(() {});
     });
 
@@ -78,6 +77,7 @@ class _MyAppState extends State<MyApp> {
           try {
             parsePlans(sharedState.content, sharedState)
                 .then((value) => setState(() {
+                      // ignore: avoid_print
                       print(
                           "State was set to : ${sharedState.content}"); //TODO: Remove Debug Message
                       sharedState.saveContent();
@@ -85,6 +85,7 @@ class _MyAppState extends State<MyApp> {
                     }));
           } on TimeoutException catch (_) {
             setState(() {
+              // ignore: avoid_print
               print("Timeout !");
               sharedState.loadContent();
               loading = false;
@@ -92,6 +93,7 @@ class _MyAppState extends State<MyApp> {
           }
         } else {
           setState(() {
+            // ignore: avoid_print
             print("No connection !");
             sharedState.loadContent();
             loading = false;
@@ -146,10 +148,12 @@ class _MyAppState extends State<MyApp> {
                             });
                           });
                         } on TimeoutException catch (_) {
+                          // ignore: avoid_print
                           print("Timeout !");
                           _refreshController.refreshFailed();
                         }
                       } else {
+                        // ignore: avoid_print
                         print("no connection !");
                         _refreshController.refreshFailed();
                       }
@@ -158,7 +162,7 @@ class _MyAppState extends State<MyApp> {
                   sharedState: sharedState,
                   refreshController: _refreshController,
                   child: ListView(
-                    physics: BouncingScrollPhysics(),
+                    physics: const BouncingScrollPhysics(),
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(
@@ -182,7 +186,7 @@ class _MyAppState extends State<MyApp> {
                                   fontWeight: FontWeight.w300),
                             ),
                             Text(
-                              timeAgo.format(sharedState.content.lastUpdated,
+                              time_ago.format(sharedState.content.lastUpdated,
                                   locale: "de"),
                               style: GoogleFonts.poppins(
                                   color: sharedState.theme.textColor
