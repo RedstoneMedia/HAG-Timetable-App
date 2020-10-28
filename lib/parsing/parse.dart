@@ -17,16 +17,13 @@ Future<void> parsePlans(Content content, SharedState sharedState) async {
     allSubjects.add(defaultSubject);
   }
 
-  final schoolClassName =
-      "${sharedState.profileManager.schoolGrade}${sharedState.profileManager.subSchoolClass}";
+  final schoolClassName = "${sharedState.profileManager.schoolGrade}${sharedState.profileManager.subSchoolClass}";
   // ignore: avoid_print
   print("Parsing main time table");
-  await fillTimeTable(schoolClassName, Constants.timeTableLinkBase, client,
-          content, allSubjects)
+  await fillTimeTable(schoolClassName, Constants.timeTableLinkBase, client, content, allSubjects)
       .timeout(Constants.clientTimeout);
 
-  if (!Constants.displayFullHeightSchoolGrades
-      .contains(sharedState.profileManager.schoolGrade)) {
+  if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
     // ignore: avoid_print
     print("Parsing course only time table");
     final courseTimeTableContent = Content(Constants.width, sharedState.height);
@@ -43,7 +40,6 @@ Future<void> parsePlans(Content content, SharedState sharedState) async {
   }
   // ignore: avoid_print
   print("Parsing substitution plan");
-  await overwriteContentWithSubsitutionPlan(
-          sharedState, client, content, allSubjects, schoolClassName)
+  await overwriteContentWithSubsitutionPlan(sharedState, client, content, allSubjects, schoolClassName)
       .timeout(Constants.clientTimeout);
 }

@@ -14,14 +14,13 @@ Future<void> overwriteContentWithSubsitutionPlan(
     Client client,
     Content content,
     List<String> subjects,
-    String schoolClassName) async {
-  final ret = await getCourseSubstitutionPlan(
-      schoolClassName, Constants.substitutionLinkBase, client);
+    String schoolClassName) async
+{
+  final ret = await getCourseSubstitutionPlan(schoolClassName, Constants.substitutionLinkBase, client);
   final mainPlan = ret.item1;
   final weekDayMain = ret.item2;
   writeSubstitutionPlan(mainPlan, weekDayMain, content, subjects);
-  if (!Constants.displayFullHeightSchoolGrades
-      .contains(sharedState.profileManager.schoolGrade)) {
+  if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
     final courseRet = await getCourseSubstitutionPlan(
         "${sharedState.profileManager.schoolGrade}K",
         Constants.substitutionLinkBase,
@@ -33,7 +32,8 @@ Future<void> overwriteContentWithSubsitutionPlan(
 }
 
 void writeSubstitutionPlan(List<HashMap<String, String>> plan, int weekDay,
-    Content content, List<String> subjects) {
+    Content content, List<String> subjects)
+{
   for (var i = 0; i < plan.length; i++) {
     final hours = strip(plan[i]["Stunde"]).split("-");
 
@@ -72,14 +72,16 @@ void writeSubstitutionPlan(List<HashMap<String, String>> plan, int weekDay,
   }
 }
 
-Future<Tuple2<List<HashMap<String, String>>, int>> getCourseSubstitutionPlan(
-    String course, String linkBase, Client client) async {
+Future<Tuple2<List<HashMap<String, String>>, int>> getCourseSubstitutionPlan(String course, String linkBase, Client client) async {
   final response = await client.get('${linkBase}_$course.htm');
   if (response.statusCode != 200) {
     return const Tuple2(<HashMap<String, String>>[], 1);
   }
 
   final document = parse(response.body);
+  if (document.outerHtml.contains("Fatal error")) {
+    return const Tuple2(<HashMap<String, String>>[], 1);
+  }
 
   // Get weekday for that substitute table
   final headerText = strip(document

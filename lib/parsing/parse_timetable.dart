@@ -8,7 +8,8 @@ import 'package:stundenplan/content.dart';
 
 /// This will fill the input content with a timetable based on the other arguments
 Future<void> fillTimeTable(String course, String linkBase, Client client,
-    Content content, List<String> subjects) async {
+    Content content, List<String> subjects) async
+{
   // Get the html file
   final response = await client.get('${linkBase}_$course.htm');
   if (response.statusCode != 200) {
@@ -19,6 +20,12 @@ Future<void> fillTimeTable(String course, String linkBase, Client client,
 
   // Init the parser
   final document = parse(response.body);
+
+  if (document.outerHtml.contains("Fatal error")) {
+    // ignore: avoid_print
+    print("Cannot get timetable");
+    return;
+  }
 
   // Find all elements with attr rules
   final tables = <dom.Element>[];
@@ -217,17 +224,16 @@ void parseMainTimeTable(
     List<String> subjects,
     dom.Element mainTimeTable,
     HashMap<String, List<Footnote>> footnoteMap,
-    String course) {
-  final rows = mainTimeTable
-      .children[0].children; // Gets all <tr> elements of the main table
+    String course)
+{
+  final rows = mainTimeTable.children[0].children; // Gets all <tr> elements of the main table
   rows.removeAt(0); // Removes header
 
   // Loop over all rows
   for (var y = 0; y < rows.length; y++) {
     final row = rows[y];
     final columns = row.children; // Gets the columns within that row
-    var tableX =
-        0; // The next valid index of the next column within the html grid
+    var tableX = 0; // The next valid index of the next column within the html grid
     // Ignore this row if its empty
     if (columns.isEmpty) {
       continue;
@@ -241,8 +247,7 @@ void parseMainTimeTable(
       } else {
         var doParseCell = true; // If this is false that cell will not be parsed
         if (y != 0) {
-          final contentY = (y / 2)
-              .floor(); // Get the y pos in the content timetable from the html y pos
+          final contentY = (y / 2).floor(); // Get the y pos in the content timetable from the html y pos
           if (contentY >= content.cells.length) {
             // If content to small break
             break;
@@ -250,13 +255,11 @@ void parseMainTimeTable(
           // Check if a class is already at this position (Only happens if a double class is above the current class)
           final isDoubleClass = content.cells[contentY][x].isDoubleClass;
           if (isDoubleClass) {
-            doParseCell =
-                false; // Don't parse this cell since it dose not exist in the html
+            doParseCell = false; // Don't parse this cell since it dose not exist in the html
           }
         }
         if (doParseCell) {
-          parseOneCell(
-              columns[tableX], x, y, content, subjects, footnoteMap, course);
+          parseOneCell(columns[tableX], x, y, content, subjects, footnoteMap, course);
           tableX++;
         }
       }
@@ -271,7 +274,8 @@ void parseOneCell(
     Content content,
     List<String> subjects,
     HashMap<String, List<Footnote>> footnoteMap,
-    String course) {
+    String course)
+{
   var cell = Cell();
 
   // Ignore the sidebar
