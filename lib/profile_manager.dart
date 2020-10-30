@@ -23,13 +23,11 @@ class ProfileManager {
     final profileManager = ProfileManager();
     // ignore: prefer_collection_literals
     profileManager.profiles = LinkedHashMap<String, Profile>();
-    profileManager.currentProfileName =
-        jsonProfileManagerData["currentProfileName"].toString();
+    profileManager.currentProfileName = jsonProfileManagerData["currentProfileName"].toString();
     final jsonProfilesData = jsonProfileManagerData["profiles"];
     for (final profileName in jsonProfilesData.keys) {
       final jsonProfileData = jsonProfilesData[profileName];
-      profileManager.profiles[profileName.toString()] =
-          Profile.fromJsonData(jsonProfileData);
+      profileManager.profiles[profileName.toString()] = Profile.fromJsonData(jsonProfileData);
     }
     return profileManager;
   }

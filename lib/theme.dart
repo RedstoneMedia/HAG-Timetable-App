@@ -29,7 +29,40 @@ final neonTheme = Theme(
   const Color.fromRGBO(255, 0, 0, 1), // Subject substitution color
 );
 
-final themes = [darkTheme, lightTheme, neonTheme];
+
+// Theses colors are just the standard colors for the custom theme and can be changed.
+final customTheme = Theme(
+  "Benutzerdefiniert", // Theme name
+  const Color.fromRGBO(44, 44, 84,1.0), // Background color
+  const Color.fromRGBO(247, 241, 227,1.0), // Text color
+  const Color.fromRGBO(51, 217, 178,1.0), // Subject color
+  const Color.fromRGBO(132, 129, 122,1.0), // Subject drop out color
+  const Color.fromRGBO(179, 57, 57,1.0), // Subject substitution color
+);
+
+
+final themes = [darkTheme, lightTheme, neonTheme, customTheme];
+
+
+Map<String, dynamic> colorToJsonData(Color color) {
+  final jsonColorData = <String, dynamic>{
+    "r" : color.red,
+    "g" : color.green,
+    "b" : color.blue,
+    "o" : color.opacity
+  };
+  return jsonColorData;
+}
+
+
+Color colorFromJsonData(dynamic jsonColorData) {
+  return Color.fromRGBO(
+      int.parse(jsonColorData["r"].toString()),
+      int.parse(jsonColorData["g"].toString()),
+      int.parse(jsonColorData["b"].toString()),
+      double.parse(jsonColorData["o"].toString()));
+}
+
 
 class Theme {
   final String themeName;
@@ -46,6 +79,31 @@ class Theme {
   Color get invertedTextColor {
     return Color.fromRGBO(255 - textColor.red, 255 - textColor.green,
         255 - textColor.blue, textColor.opacity);
+  }
+
+  Map<String, dynamic> getJsonData() {
+    final jsonThemeData = <String, dynamic>{
+      "themeName" : themeName,
+      "backgroundColor" : colorToJsonData(backgroundColor),
+      "textColor" : colorToJsonData(textColor),
+      "subjectColor" : colorToJsonData(subjectColor),
+      "subjectDropOutColor" : colorToJsonData(subjectDropOutColor),
+      "subjectSubstitutionColor" : colorToJsonData(subjectSubstitutionColor)
+    };
+    return jsonThemeData;
+  }
+
+  // ignore: prefer_constructors_over_static_methods
+  static Theme fromJsonData(dynamic jsonThemeData) {
+    final theme = Theme(
+      jsonThemeData["themeName"].toString(),
+      colorFromJsonData(jsonThemeData["backgroundColor"]),
+      colorFromJsonData(jsonThemeData["textColor"]),
+      colorFromJsonData(jsonThemeData["subjectColor"]),
+      colorFromJsonData(jsonThemeData["subjectDropOutColor"]),
+      colorFromJsonData(jsonThemeData["subjectSubstitutionColor"]),
+    );
+    return theme;
   }
 
   static Theme getThemeFromThemeName(String themeName) {

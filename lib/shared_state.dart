@@ -16,7 +16,7 @@ class SharedState {
   SharedState(this.preferences);
 
   void saveState() {
-    preferences.setString("theme", theme.themeName);
+    preferences.setString("theme", jsonEncode(theme.getJsonData()));
 
     // Profiles
     profileManager.renameAllProfiles();
@@ -27,7 +27,11 @@ class SharedState {
   }
 
   bool loadStateAndCheckIfFirstTime() {
-    setThemeFromThemeName(preferences.getString("theme") ?? "dark");
+    final String themeDataString = preferences.getString("theme");
+    if (themeDataString == null) {
+      theme = darkTheme;
+    }
+
     height = preferences.getInt("height");
 
     // If first time using app
@@ -36,8 +40,8 @@ class SharedState {
       return true;
     }
 
-    profileManager = ProfileManager.fromJsonData(
-        jsonDecode(preferences.getString("jsonProfileManagerData")));
+    theme = Theme.fromJsonData(jsonDecode(themeDataString));
+    profileManager = ProfileManager.fromJsonData(jsonDecode(preferences.getString("jsonProfileManagerData")));
     return false;
   }
 
@@ -61,7 +65,6 @@ class SharedState {
   }
 
   // Theme
-
   void setThemeFromThemeName(String themeName) {
     theme = Theme.getThemeFromThemeName(themeName);
   }
