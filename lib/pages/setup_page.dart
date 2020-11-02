@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/main.dart';
@@ -31,6 +32,7 @@ class _SetupPageState extends State<SetupPage> {
   SharedState sharedState;
   bool subSchoolClassEnabled;
   bool subSchoolClassIsCorrect = true;
+  Color lastPickedColor;
 
   @override
   void initState() {
@@ -155,6 +157,72 @@ class _SetupPageState extends State<SetupPage> {
     sharedState.profileManager.addProfileWithName(
         profileName); // Add that new Profile to placeholder name.
     setProfile(profileName); // Switch to that profile
+  }
+
+  RaisedButton getPickColorButton(String name, Color inputColor , void Function(Color) onPicked) {
+    return RaisedButton(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      onPressed: () {
+        displayColoPickerAlertWindow(name, inputColor).then((_) {
+          lastPickedColor ??= inputColor;
+          onPicked(lastPickedColor);
+        });
+      },
+      color: inputColor,
+      child: Text(
+          name,
+          style: GoogleFonts.poppins(
+              color: my_theme.Theme.invertColor(inputColor),
+              fontSize: 16.0,
+              fontWeight: FontWeight.bold
+          )
+      ),
+    );
+  }
+
+  Future<void> displayColoPickerAlertWindow(String name, Color color) async {
+    lastPickedColor = null;
+    await showDialog(context: context, builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(
+            "$name Farbe auswählen",
+            style: GoogleFonts.poppins(
+                color: Colors.black87,
+                fontSize: 16.0,
+                fontWeight: FontWeight.bold
+            )
+        ),
+        content: SingleChildScrollView(
+            child: ColorPicker(
+              enableAlpha: false,
+              pickerColor: color,
+              onColorChanged: (Color newColor) {
+                lastPickedColor = newColor;
+              },
+              pickerAreaBorderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(2.0),
+                topRight: Radius.circular(2.0),
+              )
+            )
+        ),
+        actions: <Widget>[
+          FlatButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text("Fertig",
+              style: GoogleFonts.poppins(
+                  color: Colors.black87,
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold
+              )
+            ),
+          )
+        ],
+      );
+    });
   }
 
   // TODO : Refactor this madness
@@ -440,6 +508,18 @@ class _SetupPageState extends State<SetupPage> {
                     ),
                   ),
                 ),
+                if (themeName == "Benutzerdefiniert") Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0, top: 15.0),
+                  child: Column(
+                    children: [
+                      getPickColorButton("Hintergrund", sharedState.theme.backgroundColor, (Color color) => setState(() => sharedState.theme.backgroundColor = color)),
+                      getPickColorButton("Text", sharedState.theme.textColor, (Color color) => setState(() => sharedState.theme.textColor = color)),
+                      getPickColorButton("Fach", sharedState.theme.subjectColor, (Color color) => setState(() => sharedState.theme.subjectColor = color)),
+                      getPickColorButton("Fach ausfall", sharedState.theme.subjectDropOutColor, (Color color) => setState(() => sharedState.theme.subjectDropOutColor = color)),
+                      getPickColorButton("Fach vertretung", sharedState.theme.subjectSubstitutionColor, (Color color) => setState(() => sharedState.theme.subjectSubstitutionColor = color))
+                    ],
+                  )
+                ) else Container(),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12.0, top: 15.0),
                   child: RaisedButton(
