@@ -93,8 +93,9 @@ class UpdateNotifier {
             RaisedButton(
               color: sharedState.theme.subjectColor,
               onPressed: () async {
-                if (await canLaunch(Constants.newestReleaseUrl)) {
-                  await launch(Constants.newestReleaseUrl);
+                final newReleaseUrl = Constants.newestReleaseUrlPart + newVersion.toString();
+                if (await canLaunch(newReleaseUrl)) {
+                  await launch(newReleaseUrl);
                 }
                 Navigator.of(context).pop();
               },
