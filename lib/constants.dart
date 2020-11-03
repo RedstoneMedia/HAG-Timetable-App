@@ -7,13 +7,13 @@ class Constants {
   static const Duration clientTimeout = Duration(seconds: 15);
   static const List<String> weekDays = ["", "Mo", "Di", "Mi", "Do", "Fr"];
   static const String newestReleaseUrlPart =
-      "https://github.com/RedstoneMedia/HAG-Crappy-Timetable-App/releases/tag/";
+      "https://github.com/RedstoneMedia/HAG-Timetable-App/releases/tag/";
   static const String substitutionLinkBase =
       "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/svertretung/svertretungen";
   static const String timeTableLinkBase =
       "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
   static const String newestVersionPubspecUrl =
-      "https://raw.githubusercontent.com/RedstoneMedia/HAG-Crappy-Timetable-App/master/pubspec.yaml";
+      "https://raw.githubusercontent.com/RedstoneMedia/HAG-Timetable-App/master/pubspec.yaml";
   static const List<String> alwaysDefaultSubjects = [
     "De",
     "Ma",
