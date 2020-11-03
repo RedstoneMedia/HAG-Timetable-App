@@ -1,4 +1,4 @@
-# HAG-Crappy-Timetable-App
+# HAG-Timetable-App
 
 This is a Timetable app for a specific school in Germany.
 
