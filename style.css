@@ -24,9 +24,10 @@ content-center {
     background-color: var(--content-bg-color);
 }
 
-@media (max-width: 550px) {
+@media (max-width: 600px) {
     content-center {
         padding: 0px;
+        padding-top: 5px;
         width: 350px;
         height: 500px;
         margin: -250px 0 0 -175px;
