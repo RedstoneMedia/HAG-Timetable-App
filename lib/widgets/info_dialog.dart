@@ -191,7 +191,7 @@ Future<void> showInfoDialog(
                                               color:
                                                   sharedState.theme.textColor)),
                                     if (cell.text.codeUnitAt(0) != 160)
-                                      Text("Text:           ${cell.text}",
+                                      Text(cell.text,
                                           textAlign: TextAlign.left,
                                           style: TextStyle(
                                               color:
