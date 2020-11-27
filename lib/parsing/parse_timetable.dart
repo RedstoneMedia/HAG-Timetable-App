@@ -187,9 +187,12 @@ HashMap<String, List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
         switch (columnTextList[columnIndex]) {
           case "Le.,Fa.,Rm.":
             final splitValue = value.split(",");
-            if (splitValue.length >= 3) {
+            if (splitValue.length >= 2) {
               footnotes[rowIndex].teacher = splitValue[0];
               footnotes[rowIndex].subject = splitValue[1];
+            }
+            // Room value may not exist on some footnotes
+            if (splitValue.length >= 3) {
               footnotes[rowIndex].room = splitValue[2];
             }
             break;
@@ -292,7 +295,8 @@ void parseOneCell(
     final teacherAndRoom = cellData[0].children;
     final subjectAndFootnote = cellData[1].children;
     cell.teacher = strip(teacherAndRoom[0].text);
-    cell.room = strip(teacherAndRoom[1].text);
+    // Check if room data exists and set it if it does
+    if (teacherAndRoom.length > 1) cell.room = strip(teacherAndRoom[1].text);
     cell.subject = strip(subjectAndFootnote[0].text);
     // Check if footnote exists
     if (subjectAndFootnote.length > 1) {
@@ -303,8 +307,7 @@ void parseOneCell(
       // Filter out footnotes that don't matter to the user
       final requiredFootnotes = <Footnote>[];
       for (final footnote in footnotes) {
-        if (subjects.contains(footnote.subject) &&
-            footnote.schoolClasses.contains(course)) {
+        if (subjects.contains(footnote.subject) && footnote.schoolClasses.contains(course)) {
           requiredFootnotes.add(footnote);
         }
       }

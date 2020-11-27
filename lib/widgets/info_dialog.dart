@@ -63,7 +63,7 @@ Future<void> showInfoDialog(
                                     textAlign: TextAlign.left,
                                     style: TextStyle(
                                         color: sharedState.theme.textColor)),
-                                Text(cell.footnotes[i].room,
+                                Text(cell.footnotes[i].room ?? "---",
                                     textAlign: TextAlign.left,
                                     style: TextStyle(
                                         color: sharedState.theme.textColor)),
