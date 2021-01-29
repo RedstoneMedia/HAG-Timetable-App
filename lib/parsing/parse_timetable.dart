@@ -18,8 +18,21 @@ Future<void> fillTimeTable(String course, String linkBase, Client client,
     return;
   }
 
+  // Change the encoding manually because the encoding is somehow wrong on the website it self and the property on the parse method dose nothing yay.
+  final headers = <String, String>{};
+  response.headers.forEach((key, value) {
+    if (key == "content-type") {
+      final splitStuff = value.replaceAll(" ", "").split(";");
+      splitStuff.remove("charset=UTF-8");
+      headers["content-type"] = splitStuff.join(";");
+    } else {
+      headers[key] = value;
+    }
+  });
+  final modResponse = Response.bytes(response.bodyBytes, response.statusCode, headers: headers);
+
   // Init the parser
-  final document = parse(response.body);
+  final document = parse(modResponse.body, encoding: "ISO-8859-1");
 
   if (document.outerHtml.contains("Fatal error")) {
     // ignore: avoid_print
