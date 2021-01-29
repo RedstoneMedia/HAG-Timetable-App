@@ -1,5 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:stundenplan/profile_manager.dart';
 import 'package:time_ago_provider/time_ago_provider.dart' as time_ago;
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/cupertino.dart';
@@ -61,12 +65,7 @@ class _MyAppState extends State<MyApp> {
     });
 
     if (sharedState.loadStateAndCheckIfFirstTime()) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
-        );
-      });
+      openSetupPageAndCheckForFiles();
     } else {
       isInternetAvailable(connectivity).then((result) {
         if (result) {
@@ -100,6 +99,36 @@ class _MyAppState extends State<MyApp> {
           });
         }
       });
+    }
+  }
+
+  Future<void> openSetupPageAndCheckForFiles() async {
+    await loadProfileManagerFromFile();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
+      );
+    });
+  }
+
+  Future<void> loadProfileManagerFromFile() async {
+    //This function uses root-level file access, which is only available on android
+    if (!Platform.isAndroid) return;
+    //Check if we have the storage Permission
+    if (await Permission.storage.request().isDenied) return;
+
+    try {
+      final File saveFile =
+          File("/storage/emulated/0/Android/data/stundenplan-profileData.save");
+
+      final String data = await saveFile.readAsString();
+
+      sharedState.profileManager =
+          ProfileManager.fromJsonData(jsonDecode(data));
+    } catch (e) {
+      // ignore: avoid_print
+      print(e);
     }
   }
 

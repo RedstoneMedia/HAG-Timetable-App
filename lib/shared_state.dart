@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
@@ -22,8 +24,25 @@ class SharedState {
     profileManager.renameAllProfiles();
     preferences.setString(
         "jsonProfileManagerData", jsonEncode(profileManager.getJsonData()));
+    _saveToSaveFile(jsonEncode(profileManager.getJsonData()));
 
     preferences.setInt("height", height);
+  }
+
+  Future<void> _saveToSaveFile(String data) async {
+    //This function uses root-level file access, which is only available on android
+    if (!Platform.isAndroid) return;
+    //Check if we have the storage Permission
+    if (await Permission.storage.request().isDenied) return;
+
+    try {
+      final File saveFile = File(
+          "/storage/emulated/0/Android/data/stundenplan-profileData.save");
+      await saveFile.writeAsString(data);
+    } catch (e) {
+      // ignore: avoid_print
+      print(e);
+    }
   }
 
   bool loadStateAndCheckIfFirstTime() {
@@ -41,7 +60,8 @@ class SharedState {
     }
 
     theme = Theme.fromJsonData(jsonDecode(themeDataString));
-    profileManager = ProfileManager.fromJsonData(jsonDecode(preferences.getString("jsonProfileManagerData")));
+    profileManager = ProfileManager.fromJsonData(
+        jsonDecode(preferences.getString("jsonProfileManagerData")));
     return false;
   }
 
