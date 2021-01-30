@@ -24,12 +24,13 @@ class SharedState {
     profileManager.renameAllProfiles();
     preferences.setString(
         "jsonProfileManagerData", jsonEncode(profileManager.getJsonData()));
-    _saveToSaveFile(jsonEncode(profileManager.getJsonData()));
+    _saveToSaveFile(jsonEncode(profileManager.getJsonData()), "/storage/emulated/0/Android/data/stundenplan-profileData.save");
+    _saveToSaveFile(jsonEncode(theme.getJsonData()), "/storage/emulated/0/Android/data/stundenplan-themeData.save");
 
     preferences.setInt("height", height);
   }
 
-  Future<void> _saveToSaveFile(String data) async {
+  Future<void> _saveToSaveFile(String data, String path) async {
     //This function uses root-level file access, which is only available on android
     if (!Platform.isAndroid) return;
     //Check if we have the storage Permission
@@ -37,12 +38,16 @@ class SharedState {
 
     try {
       final File saveFile = File(
-          "/storage/emulated/0/Android/data/stundenplan-profileData.save");
+          path);
       await saveFile.writeAsString(data);
     } catch (e) {
       // ignore: avoid_print
       print(e);
     }
+  }
+
+  Theme themeFromJsonData(dynamic jsonThemeData) {
+    return Theme.fromJsonData(jsonThemeData);
   }
 
   bool loadStateAndCheckIfFirstTime() {

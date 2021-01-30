@@ -16,7 +16,6 @@ import 'package:stundenplan/pages/setup_page.dart';
 import 'package:stundenplan/parsing/parse.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/update_notify.dart';
-
 import 'content.dart';
 import 'widgets/custom_widgets.dart';
 
@@ -103,7 +102,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> openSetupPageAndCheckForFiles() async {
-    await loadProfileManagerFromFile();
+    await loadProfileManagerAndThemeFromFiles();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Navigator.push(
         context,
@@ -112,12 +111,29 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> loadProfileManagerFromFile() async {
+  Future<void> loadProfileManagerAndThemeFromFiles() async {
     //This function uses root-level file access, which is only available on android
     if (!Platform.isAndroid) return;
     //Check if we have the storage Permission
-    if (await Permission.storage.request().isDenied) return;
+    if (await Permission.storage.isDenied || await Permission.storage.isUndetermined) {
+      await showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text("Einstellungen Speichern"),
+              content: const Text(
+                  "Diese App benötigt zugriff auf den Speicher deines Gerätes um Fächer und Themes verlässlich zu speichern."),
+                actions: <Widget>[
+                  FlatButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Ok'),
+                  ),
 
+                ],
+            );
+          });
+      if (await Permission.storage.request().isDenied) return;
+    }
     try {
       final File saveFile =
           File("/storage/emulated/0/Android/data/stundenplan-profileData.save");
@@ -128,7 +144,19 @@ class _MyAppState extends State<MyApp> {
           ProfileManager.fromJsonData(jsonDecode(data));
     } catch (e) {
       // ignore: avoid_print
-      print(e);
+      print("Error while loading profileData:\n$e");
+    }
+
+    try {
+      final File saveFile =
+          File("/storage/emulated/0/Android/data/stundenplan-themeData.save");
+
+      final String data = await saveFile.readAsString();
+
+      sharedState.theme = sharedState.themeFromJsonData(jsonDecode(data));
+    } catch (e) {
+      // ignore: avoid_print
+      print("Error while loading themeData:\n$e");
     }
   }
 
