@@ -1,26 +1,26 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:stundenplan/profile_manager.dart';
-import 'package:time_ago_provider/time_ago_provider.dart' as time_ago;
+
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/helper_functions.dart';
-import 'package:stundenplan/pages/setup_page.dart';
 import 'package:stundenplan/parsing/parse.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/update_notify.dart';
+import 'package:time_ago_provider/time_ago_provider.dart' as time_ago;
+
 import 'content.dart';
+import 'loading_functions.dart';
 import 'widgets/custom_widgets.dart';
 
 void main() {
+  //Make sure the widget fully loads before doing stuff
   WidgetsFlutterBinding.ensureInitialized();
+  //Create a SharedPreferences instance; [Used for caching and storing settings]
   SharedPreferences.getInstance().then((prefs) {
     runApp(
       MaterialApp(
@@ -54,7 +54,10 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
+    //Init the Widget
     super.initState();
+
+    //Setup the sharedState
     sharedState = widget.sharedState;
     sharedState.content = Content(Constants.width, sharedState.height);
 
@@ -63,100 +66,35 @@ class _MyAppState extends State<MyApp> {
       setState(() {});
     });
 
+    //Do all the Async Init stuff
+    asyncInit();
+  }
+
+  Future<void> asyncInit() async {
+    //Check if the App is opened for the first time
     if (sharedState.loadStateAndCheckIfFirstTime()) {
-      openSetupPageAndCheckForFiles();
+      //App is opened for the firs time -> load settings from file
+      await openSetupPageAndCheckForFiles(sharedState, context);
     } else {
-      isInternetAvailable(connectivity).then((result) {
-        if (result) {
-          updateNotifier.init().then((value) {
-            updateNotifier.checkForNewestVersionAndShowDialog(
-                context, sharedState);
-          });
-          try {
-            parsePlans(sharedState.content, sharedState)
-                .then((value) => setState(() {
-                      // ignore: avoid_print
-                      print(
-                          "State was set to : ${sharedState.content}"); //TODO: Remove Debug Message
-                      sharedState.saveContent();
-                      loading = false;
-                    }));
-          } on TimeoutException catch (_) {
-            setState(() {
-              // ignore: avoid_print
-              print("Timeout !");
-              sharedState.loadContent();
-              loading = false;
-            });
-          }
-        } else {
-          setState(() {
-            // ignore: avoid_print
-            print("No connection !");
-            sharedState.loadContent();
-            loading = false;
-          });
-        }
-      });
-    }
-  }
-
-  Future<void> openSetupPageAndCheckForFiles() async {
-    await loadProfileManagerAndThemeFromFiles();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
-      );
-    });
-  }
-
-  Future<void> loadProfileManagerAndThemeFromFiles() async {
-    //This function uses root-level file access, which is only available on android
-    if (!Platform.isAndroid) return;
-    //Check if we have the storage Permission
-    if (await Permission.storage.isDenied || await Permission.storage.isUndetermined) {
-      await showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text("Einstellungen Speichern"),
-              content: const Text(
-                  "Diese App benötigt zugriff auf den Speicher deines Gerätes um Fächer und Themes verlässlich zu speichern."),
-                actions: <Widget>[
-                  FlatButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Ok'),
-                  ),
-
-                ],
-            );
-          });
-      if (await Permission.storage.request().isDenied) return;
-    }
-    try {
-      final File saveFile =
-          File("/storage/emulated/0/Android/data/stundenplan-profileData.save");
-
-      final String data = await saveFile.readAsString();
-
-      sharedState.profileManager =
-          ProfileManager.fromJsonData(jsonDecode(data));
-    } catch (e) {
-      // ignore: avoid_print
-      print("Error while loading profileData:\n$e");
-    }
-
-    try {
-      final File saveFile =
-          File("/storage/emulated/0/Android/data/stundenplan-themeData.save");
-
-      final String data = await saveFile.readAsString();
-
-      sharedState.theme = sharedState.themeFromJsonData(jsonDecode(data));
-    } catch (e) {
-      // ignore: avoid_print
-      print("Error while loading themeData:\n$e");
+      //If not the first time -> Check if Internet is available
+      final bool result = await isInternetAvailable(connectivity);
+      //Internet is available
+      if (result) {
+        //Check for App-Updates und Load the Timetable
+        loading = await checkForUpdateAndLoadTimetable(
+            updateNotifier, sharedState, context);
+        //Update the Page to remove the loading Icon
+        setState(() {});
+      } else {
+        //Internet is not available
+        print("No connection !");
+        //Load cached content
+        sharedState.loadContent();
+        //remove loading Icon
+        loading = false;
+        //Update the Page
+        setState(() {});
+      }
     }
   }
 
@@ -194,8 +132,8 @@ class _MyAppState extends State<MyApp> {
                 )
               : PullDownToRefresh(
                   onRefresh: () {
-                    isInternetAvailable(connectivity).then((value) {
-                      if (value) {
+                    isInternetAvailable(connectivity).then((internetAvailable) {
+                      if (internetAvailable) {
                         try {
                           setState(() {
                             parsePlans(sharedState.content, sharedState)
