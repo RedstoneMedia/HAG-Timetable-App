@@ -104,5 +104,5 @@ Future<bool> checkForUpdateAndLoadTimetable(UpdateNotifier updateNotifier, Share
       sharedState.loadContent();
       return false;
   }
-  return true;
+  return false;
 }
