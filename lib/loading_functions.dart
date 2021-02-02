@@ -79,6 +79,7 @@ Future<void> loadProfileManagerAndThemeFromFiles(SharedState sharedState, BuildC
   }
 }
 
+//TODO: This function only returns false; This will definitely cause a bug later!
 Future<bool> checkForUpdateAndLoadTimetable(UpdateNotifier updateNotifier, SharedState sharedState, BuildContext context) async {
   //Check for new App-Version -> if yes -> Show dialog
   await updateNotifier.init().then((value) {
