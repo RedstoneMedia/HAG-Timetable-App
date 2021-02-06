@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:connectivity/connectivity.dart';
+import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'pages/setup_page.dart';
 
@@ -14,4 +16,30 @@ void showSettingsWindow(BuildContext context, SharedState sharedState) {
     context,
     MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
   );
+}
+
+Future<void> saveToFile(String data, String path) async {
+  //This function uses root-level file access, which is only available on android
+  if (!Platform.isAndroid) return;
+  //Check if we have the storage Permission
+  if (await Permission.storage.request().isDenied) return;
+
+  try {
+    final File saveFile = File(path);
+    await saveFile.writeAsString(data);
+  } catch (e) {
+    debugPrint("Error while writing to file at '$path':\n$e");
+  }
+}
+
+Future<String> loadFromFile(String path) async {
+  //This function uses root-level file access, which is only available on android
+  if (!Platform.isAndroid) throw const OSError("Root-level file access is only available on android");
+  //Check if we have the storage Permission
+  if (await Permission.storage.request().isDenied) throw const OSError("Storage access is denied");
+
+  //Create a reference to the File
+  final File saveFile = File("/storage/emulated/0/Android/data/stundenplan-data.save");
+  //Read from the File
+  return saveFile.readAsString();
 }

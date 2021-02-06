@@ -81,8 +81,10 @@ class _MyAppState extends State<MyApp> {
       //Internet is available
       if (result) {
         //Check for App-Updates und Load the Timetable
-        loading = await checkForUpdateAndLoadTimetable(
-            updateNotifier, sharedState, context);
+        //ignore: unused_local_variable
+        final couldNotLoad = await checkForUpdateAndLoadTimetable(updateNotifier, sharedState, context);
+        //TODO : Do something when we can't load the timetable from the network or the cache. Show a pop up Maybe ?
+        loading = false;
         //Update the Page to remove the loading Icon
         setState(() {});
       } else {

@@ -1,9 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
+import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/profile_manager.dart';
 import 'package:stundenplan/theme.dart';
 
@@ -18,32 +17,23 @@ class SharedState {
   SharedState(this.preferences);
 
   void saveState() {
-    preferences.setString("theme", jsonEncode(theme.getJsonData()));
+    final saveFileData = <String, dynamic>{};
+
+    // Theme
+    final themeData = theme.getJsonData();
+    saveFileData["theme"] = themeData;
+    preferences.setString("theme", jsonEncode(themeData));
 
     // Profiles
     profileManager.renameAllProfiles();
-    preferences.setString(
-        "jsonProfileManagerData", jsonEncode(profileManager.getJsonData()));
-    _saveToSaveFile(jsonEncode(profileManager.getJsonData()), "/storage/emulated/0/Android/data/stundenplan-profileData.save");
-    _saveToSaveFile(jsonEncode(theme.getJsonData()), "/storage/emulated/0/Android/data/stundenplan-themeData.save");
+    final jsonProfileManagerData = profileManager.getJsonData();
+    saveFileData["jsonProfileManagerData"] = jsonProfileManagerData;
+    preferences.setString("jsonProfileManagerData", jsonEncode(jsonProfileManagerData));
+
+    // Save theme and profiles to file
+    saveToFile(jsonEncode(saveFileData), Constants.saveDataFileLocation);
 
     preferences.setInt("height", height);
-  }
-
-  Future<void> _saveToSaveFile(String data, String path) async {
-    //This function uses root-level file access, which is only available on android
-    if (!Platform.isAndroid) return;
-    //Check if we have the storage Permission
-    if (await Permission.storage.request().isDenied) return;
-
-    try {
-      final File saveFile = File(
-          path);
-      await saveFile.writeAsString(data);
-    } catch (e) {
-      // ignore: avoid_print
-      print(e);
-    }
   }
 
   Theme themeFromJsonData(dynamic jsonThemeData) {
@@ -64,10 +54,13 @@ class SharedState {
       return true;
     }
 
-    theme = Theme.fromJsonData(jsonDecode(themeDataString));
-    profileManager = ProfileManager.fromJsonData(
-        jsonDecode(preferences.getString("jsonProfileManagerData")));
+    loadThemeAndProfileManagerFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")));
     return false;
+  }
+
+  void loadThemeAndProfileManagerFromJson(dynamic themeData, dynamic jsonProfileManagerData) {
+    theme = Theme.fromJsonData(themeData);
+    profileManager = ProfileManager.fromJsonData(jsonProfileManagerData);
   }
 
   // Content

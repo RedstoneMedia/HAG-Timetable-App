@@ -4,15 +4,19 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:stundenplan/constants.dart';
+import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/parsing/parse.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/update_notify.dart';
 
 import 'pages/setup_page.dart';
-import 'profile_manager.dart';
 
 Future<void> openSetupPageAndCheckForFiles(SharedState sharedState, BuildContext context) async {
-  await loadProfileManagerAndThemeFromFiles(sharedState, context);
+  //Only load from file when file permissions are granted
+  if (await checkForFilePermissionsAndShowDialog(context) == true) {
+    await loadProfileManagerAndThemeFromFiles(sharedState);
+  }
   //Making sure the Frame has been completely drawn and everything has loaded before navigating to new Page
   WidgetsBinding.instance.addPostFrameCallback((_) {
     //Opening the setupPage
@@ -20,66 +24,48 @@ Future<void> openSetupPageAndCheckForFiles(SharedState sharedState, BuildContext
       context,
       MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
     );
-
   });
 }
 
-Future<void> loadProfileManagerAndThemeFromFiles(SharedState sharedState, BuildContext context) async {
+Future<bool> checkForFilePermissionsAndShowDialog(BuildContext context) async {
   //This function uses root-level file access, which is only available on android
-  if (!Platform.isAndroid) return;
+  if (!Platform.isAndroid) return false;
   //Check if we have the storage Permission
   if (await Permission.storage.isDenied || await Permission.storage.isUndetermined) {
-    //We don't have Permission -> Show a small dialog to explain why we need it
-    await showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text("Einstellungen Speichern"),
-            content: const Text(
-                "Diese App benötigt zugriff auf den Speicher deines Gerätes um Fächer und Themes verlässlich zu speichern."),
-            actions: <Widget>[
-              FlatButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Ok'),
-              ),
-
-            ],
-          );
-        });
+      //We don't have Permission -> Show a small dialog to explain why we need it
+      await showDialog(
+          context: context,
+          builder: (context) {
+        return AlertDialog(
+          title: const Text("Einstellungen Speichern"),
+          content: const Text(
+              "Diese App benötigt zugriff auf den Speicher deines Gerätes um Fächer und Themes verlässlich zu speichern."),
+          actions: <Widget>[
+            FlatButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Ok'),
+            ),
+          ],
+        );
+      });
     //Request Permission -> If Permission denied -> return;
-    if (await Permission.storage.request().isDenied) return;
+    if (await Permission.storage.request().isDenied) return false;
   }
+  return true;
+}
+
+Future<void> loadProfileManagerAndThemeFromFiles(SharedState sharedState) async {
   try {
-    //Create a reference to the File
-    final File saveFile =
-    File("/storage/emulated/0/Android/data/stundenplan-profileData.save");
-
-    //Read from the File
-    final String data = await saveFile.readAsString();
-
-    //Parse the data and load it as profileManager
-    sharedState.profileManager =
-        ProfileManager.fromJsonData(jsonDecode(data));
+    final String data = await loadFromFile(Constants.saveDataFileLocation);
+    //Parse the json
+    final jsonData = jsonDecode(data);
+    //Load data from json
+    sharedState.loadThemeAndProfileManagerFromJson(jsonData["theme"], jsonData["jsonProfileManagerData"]);
   } catch (e) {
-    print("Error while loading profileData:\n$e");
-  }
-
-  try {
-    //Create a reference to the File
-    final File saveFile =
-    File("/storage/emulated/0/Android/data/stundenplan-themeData.save");
-
-    //Read from the File
-    final String data = await saveFile.readAsString();
-
-    //Parse the data and load it as theme
-    sharedState.theme = sharedState.themeFromJsonData(jsonDecode(data));
-  } catch (e) {
-    print("Error while loading themeData:\n$e");
+    debugPrint("Error while loading save data from file:\n$e");
   }
 }
 
-//TODO: This function only returns false; This will definitely cause a bug later!
 Future<bool> checkForUpdateAndLoadTimetable(UpdateNotifier updateNotifier, SharedState sharedState, BuildContext context) async {
   //Check for new App-Version -> if yes -> Show dialog
   await updateNotifier.init().then((value) {
@@ -91,19 +77,16 @@ Future<bool> checkForUpdateAndLoadTimetable(UpdateNotifier updateNotifier, Share
   try {
     await parsePlans(sharedState.content, sharedState)
         .then((value) {
-      // ignore: avoid_print
-      print(
-          "State was set to : ${sharedState.content}"); //TODO: Remove Debug Message
-
+      debugPrint("State was set to : ${sharedState.content}"); //TODO: Remove Debug Message
       //Cache the Timetable
       sharedState.saveContent();
       return false;
     });
   } on TimeoutException catch (_) {
-      print("Timeout !");
+      debugPrint("Timeout ! Can't read timetable from Network");
       //Load cached Timetable
       sharedState.loadContent();
       return false;
   }
-  return false;
+  return true;
 }
