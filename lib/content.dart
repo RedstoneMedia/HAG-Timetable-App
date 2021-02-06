@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 class Content {
   Content(int width, int height) {
     for (var y = 0; y < height; y++) {
@@ -13,8 +15,7 @@ class Content {
 
   void updateLastUpdated() {
     lastUpdated = DateTime.now();
-    // ignore: avoid_print
-    print("UPDATED LASTUPDATED");
+    log("UPDATED LASTUPDATED", name: "cache");
   }
 
   List<List<Map<String, dynamic>>> toJsonData() {
@@ -48,8 +49,7 @@ class Content {
 
   final cells = <List<Cell>>[];
   void setCell(int y, int x, Cell value) {
-    // ignore: avoid_print
-    print("Setting cell at y:$y, x:$x to $value");
+    log("Setting cell at y:$y, x:$x to $value", name: "content");
     cells[y][x] = value;
   }
 

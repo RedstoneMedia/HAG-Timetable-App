@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:developer';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
 import 'package:http/http.dart'; // Contains a client for making API calls
@@ -13,8 +14,7 @@ Future<void> fillTimeTable(String course, String linkBase, Client client,
   // Get the html file
   final response = await client.get('${linkBase}_$course.htm');
   if (response.statusCode != 200) {
-    // ignore: avoid_print
-    print("Cannot get timetable");
+    log("Cannot get timetable", name: "parsing.timetable");
     return;
   }
 
@@ -35,8 +35,7 @@ Future<void> fillTimeTable(String course, String linkBase, Client client,
   final document = parse(modResponse.body, encoding: "ISO-8859-1");
 
   if (document.outerHtml.contains("Fatal error")) {
-    // ignore: avoid_print
-    print("Cannot get timetable");
+    log("Cannot get timetable", name: "parsing.timetable");
     return;
   }
 

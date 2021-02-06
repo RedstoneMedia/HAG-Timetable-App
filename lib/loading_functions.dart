@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -62,7 +63,7 @@ Future<void> loadProfileManagerAndThemeFromFiles(SharedState sharedState) async 
     //Load data from json
     sharedState.loadThemeAndProfileManagerFromJson(jsonData["theme"], jsonData["jsonProfileManagerData"]);
   } catch (e) {
-    debugPrint("Error while loading save data from file:\n$e");
+    log("Error while loading save data from file", name: "file", error: e);
   }
 }
 
@@ -77,13 +78,13 @@ Future<bool> checkForUpdateAndLoadTimetable(UpdateNotifier updateNotifier, Share
   try {
     await parsePlans(sharedState.content, sharedState)
         .then((value) {
-      debugPrint("State was set to : ${sharedState.content}"); //TODO: Remove Debug Message
+      log("State was set to : ${sharedState.content}", name: "state"); //TODO: Remove Debug Message
       //Cache the Timetable
       sharedState.saveContent();
       return false;
     });
   } on TimeoutException catch (_) {
-      debugPrint("Timeout ! Can't read timetable from Network");
+      log("Timeout ! Can't read timetable from Network", name: "network");
       //Load cached Timetable
       sharedState.loadContent();
       return false;

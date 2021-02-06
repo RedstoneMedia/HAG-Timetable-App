@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:http/http.dart'; // Contains a client for making API calls
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
@@ -18,14 +20,12 @@ Future<void> parsePlans(Content content, SharedState sharedState) async {
   }
 
   final schoolClassName = "${sharedState.profileManager.schoolGrade}${sharedState.profileManager.subSchoolClass}";
-  // ignore: avoid_print
-  print("Parsing main time table");
+  log("Parsing main time table", name: "parsing");
   await fillTimeTable(schoolClassName, Constants.timeTableLinkBase, client, content, allSubjects)
       .timeout(Constants.clientTimeout);
 
   if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
-    // ignore: avoid_print
-    print("Parsing course only time table");
+    log("Parsing course only time table", name: "parsing");
     final courseTimeTableContent = Content(Constants.width, sharedState.height);
     await fillTimeTable(
             "${sharedState.profileManager.schoolGrade}K",
@@ -34,12 +34,10 @@ Future<void> parsePlans(Content content, SharedState sharedState) async {
             courseTimeTableContent,
             allSubjects)
         .timeout(Constants.clientTimeout);
-    // ignore: avoid_print
-    print("Combining both tables");
+    log("Combining both tables", name: "parsing");
     content.combine(courseTimeTableContent);
   }
-  // ignore: avoid_print
-  print("Parsing substitution plan");
+  log("Parsing substitution plan", name: "parsing");
   await overwriteContentWithSubsitutionPlan(sharedState, client, content, allSubjects, schoolClassName)
       .timeout(Constants.clientTimeout);
 }

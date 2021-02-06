@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
@@ -67,8 +68,7 @@ class SharedState {
 
   void saveContent() {
     content.updateLastUpdated();
-    // ignore: avoid_print
-    print("[SAVED] lastUpdated: ${content.lastUpdated}");
+    log("[SAVED] lastUpdated: ${content.lastUpdated}", name: "cache");
     final encodedContent = jsonEncode(content.toJsonData());
     preferences.setString("cachedContent", encodedContent);
   }
@@ -78,8 +78,7 @@ class SharedState {
     if (contentJsonString == null) return;
     final decodedJson = jsonDecode(contentJsonString) as List<dynamic>;
     content = Content.fromJsonData(decodedJson);
-    // ignore: avoid_print
-    print("[LOADED] lastUpdated: ${content.lastUpdated}");
+    log("[LOADED] lastUpdated: ${content.lastUpdated}", name: "cache");
   }
 
   // Theme

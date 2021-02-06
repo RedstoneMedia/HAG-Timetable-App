@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +29,7 @@ Future<void> saveToFile(String data, String path) async {
     final File saveFile = File(path);
     await saveFile.writeAsString(data);
   } catch (e) {
-    debugPrint("Error while writing to file at '$path':\n$e");
+    log("Error while writing to file at '$path'", name: "file", error: e);
   }
 }
 

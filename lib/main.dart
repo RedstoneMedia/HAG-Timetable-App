@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/cupertino.dart';
@@ -89,7 +90,7 @@ class _MyAppState extends State<MyApp> {
         setState(() {});
       } else {
         //Internet is not available
-        print("No connection !");
+        log("No connection !", name: "network");
         //Load cached content
         sharedState.loadContent();
         //remove loading Icon
@@ -145,13 +146,11 @@ class _MyAppState extends State<MyApp> {
                             });
                           });
                         } on TimeoutException catch (_) {
-                          // ignore: avoid_print
-                          print("Timeout !");
+                          log("Timeout !", name: "newtork");
                           _refreshController.refreshFailed();
                         }
                       } else {
-                        // ignore: avoid_print
-                        print("no connection !");
+                        log("No connection !", name: "newtork");
                         _refreshController.refreshFailed();
                       }
                     });
