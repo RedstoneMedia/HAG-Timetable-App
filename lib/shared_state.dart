@@ -6,6 +6,7 @@ import 'package:stundenplan/content.dart';
 import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/profile_manager.dart';
 import 'package:stundenplan/theme.dart';
+import 'package:stundenplan/week_subsitutions.dart';
 
 class SharedState {
   SharedPreferences preferences;
@@ -13,6 +14,7 @@ class SharedState {
   Theme theme = darkTheme;
   int height = Constants.defaultHeight;
   Content content;
+  WeekSubstitutions weekSubstitutions = WeekSubstitutions({});
   ProfileManager profileManager = ProfileManager();
 
   SharedState(this.preferences);
@@ -31,6 +33,9 @@ class SharedState {
     saveFileData["jsonProfileManagerData"] = jsonProfileManagerData;
     preferences.setString("jsonProfileManagerData", jsonEncode(jsonProfileManagerData));
 
+    // Week substitutions
+    preferences.setString("weekSubstitutions", jsonEncode(weekSubstitutions.weekSubstitutions));
+
     // Save theme and profiles to file
     saveToFile(jsonEncode(saveFileData), Constants.saveDataFileLocation);
 
@@ -46,13 +51,18 @@ class SharedState {
     if (themeDataString == null) {
       theme = darkTheme;
     }
-
     height = preferences.getInt("height");
 
     // If first time using app
     if (height == null) {
       height = Constants.defaultHeight;
       return true;
+    }
+
+    // Load week substitutions
+    final weekSubstitutionsJsonString = preferences.get("weekSubstitutions").toString();
+    if (weekSubstitutionsJsonString != null) {
+      weekSubstitutions = WeekSubstitutions(jsonDecode(weekSubstitutionsJsonString));
     }
 
     loadThemeAndProfileManagerFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")));

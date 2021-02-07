@@ -1,13 +1,11 @@
-import 'dart:collection';
 import 'dart:math';
 
 import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
-import 'package:http/http.dart';
+import 'package:http/http.dart';  // Contains a client for making API calls
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
 import 'package:stundenplan/parsing/parsing_util.dart';
 import 'package:stundenplan/shared_state.dart';
-import 'package:tuple/tuple.dart'; // Contains a client for making API calls
 
 Future<void> overwriteContentWithSubsitutionPlan(
     SharedState sharedState,
@@ -16,41 +14,50 @@ Future<void> overwriteContentWithSubsitutionPlan(
     List<String> subjects,
     String schoolClassName) async
 {
+  // Get main substitutions
   final ret = await getCourseSubstitutionPlan(schoolClassName, Constants.substitutionLinkBase, client);
-  final mainPlan = ret.item1;
-  final weekDayMain = ret.item2;
-  writeSubstitutionPlan(mainPlan, weekDayMain, content, subjects);
+  final mainPlan = ret["substitutions"] as List<Map<String, String>>;
+  final weekDayMain = ret["substituteWeekday"] as int;
+  sharedState.weekSubstitutions.setDay(mainPlan, weekDayMain);
+
+  //  Get course substitutions
   if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
     final courseRet = await getCourseSubstitutionPlan(
         "${sharedState.profileManager.schoolGrade}K",
         Constants.substitutionLinkBase,
         client);
-    final coursePlan = courseRet.item1;
-    final weekDayCourse = courseRet.item2;
-    writeSubstitutionPlan(coursePlan, weekDayCourse, content, subjects);
+    final coursePlan = courseRet["substitutions"] as List<Map<String, String>>;
+    final weekDayCourse = courseRet["substituteWeekday"] as int;
+    sharedState.weekSubstitutions.setDay(coursePlan, weekDayCourse);
+  }
+
+  // Write substitutions to content.
+  for (final weekDayString in sharedState.weekSubstitutions.weekSubstitutions.keys) {
+    final weekDay = int.parse(weekDayString);
+    writeSubstitutionPlan(sharedState.weekSubstitutions.weekSubstitutions[weekDayString], weekDay, content, subjects);
   }
 }
 
-void writeSubstitutionPlan(List<HashMap<String, String>> plan, int weekDay,
+void writeSubstitutionPlan(List<Map<String, dynamic>> plan, int weekDay,
     Content content, List<String> subjects)
 {
   for (var i = 0; i < plan.length; i++) {
-    final hours = strip(plan[i]["Stunde"]).split("-");
+    final hours = strip(plan[i]["Stunde"] as String).split("-");
 
     // Fill cell
     final cell = Cell();
-    cell.subject = strip(plan[i]["Fach"]);
-    cell.originalSubject = strip(plan[i]["statt Fach"]);
+    cell.subject = strip(plan[i]["Fach"] as String);
+    cell.originalSubject = strip(plan[i]["statt Fach"] as String);
     if (!subjects.contains(cell.originalSubject)) {
       // If user dose not have that subject skip that class
       continue;
     }
-    cell.teacher = strip(plan[i]["Vertretung"]);
-    cell.originalTeacher = strip(plan[i]["statt Lehrer"]);
-    cell.room = strip(plan[i]["Raum"]);
-    cell.originalRoom = strip(plan[i]["statt Raum"]);
-    cell.text = plan[i]["Text"];
-    cell.isDropped = strip(plan[i]["Entfall"]) == "x";
+    cell.teacher = strip(plan[i]["Vertretung"] as String);
+    cell.originalTeacher = strip(plan[i]["statt Lehrer"] as String);
+    cell.room = strip(plan[i]["Raum"] as String);
+    cell.originalRoom = strip(plan[i]["statt Raum"] as String);
+    cell.text = plan[i]["Text"] as String;
+    cell.isDropped = strip(plan[i]["Entfall"] as String) == "x";
     if (!cell.isDropped) {
       cell.isSubstitute = true;
     }
@@ -72,15 +79,21 @@ void writeSubstitutionPlan(List<HashMap<String, String>> plan, int weekDay,
   }
 }
 
-Future<Tuple2<List<HashMap<String, String>>, int>> getCourseSubstitutionPlan(String course, String linkBase, Client client) async {
+Future<Map<String, dynamic>> getCourseSubstitutionPlan(String course, String linkBase, Client client) async {
   final response = await client.get('${linkBase}_$course.htm');
   if (response.statusCode != 200) {
-    return const Tuple2(<HashMap<String, String>>[], 1);
+    return {
+      "substitutions" : <Map<String, String>>[],
+      "substituteWeekday" : 1
+    };
   }
 
   final document = parse(response.body);
   if (document.outerHtml.contains("Fatal error")) {
-    return const Tuple2(<HashMap<String, String>>[], 1);
+    return {
+      "substitutions" : <Map<String, String>>[],
+      "substituteWeekday" : 1
+    };
   }
 
   // Get weekday for that substitute table
@@ -123,17 +136,20 @@ Future<Tuple2<List<HashMap<String, String>>, int>> getCourseSubstitutionPlan(Str
     "Entfall"
   ];
   rows.removeAt(0);
-  final subsituions = <HashMap<String, String>>[];
+  final substitutions = <Map<String, String>>[];
 
   for (final row in rows) {
-    final substituion = HashMap<String, String>();
-    final coloumns = row.getElementsByTagName("td");
-    for (var i = 0; i < coloumns.length; i++) {
-      substituion[headerInformation[i]] =
-          coloumns[i].text.replaceAll("\n", " ");
+    final substitution = <String, String>{};
+    final columns = row.getElementsByTagName("td");
+    for (var i = 0; i < columns.length; i++) {
+      substitution[headerInformation[i]] =
+          columns[i].text.replaceAll("\n", " ");
     }
-    subsituions.add(substituion);
+    substitutions.add(substitution);
   }
 
-  return Tuple2(subsituions, substituteWeekday);
+  return {
+    "substitutions" : substitutions,
+    "substituteWeekday" : substituteWeekday
+  };
 }
