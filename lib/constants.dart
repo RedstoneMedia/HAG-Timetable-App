@@ -1,5 +1,5 @@
 class Constants {
-  //Grid Properties
+  // Grid Properties
   static const int width = 6;
   static const int defaultHeight = 10;
   static const int fullHeight = 12;

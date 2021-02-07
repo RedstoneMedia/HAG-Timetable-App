@@ -20,9 +20,9 @@ void showSettingsWindow(BuildContext context, SharedState sharedState) {
 }
 
 Future<void> saveToFile(String data, String path) async {
-  //This function uses root-level file access, which is only available on android
+  // This function uses root-level file access, which is only available on android
   if (!Platform.isAndroid) return;
-  //Check if we have the storage Permission
+  // Check if we have the storage Permission
   if (await Permission.storage.request().isDenied) return;
 
   try {
@@ -34,13 +34,13 @@ Future<void> saveToFile(String data, String path) async {
 }
 
 Future<String> loadFromFile(String path) async {
-  //This function uses root-level file access, which is only available on android
+  // This function uses root-level file access, which is only available on android
   if (!Platform.isAndroid) throw const OSError("Root-level file access is only available on android");
-  //Check if we have the storage Permission
+  // Check if we have the storage Permission
   if (await Permission.storage.request().isDenied) throw const OSError("Storage access is denied");
 
-  //Create a reference to the File
+  // Create a reference to the File
   final File saveFile = File("/storage/emulated/0/Android/data/stundenplan-data.save");
-  //Read from the File
+  // Read from the File
   return saveFile.readAsString();
 }

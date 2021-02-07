@@ -3,10 +3,9 @@ import '../content.dart';
 import '../shared_state.dart';
 
 // This is ridiculously long for a simple info-dialog.
-//
 // You could probably remove the 'flexible' widgets.
 // Not quite sure what else can be done. I have to look into this.
-//TODO: fix this mess
+// TODO: fix this mess
 
 Future<void> showInfoDialog(
     Cell cell, BuildContext context, SharedState sharedState) async {

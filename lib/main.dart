@@ -19,9 +19,9 @@ import 'loading_functions.dart';
 import 'widgets/custom_widgets.dart';
 
 void main() {
-  //Make sure the widget fully loads before doing stuff
+  // Make sure the widget fully loads before doing stuff
   WidgetsFlutterBinding.ensureInitialized();
-  //Create a SharedPreferences instance; [Used for caching and storing settings]
+  // Create a SharedPreferences instance; [Used for caching and storing settings]
   SharedPreferences.getInstance().then((prefs) {
     runApp(
       MaterialApp(
@@ -55,10 +55,10 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
-    //Init the Widget
+    // Init the Widget
     super.initState();
 
-    //Setup the sharedState
+    // Setup the sharedState
     sharedState = widget.sharedState;
     sharedState.content = Content(Constants.width, sharedState.height);
 
@@ -67,35 +67,35 @@ class _MyAppState extends State<MyApp> {
       setState(() {});
     });
 
-    //Do all the Async Init stuff
+    // Do all the Async Init stuff
     asyncInit();
   }
 
   Future<void> asyncInit() async {
-    //Check if the App is opened for the first time
+    // Check if the App is opened for the first time
     if (sharedState.loadStateAndCheckIfFirstTime()) {
-      //App is opened for the firs time -> load settings from file
+      // App is opened for the firs time -> load settings from file
       await openSetupPageAndCheckForFile(sharedState, context);
     } else {
-      //If not the first time -> Check if Internet is available
+      // If not the first time -> Check if Internet is available
       final bool result = await isInternetAvailable(connectivity);
-      //Internet is available
+      // Internet is available
       if (result) {
-        //Check for App-Updates und Load the Timetable
-        //ignore: unused_local_variable
+        // Check for App-Updates und Load the Timetable
+        // ignore: unused_local_variable
         final couldNotLoad = await checkForUpdateAndLoadTimetable(updateNotifier, sharedState, context);
-        //TODO : Do something when we can't load the timetable from the network or the cache. Show a pop up Maybe ?
+        // TODO : Do something when we can't load the timetable from the network or the cache. Show a pop up Maybe ?
         loading = false;
-        //Update the Page to remove the loading Icon
+        // Update the Page to remove the loading Icon
         setState(() {});
       } else {
-        //Internet is not available
+        // Internet is not available
         log("No connection !", name: "network");
-        //Load cached content
+        // Load cached content
         sharedState.loadContent();
-        //remove loading Icon
+        // remove loading Icon
         loading = false;
-        //Update the Page
+        // Update the Page
         setState(() {});
       }
     }

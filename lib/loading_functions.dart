@@ -14,13 +14,13 @@ import 'package:stundenplan/update_notify.dart';
 import 'pages/setup_page.dart';
 
 Future<void> openSetupPageAndCheckForFile(SharedState sharedState, BuildContext context) async {
-  //Only load from file when file permissions are granted
+  // Only load from file when file permissions are granted
   if (await checkForFilePermissionsAndShowDialog(context) == true) {
     await loadProfileManagerAndThemeFromFile(sharedState);
   }
-  //Making sure the Frame has been completely drawn and everything has loaded before navigating to new Page
+  // Making sure the Frame has been completely drawn and everything has loaded before navigating to new Page
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    //Opening the setupPage
+    // Opening the setupPage
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
@@ -29,11 +29,11 @@ Future<void> openSetupPageAndCheckForFile(SharedState sharedState, BuildContext 
 }
 
 Future<bool> checkForFilePermissionsAndShowDialog(BuildContext context) async {
-  //This function uses root-level file access, which is only available on android
+  // This function uses root-level file access, which is only available on android
   if (!Platform.isAndroid) return false;
-  //Check if we have the storage Permission
+  // Check if we have the storage Permission
   if (await Permission.storage.isDenied || await Permission.storage.isUndetermined) {
-      //We don't have Permission -> Show a small dialog to explain why we need it
+      // We don't have Permission -> Show a small dialog to explain why we need it
       await showDialog(
           context: context,
           builder: (context) {
@@ -49,7 +49,7 @@ Future<bool> checkForFilePermissionsAndShowDialog(BuildContext context) async {
           ],
         );
       });
-    //Request Permission -> If Permission denied -> return;
+    // Request Permission -> If Permission denied -> return;
     if (await Permission.storage.request().isDenied) return false;
   }
   return true;
@@ -58,9 +58,9 @@ Future<bool> checkForFilePermissionsAndShowDialog(BuildContext context) async {
 Future<void> loadProfileManagerAndThemeFromFile(SharedState sharedState) async {
   try {
     final String data = await loadFromFile(Constants.saveDataFileLocation);
-    //Parse the json
+    // Parse the json
     final jsonData = jsonDecode(data);
-    //Load data from json
+    // Load data from json
     sharedState.loadThemeAndProfileManagerFromJson(jsonData["theme"], jsonData["jsonProfileManagerData"]);
   } catch (e) {
     log("Error while loading save data from file", name: "file", error: e);
@@ -68,24 +68,24 @@ Future<void> loadProfileManagerAndThemeFromFile(SharedState sharedState) async {
 }
 
 Future<bool> checkForUpdateAndLoadTimetable(UpdateNotifier updateNotifier, SharedState sharedState, BuildContext context) async {
-  //Check for new App-Version -> if yes -> Show dialog
+  // Check for new App-Version -> if yes -> Show dialog
   await updateNotifier.init().then((value) {
     updateNotifier.checkForNewestVersionAndShowDialog(
         context, sharedState);
   });
 
-  //Parse the Timetable
+  // Parse the Timetable
   try {
     await parsePlans(sharedState.content, sharedState)
         .then((value) {
-      log("State was set to : ${sharedState.content}", name: "state"); //TODO: Remove Debug Message
-      //Cache the Timetable
+      log("State was set to : ${sharedState.content}", name: "state");
+      // Cache the Timetable
       sharedState.saveContent();
       return false;
     });
   } on TimeoutException catch (_) {
       log("Timeout ! Can't read timetable from Network", name: "network");
-      //Load cached Timetable
+      // Load cached Timetable
       sharedState.loadContent();
       return false;
   }
