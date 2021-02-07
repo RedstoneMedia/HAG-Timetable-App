@@ -13,10 +13,10 @@ import 'package:stundenplan/update_notify.dart';
 
 import 'pages/setup_page.dart';
 
-Future<void> openSetupPageAndCheckForFiles(SharedState sharedState, BuildContext context) async {
+Future<void> openSetupPageAndCheckForFile(SharedState sharedState, BuildContext context) async {
   //Only load from file when file permissions are granted
   if (await checkForFilePermissionsAndShowDialog(context) == true) {
-    await loadProfileManagerAndThemeFromFiles(sharedState);
+    await loadProfileManagerAndThemeFromFile(sharedState);
   }
   //Making sure the Frame has been completely drawn and everything has loaded before navigating to new Page
   WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -55,7 +55,7 @@ Future<bool> checkForFilePermissionsAndShowDialog(BuildContext context) async {
   return true;
 }
 
-Future<void> loadProfileManagerAndThemeFromFiles(SharedState sharedState) async {
+Future<void> loadProfileManagerAndThemeFromFile(SharedState sharedState) async {
   try {
     final String data = await loadFromFile(Constants.saveDataFileLocation);
     //Parse the json

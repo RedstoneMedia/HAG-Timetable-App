@@ -75,7 +75,7 @@ class _MyAppState extends State<MyApp> {
     //Check if the App is opened for the first time
     if (sharedState.loadStateAndCheckIfFirstTime()) {
       //App is opened for the firs time -> load settings from file
-      await openSetupPageAndCheckForFiles(sharedState, context);
+      await openSetupPageAndCheckForFile(sharedState, context);
     } else {
       //If not the first time -> Check if Internet is available
       final bool result = await isInternetAvailable(connectivity);
