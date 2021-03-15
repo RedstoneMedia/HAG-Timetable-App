@@ -50,7 +50,7 @@ class _MyAppState extends State<MyApp> {
   String day;
   Timer everyMinute;
 
-  bool couldNotLoad = true;
+  bool couldLoad = true;
 
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   final RefreshController _refreshController = RefreshController();
@@ -85,7 +85,7 @@ class _MyAppState extends State<MyApp> {
       if (result) {
         // Check for App-Updates und Load the Timetable
         // ignore: unused_local_variable
-        couldNotLoad = await checkForUpdateAndLoadTimetable(
+        couldLoad = await checkForUpdateAndLoadTimetable(
             updateNotifier, sharedState, context);
         loading = false;
         // Update the Page to remove the loading Icon
@@ -97,8 +97,8 @@ class _MyAppState extends State<MyApp> {
         try {
           sharedState.loadContent();
         } catch (e) {
-          log("Loading from Network and Cache failed.", name: "loading");
-          couldNotLoad = true;
+          log("Loading from Network or Cache failed.", name: "loading");
+          couldLoad = false;
           await showDialog(
               context: context,
               builder: (context) {
@@ -155,7 +155,7 @@ class _MyAppState extends State<MyApp> {
               ? Center(
                   child: Loader(sharedState),
                 )
-              : couldNotLoad
+              : !couldLoad
                   ? Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: Column(
