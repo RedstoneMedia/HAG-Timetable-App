@@ -196,7 +196,7 @@ class _MyAppState extends State<MyApp> {
                                 });
                               });
                             } on TimeoutException catch (_) {
-                              log("Timeout !", name: "newtork");
+                              log("Timeout !", name: "network");
                               _refreshController.refreshFailed();
                             }
                           } else {
