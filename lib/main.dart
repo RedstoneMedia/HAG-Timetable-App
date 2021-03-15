@@ -200,7 +200,7 @@ class _MyAppState extends State<MyApp> {
                               _refreshController.refreshFailed();
                             }
                           } else {
-                            log("No connection !", name: "newtork");
+                            log("No connection !", name: "network");
                             _refreshController.refreshFailed();
                           }
                         });
