@@ -50,6 +50,8 @@ class _MyAppState extends State<MyApp> {
   String day;
   Timer everyMinute;
 
+  bool couldNotLoad = true;
+
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   final RefreshController _refreshController = RefreshController();
 
@@ -83,8 +85,8 @@ class _MyAppState extends State<MyApp> {
       if (result) {
         // Check for App-Updates und Load the Timetable
         // ignore: unused_local_variable
-        final couldNotLoad = await checkForUpdateAndLoadTimetable(updateNotifier, sharedState, context);
-        // TODO : Do something when we can't load the timetable from the network or the cache. Show a pop up Maybe ?
+        couldNotLoad = await checkForUpdateAndLoadTimetable(
+            updateNotifier, sharedState, context);
         loading = false;
         // Update the Page to remove the loading Icon
         setState(() {});
@@ -92,7 +94,27 @@ class _MyAppState extends State<MyApp> {
         // Internet is not available
         log("No connection !", name: "network");
         // Load cached content
-        sharedState.loadContent();
+        try {
+          sharedState.loadContent();
+        } catch (e) {
+          log("Loading from Network and Cache failed.", name: "loading");
+          couldNotLoad = true;
+          await showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text("Die Daten konnten nicht geladen werden"),
+                  content: const Text(
+                      "Die App konnte den Stundenplan nicht aus dem Internet oder dem Cache laden."),
+                  actions: <Widget>[
+                    FlatButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Ok'),
+                    ),
+                  ],
+                );
+              });
+        }
         // remove loading Icon
         loading = false;
         // Update the Page
@@ -133,68 +155,97 @@ class _MyAppState extends State<MyApp> {
               ? Center(
                   child: Loader(sharedState),
                 )
-              : PullDownToRefresh(
-                  onRefresh: () {
-                    isInternetAvailable(connectivity).then((internetAvailable) {
-                      if (internetAvailable) {
-                        try {
-                          setState(() {
-                            parsePlans(sharedState.content, sharedState)
-                                .then((value) {
-                              sharedState.saveContent();
-                              _refreshController.refreshCompleted();
-                            });
-                          });
-                        } on TimeoutException catch (_) {
-                          log("Timeout !", name: "newtork");
-                          _refreshController.refreshFailed();
-                        }
-                      } else {
-                        log("No connection !", name: "newtork");
-                        _refreshController.refreshFailed();
-                      }
-                    });
-                  },
-                  sharedState: sharedState,
-                  refreshController: _refreshController,
-                  child: ListView(
-                    physics: const BouncingScrollPhysics(),
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 8.0,
-                          top: 8.0,
-                          right: 8.0,
-                        ),
-                        child: TimeTable(
-                            sharedState: sharedState,
-                            content: sharedState.content),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Text(
-                              "Zuletzt aktualisiert: ",
-                              style: GoogleFonts.poppins(
-                                  color: sharedState.theme.textColor
-                                      .withAlpha(200),
+              : couldNotLoad
+                  ? Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Center(
+                            child: Text(
+                              "Es konnten keine Daten geladen werden...",
+                              style: TextStyle(
+                                  color: sharedState.theme.textColor,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          Container(height: 10.0,),
+                          Center(
+                            child: Text(
+                              "Versuche eine Internetverbindung herzustellen und starte die App neu.",
+                              style: TextStyle(
+                                  color: sharedState.theme.textColor,
                                   fontWeight: FontWeight.w300),
+                              textAlign: TextAlign.center,
                             ),
-                            Text(
-                              time_ago.format(sharedState.content.lastUpdated,
-                                  locale: "de"),
-                              style: GoogleFonts.poppins(
-                                  color: sharedState.theme.textColor
-                                      .withAlpha(200),
-                                  fontWeight: FontWeight.w200),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                  )
+                  : PullDownToRefresh(
+                      onRefresh: () {
+                        isInternetAvailable(connectivity)
+                            .then((internetAvailable) {
+                          if (internetAvailable) {
+                            try {
+                              setState(() {
+                                parsePlans(sharedState.content, sharedState)
+                                    .then((value) {
+                                  sharedState.saveContent();
+                                  _refreshController.refreshCompleted();
+                                });
+                              });
+                            } on TimeoutException catch (_) {
+                              log("Timeout !", name: "newtork");
+                              _refreshController.refreshFailed();
+                            }
+                          } else {
+                            log("No connection !", name: "newtork");
+                            _refreshController.refreshFailed();
+                          }
+                        });
+                      },
+                      sharedState: sharedState,
+                      refreshController: _refreshController,
+                      child: ListView(
+                        physics: const BouncingScrollPhysics(),
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: 8.0,
+                              top: 8.0,
+                              right: 8.0,
+                            ),
+                            child: TimeTable(
+                                sharedState: sharedState,
+                                content: sharedState.content),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: [
+                                Text(
+                                  "Zuletzt aktualisiert: ",
+                                  style: GoogleFonts.poppins(
+                                      color: sharedState.theme.textColor
+                                          .withAlpha(200),
+                                      fontWeight: FontWeight.w300),
+                                ),
+                                Text(
+                                  time_ago.format(
+                                      sharedState.content.lastUpdated,
+                                      locale: "de"),
+                                  style: GoogleFonts.poppins(
+                                      color: sharedState.theme.textColor
+                                          .withAlpha(200),
+                                      fontWeight: FontWeight.w200),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
         ),
       ),
     );
