@@ -68,11 +68,14 @@ Future<void> loadProfileManagerAndThemeFromFile(SharedState sharedState) async {
 }
 
 Future<bool> checkForUpdateAndLoadTimetable(UpdateNotifier updateNotifier, SharedState sharedState, BuildContext context) async {
-  // Check for new App-Version -> if yes -> Show dialog
-  await updateNotifier.init().then((value) {
-    updateNotifier.checkForNewestVersionAndShowDialog(
-        context, sharedState);
-  });
+  //TODO: Do something on Windows
+  if(!Platform.isWindows) {
+    // Check for new App-Version -> if yes -> Show dialog
+    await updateNotifier.init().then((value) {
+      updateNotifier.checkForNewestVersionAndShowDialog(
+          context, sharedState);
+    });
+  }
 
   // Parse the Timetable
   try {

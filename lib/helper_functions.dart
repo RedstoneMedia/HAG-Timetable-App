@@ -7,6 +7,8 @@ import 'package:stundenplan/shared_state.dart';
 import 'pages/setup_page.dart';
 
 Future<bool> isInternetAvailable(Connectivity connectivity) async {
+  //TODO: Check on Windows
+  if(Platform.isWindows) return true;
   final result = await connectivity.checkConnectivity();
   return result == ConnectivityResult.mobile ||
       result == ConnectivityResult.wifi;
