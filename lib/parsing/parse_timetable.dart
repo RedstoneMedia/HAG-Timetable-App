@@ -12,7 +12,7 @@ Future<void> fillTimeTable(String course, String linkBase, Client client,
     Content content, List<String> subjects) async
 {
   // Get the html file
-  final response = await client.get('${linkBase}_$course.htm');
+  final response = await client.get(Uri.parse('${linkBase}_$course.htm'));
   if (response.statusCode != 200) {
     log("Cannot get timetable", name: "parsing.timetable");
     return;

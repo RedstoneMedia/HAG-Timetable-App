@@ -32,7 +32,7 @@ Future<bool> checkForFilePermissionsAndShowDialog(BuildContext context) async {
   // This function uses root-level file access, which is only available on android
   if (!Platform.isAndroid) return false;
   // Check if we have the storage Permission
-  if (await Permission.storage.isDenied || await Permission.storage.isUndetermined) {
+  if (await Permission.storage.isDenied) {
       // We don't have Permission -> Show a small dialog to explain why we need it
       await showDialog(
           context: context,

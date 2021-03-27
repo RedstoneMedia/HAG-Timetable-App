@@ -80,7 +80,7 @@ void writeSubstitutionPlan(List<Map<String, dynamic>> plan, int weekDay,
 }
 
 Future<Map<String, dynamic>> getCourseSubstitutionPlan(String course, String linkBase, Client client) async {
-  final response = await client.get('${linkBase}_$course.htm');
+  final response = await client.get(Uri.parse('${linkBase}_$course.htm'));
   if (response.statusCode != 200) {
     return {
       "substitutions" : <Map<String, String>>[],

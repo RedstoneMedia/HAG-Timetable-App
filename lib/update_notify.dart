@@ -50,7 +50,7 @@ class UpdateNotifier {
   }
 
   Future<Version> getNewestVersion() async {
-    final response = await client.get(Constants.newestVersionPubspecUrl);
+    final response = await client.get(Uri.parse(Constants.newestVersionPubspecUrl));
     final pubspecYamlData = loadYaml(response.body);
     return Version(pubspecYamlData["version"].toString());
   }
