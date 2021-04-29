@@ -2,7 +2,7 @@ import 'dart:developer';
 
 class Content {
   Content(int width, int height) {
-    for (var y = 0; y < height; y++) {
+    for (var y = 0; y < height-1; y++) {
       final row = <Cell>[];
       for (var x = 0; x < width; x++) {
         row.add(Cell());
@@ -50,7 +50,23 @@ class Content {
   final cells = <List<Cell>>[];
   void setCell(int y, int x, Cell value) {
     log("Setting cell at y:$y, x:$x to $value", name: "content");
+    growToY(y);
     cells[y][x] = value;
+  }
+
+  void growToY(int y) {
+    while (y >= cells.length) {
+      final row = <Cell>[];
+      for (var x = 0; x < cells[0].length; x++) {
+        row.add(Cell());
+      }
+      cells.add(row);
+    }
+  }
+
+  Cell getCell(int y, int x) {
+    growToY(y);
+    return cells[y][x];
   }
 
   @override

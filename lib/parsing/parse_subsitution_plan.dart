@@ -65,14 +65,14 @@ void writeSubstitutionPlan(List<Map<String, dynamic>> plan, int weekDay,
     if (hours.length == 1) {
       // No hour range (5)
       final hour = int.parse(hours[0]);
-      cell.footnotes = content.cells[hour - 1][weekDay].footnotes;
+      cell.footnotes = content.getCell(hour - 1, weekDay).footnotes;
       content.setCell(hour - 1, weekDay, cell);
     } else if (hours.length == 2) {
       // Hour range (5-6)
       final hourStart = int.parse(hours[0]);
       final hourEnd = int.parse(hours[1]);
       for (var i = hourStart; i < hourEnd + 1; i++) {
-        cell.footnotes = content.cells[i - 1][weekDay].footnotes;
+        cell.footnotes = content.getCell(i -1, weekDay).footnotes;
         content.setCell(i - 1, weekDay, cell);
       }
     }

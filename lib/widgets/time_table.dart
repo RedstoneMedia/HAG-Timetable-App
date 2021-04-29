@@ -16,7 +16,7 @@ class TimeTable extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        for (int y = 0; y < sharedState.height; y++)
+        for (int y = 0; y < sharedState.content.cells.length+1; y++)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
