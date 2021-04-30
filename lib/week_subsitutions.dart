@@ -1,6 +1,6 @@
 
 class WeekSubstitutions {
-  // Type is Map<String, List<Map<String, String>>>
+  // Type is Map<String, List<Map<String, dynamic>>>
   Map<String, List<Map<String, dynamic>>> weekSubstitutions;
 
   WeekSubstitutions(dynamic savedSubstitutions) {
