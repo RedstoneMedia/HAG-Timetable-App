@@ -61,10 +61,10 @@ Future<void> fillTimeTable(String course, String linkBase, Client client,
 
 /// This class is used internally by parseFootnoteTable to parse the footnotes
 class Area {
-  int columnStart;
-  int columnEnd;
-  int rowStart;
-  int rowEnd;
+  late int columnStart;
+  late int columnEnd;
+  late int rowStart;
+  late int rowEnd;
 
   @override
   String toString() {
@@ -84,7 +84,7 @@ HashMap<String, List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
   final headerColumns = rows[0].children;
   for (var i = 0; i < headerColumns.length; i++) {
     final headerColumn = headerColumns[i];
-    headerColumnsText.add(strip(headerColumn.text));
+    headerColumnsText.add(customStrip(headerColumn.text));
     columnData[i] = <String>[];
   }
 
@@ -92,7 +92,7 @@ HashMap<String, List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
   for (var i = 0; i < headerColumnsText.length; i++) {
     final headerColumnText = headerColumnsText[i];
     if (headerColumnStringIndexMap.containsKey(headerColumnText)) {
-      headerColumnStringIndexMap[headerColumnText].add(i);
+      headerColumnStringIndexMap[headerColumnText]!.add(i);
     } else {
       headerColumnStringIndexMap[headerColumnText] = [i];
     }
@@ -104,7 +104,7 @@ HashMap<String, List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
     final row = rows[rowIndex];
     final columns = row.children;
     for (var i = 0; i < columns.length; i++) {
-      columnData[i].add(strip(columns[i].text).replaceAll("\n", ""));
+      columnData[i]!.add(customStrip(columns[i].text).replaceAll("\n", ""));
     }
   }
 
@@ -112,10 +112,10 @@ HashMap<String, List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
   final footnoteAreaMap = <String, Area>{};
 
   // Loop over all columns with the header Nr.
-  final nrList = headerColumnStringIndexMap["Nr."];
+  final nrList = headerColumnStringIndexMap["Nr."]!;
   for (var i = 0; i < nrList.length; i++) {
     final columnIndex = nrList[i];
-    final column = columnData[columnIndex];
+    final column = columnData[columnIndex]!;
     var currentFootnoteIndex = column[0];
 
     // Get the columnStart and End
@@ -165,7 +165,7 @@ HashMap<String, List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
   var lastFootnoteKey = "1)";
   final footnotesMap = HashMap<String, List<Footnote>>();
   for (final footnoteKey in footnoteAreaMap.keys) {
-    final area = footnoteAreaMap[footnoteKey];
+    final area = footnoteAreaMap[footnoteKey]!;
     final relevantColumns = <List<String>>[];
 
     // Get relevant columns within area
@@ -174,7 +174,7 @@ HashMap<String, List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
       final relevantColumn = <String>[];
       columnTextList.add(headerColumnsText[i]);
       for (var j = area.rowStart; j < area.rowEnd + 1; j++) {
-        relevantColumn.add(columnData[i][j]);
+        relevantColumn.add(columnData[i]![j]);
       }
       relevantColumns.add(relevantColumn);
     }
@@ -209,13 +209,13 @@ HashMap<String, List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
             }
             break;
           case "Kla.":
-            footnotes[rowIndex].schoolClasses = strip(value).split(",");
+            footnotes[rowIndex].schoolClasses = customStrip(value).split(",");
             break;
           case "Schulwoche":
-            footnotes[rowIndex].schoolWeek = strip(value);
+            footnotes[rowIndex].schoolWeek = customStrip(value);
             break;
           case "Text":
-            footnotes[rowIndex].text = strip(value);
+            footnotes[rowIndex].text = customStrip(value);
             break;
           default:
             break;
@@ -225,7 +225,7 @@ HashMap<String, List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
 
     // Append footnote to last footnote if the current footnote key is " "
     if (footnoteKey == " ") {
-      footnotesMap[lastFootnoteKey].addAll(footnotes);
+      footnotesMap[lastFootnoteKey]!.addAll(footnotes);
     } else {
       footnotesMap[footnoteKey] = footnotes;
       lastFootnoteKey = footnoteKey;
@@ -299,22 +299,22 @@ void parseOneCell(
   }
 
   // Parse normal cell
-  final hours = int.parse(cellDom.attributes["rowspan"]) / 2;
+  final hours = int.parse(cellDom.attributes["rowspan"]!) / 2;
   cell.isDoubleClass = hours == 2;
   final cellData = cellDom.children[0].children[0].children;
   if (cellData.length >= 2) {
     // Store data from the html element into the cell
     final teacherAndRoom = cellData[0].children;
     final subjectAndFootnote = cellData[1].children;
-    cell.teacher = strip(teacherAndRoom[0].text);
+    cell.teacher = customStrip(teacherAndRoom[0].text);
     // Check if room data exists and set it if it does
-    if (teacherAndRoom.length > 1) cell.room = strip(teacherAndRoom[1].text);
-    cell.subject = strip(subjectAndFootnote[0].text);
+    if (teacherAndRoom.length > 1) cell.room = customStrip(teacherAndRoom[1].text);
+    cell.subject = customStrip(subjectAndFootnote[0].text);
     // Check if footnote exists
     if (subjectAndFootnote.length > 1) {
       // Get footnotes from footnoteMap
-      final footnoteKey = strip(subjectAndFootnote[1].text);
-      final footnotes = footnoteMap[footnoteKey];
+      final footnoteKey = customStrip(subjectAndFootnote[1].text);
+      final footnotes = footnoteMap[footnoteKey]!;
 
       // Filter out footnotes that don't matter to the user
       final requiredFootnotes = <Footnote>[];

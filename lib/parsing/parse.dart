@@ -26,7 +26,7 @@ Future<void> parsePlans(Content content, SharedState sharedState) async {
 
   if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
     log("Parsing course only time table", name: "parsing");
-    final courseTimeTableContent = Content(Constants.width, sharedState.height);
+    final courseTimeTableContent = Content(Constants.width, sharedState.height!);
     await fillTimeTable(
             "${sharedState.profileManager.schoolGrade}K",
             Constants.timeTableLinkBase,

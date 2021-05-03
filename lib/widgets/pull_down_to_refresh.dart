@@ -4,10 +4,10 @@ import 'package:stundenplan/shared_state.dart';
 
 class PullDownToRefresh extends StatelessWidget {
   const PullDownToRefresh(
-      {@required this.refreshController,
-      @required this.sharedState,
-      @required this.onRefresh,
-      @required this.child});
+      {/*required*/ required this.refreshController,
+      /*required*/ required this.sharedState,
+      /*required*/ required this.onRefresh,
+      /*required*/ required this.child});
 
   final RefreshController refreshController;
   final SharedState sharedState;

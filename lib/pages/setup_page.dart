@@ -20,7 +20,7 @@ class SetupPage extends StatefulWidget {
 class _SetupPageState extends State<SetupPage> {
   String schoolGrade = "11";
   String profileName = "11e";
-  String subSchoolClass;
+  String? subSchoolClass;
   String themeName = "dark";
 
   List<String> grades = Constants.schoolGrades;
@@ -29,10 +29,10 @@ class _SetupPageState extends State<SetupPage> {
 
   TextEditingController subClassTextEdetingController = TextEditingController();
 
-  SharedState sharedState;
-  bool subSchoolClassEnabled;
+  late SharedState sharedState;
+  bool? subSchoolClassEnabled;
   bool subSchoolClassIsCorrect = true;
-  Color lastPickedColor;
+  Color? lastPickedColor;
 
   @override
   void initState() {
@@ -159,70 +159,67 @@ class _SetupPageState extends State<SetupPage> {
     setProfile(profileName); // Switch to that profile
   }
 
-  RaisedButton getPickColorButton(String name, Color inputColor , void Function(Color) onPicked) {
-    return RaisedButton(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
+  ElevatedButton getPickColorButton(
+      String name, Color inputColor, void Function(Color) onPicked) {
+    return ElevatedButton(
+      style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all<Color>(inputColor),
+        shape: MaterialStateProperty.all<OutlinedBorder>(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+        ),
       ),
       onPressed: () {
         displayColoPickerAlertWindow(name, inputColor).then((_) {
           lastPickedColor ??= inputColor;
-          onPicked(lastPickedColor);
+          onPicked(lastPickedColor!);
         });
       },
-      color: inputColor,
-      child: Text(
-          name,
+      child: Text(name,
           style: GoogleFonts.poppins(
               color: my_theme.Theme.invertColor(inputColor),
               fontSize: 16.0,
-              fontWeight: FontWeight.bold
-          )
-      ),
+              fontWeight: FontWeight.bold)),
     );
   }
 
   Future<void> displayColoPickerAlertWindow(String name, Color color) async {
     lastPickedColor = null;
-    await showDialog(context: context, builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text(
-            "$name Farbe auswählen",
-            style: GoogleFonts.poppins(
-                color: Colors.black87,
-                fontSize: 16.0,
-                fontWeight: FontWeight.bold
-            )
-        ),
-        content: SingleChildScrollView(
-            child: ColorPicker(
-              enableAlpha: false,
-              pickerColor: color,
-              onColorChanged: (Color newColor) {
-                lastPickedColor = newColor;
-              },
-              pickerAreaBorderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(2.0),
-                topRight: Radius.circular(2.0),
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("$name Farbe auswählen",
+                style: GoogleFonts.poppins(
+                    color: Colors.black87,
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.bold)),
+            content: SingleChildScrollView(
+                child: ColorPicker(
+                    enableAlpha: false,
+                    pickerColor: color,
+                    onColorChanged: (Color newColor) {
+                      lastPickedColor = newColor;
+                    },
+                    pickerAreaBorderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(2.0),
+                      topRight: Radius.circular(2.0),
+                    ))),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("Fertig",
+                    style: GoogleFonts.poppins(
+                        color: Colors.black87,
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold)),
               )
-            )
-        ),
-        actions: <Widget>[
-          FlatButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text("Fertig",
-              style: GoogleFonts.poppins(
-                  color: Colors.black87,
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.bold
-              )
-            ),
-          )
-        ],
-      );
-    });
+            ],
+          );
+        });
   }
 
   // TODO : Refactor this madness
@@ -265,8 +262,8 @@ class _SetupPageState extends State<SetupPage> {
                         style: TextStyle(
                             color: sharedState.theme.invertedTextColor),
                         underline: Container(),
-                        onChanged: (String profileName) {
-                          setProfile(profileName);
+                        onChanged: (String? profileName) {
+                          setProfile(profileName!);
                         },
                         items: sharedState.profileManager.profiles.keys
                             .map<DropdownMenuItem<String>>(
@@ -362,8 +359,8 @@ class _SetupPageState extends State<SetupPage> {
                             style: TextStyle(
                                 color: sharedState.theme.invertedTextColor),
                             underline: Container(),
-                            onChanged: (String newValue) {
-                              setSchoolGrade(newValue);
+                            onChanged: (String? newValue) {
+                              setSchoolGrade(newValue!);
                             },
                             items: grades
                                 .map<DropdownMenuItem<String>>((String value) {
@@ -385,7 +382,7 @@ class _SetupPageState extends State<SetupPage> {
                     Container(
                       width: 60,
                       decoration: BoxDecoration(
-                        color: subSchoolClassEnabled
+                        color: subSchoolClassEnabled!
                             ? sharedState.theme.textColor.withAlpha(200)
                             : sharedState.theme.textColor.withAlpha(100),
                         borderRadius: BorderRadius.circular(15),
@@ -486,9 +483,9 @@ class _SetupPageState extends State<SetupPage> {
                           TextStyle(color: sharedState.theme.invertedTextColor),
                       underline: Container(),
                       dropdownColor: sharedState.theme.textColor.withAlpha(255),
-                      onChanged: (String newValue) {
+                      onChanged: (String? newValue) {
                         setState(() {
-                          themeName = newValue;
+                          themeName = newValue!;
                           sharedState.setThemeFromThemeName(themeName);
                         });
                       },
@@ -508,28 +505,55 @@ class _SetupPageState extends State<SetupPage> {
                     ),
                   ),
                 ),
-                if (themeName == "Benutzerdefiniert") Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0, top: 15.0),
-                  child: Column(
-                    children: [
-                      getPickColorButton("Hintergrund", sharedState.theme.backgroundColor, (Color color) => setState(() => sharedState.theme.backgroundColor = color)),
-                      getPickColorButton("Text", sharedState.theme.textColor, (Color color) => setState(() => sharedState.theme.textColor = color)),
-                      getPickColorButton("Fach", sharedState.theme.subjectColor, (Color color) => setState(() => sharedState.theme.subjectColor = color)),
-                      getPickColorButton("Fach ausfall", sharedState.theme.subjectDropOutColor, (Color color) => setState(() => sharedState.theme.subjectDropOutColor = color)),
-                      getPickColorButton("Fach vertretung", sharedState.theme.subjectSubstitutionColor, (Color color) => setState(() => sharedState.theme.subjectSubstitutionColor = color))
-                    ],
-                  )
-                ) else Container(),
+                if (themeName == "Benutzerdefiniert")
+                  Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0, top: 15.0),
+                      child: Column(
+                        children: [
+                          getPickColorButton(
+                              "Hintergrund",
+                              sharedState.theme.backgroundColor,
+                              (Color color) => setState(() =>
+                                  sharedState.theme.backgroundColor = color)),
+                          getPickColorButton(
+                              "Text",
+                              sharedState.theme.textColor,
+                              (Color color) => setState(
+                                  () => sharedState.theme.textColor = color)),
+                          getPickColorButton(
+                              "Fach",
+                              sharedState.theme.subjectColor,
+                              (Color color) => setState(() =>
+                                  sharedState.theme.subjectColor = color)),
+                          getPickColorButton(
+                              "Fach ausfall",
+                              sharedState.theme.subjectDropOutColor,
+                              (Color color) => setState(() => sharedState
+                                  .theme.subjectDropOutColor = color)),
+                          getPickColorButton(
+                              "Fach vertretung",
+                              sharedState.theme.subjectSubstitutionColor,
+                              (Color color) => setState(() => sharedState
+                                  .theme.subjectSubstitutionColor = color))
+                        ],
+                      ))
+                else
+                  Container(),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12.0, top: 15.0),
-                  child: RaisedButton(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                          sharedState.theme.subjectColor),
+                      shape: MaterialStateProperty.all<OutlinedBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                      ),
                     ),
                     onPressed: () {
                       saveDataAndGotToMain();
                     },
-                    color: sharedState.theme.subjectColor,
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(

@@ -6,7 +6,7 @@ import 'package:stundenplan/shared_state.dart';
 import 'grid.dart';
 
 class TimeTable extends StatelessWidget {
-  const TimeTable({@required this.sharedState, @required this.content});
+  const TimeTable({/*required*/ required this.sharedState, /*required*/ required this.content});
 
   final SharedState sharedState;
   final Content content;

@@ -11,7 +11,7 @@ class Content {
     }
   }
 
-  DateTime lastUpdated;
+  late DateTime lastUpdated;
 
   void updateLastUpdated() {
     lastUpdated = DateTime.now();
@@ -93,12 +93,12 @@ class Content {
 }
 
 class Footnote {
-  String teacher;
-  String subject;
-  String room;
-  List<String> schoolClasses;
-  String schoolWeek;
-  String text;
+  String teacher = "---";
+  String subject = "---";
+  String room = "---";
+  List<String> schoolClasses = [];
+  String schoolWeek = "";
+  String text = "";
 
   Map<String, dynamic> toJsonData() {
     return {
@@ -114,15 +114,15 @@ class Footnote {
   // ignore: prefer_constructors_over_static_methods
   static Footnote fromJsonData(Map<String, dynamic> jsonData) {
     final newFootnote = Footnote();
-    newFootnote.teacher = jsonData["teacher"].toString() ?? "";
-    newFootnote.subject = jsonData["subject"].toString() ?? "";
-    newFootnote.room = jsonData["room"].toString() ?? "";
+    newFootnote.teacher = jsonData["teacher"].toString();
+    newFootnote.subject = jsonData["subject"].toString();
+    newFootnote.room = jsonData["room"].toString();
     newFootnote.schoolClasses = [];
     for (final schoolClass in jsonData["schoolClasses"] ?? <String>[]) {
       newFootnote.schoolClasses.add(schoolClass.toString());
     }
-    newFootnote.schoolWeek = jsonData["schoolWeek"].toString() ?? " ";
-    newFootnote.text = jsonData["text"].toString() ?? " ";
+    newFootnote.schoolWeek = jsonData["schoolWeek"].toString();
+    newFootnote.text = jsonData["text"].toString();
     return newFootnote;
   }
 
@@ -143,7 +143,7 @@ class Cell {
   String originalTeacher = "---";
   String text = "---";
   String footNoteTextId = "";
-  List<Footnote> footnotes;
+  List<Footnote>? footnotes;
   bool isSubstitute = false;
   bool isDropped = false;
   bool isDoubleClass = false;
@@ -163,36 +163,34 @@ class Cell {
 
   factory Cell.fromJsonData(Map<String, dynamic> parsedJson) {
     final newCell = Cell();
-    newCell.subject = parsedJson["subject"].toString() ?? "---";
-    newCell.originalSubject = parsedJson["originalSubject"].toString() ?? "---";
-    newCell.room = parsedJson["room"].toString() ?? "---";
-    newCell.originalRoom = parsedJson["originalRoom"].toString() ?? "---";
-    newCell.teacher = parsedJson["teacher"].toString() ?? "---";
-    newCell.originalTeacher = parsedJson["originalTeacher"].toString() ?? "---";
-    newCell.text = parsedJson["text"].toString() ?? "---";
-    newCell.footNoteTextId = parsedJson["footNoteTextId"].toString() ?? "";
+    newCell.subject = parsedJson["subject"].toString();
+    newCell.originalSubject = parsedJson["originalSubject"].toString();
+    newCell.room = parsedJson["room"].toString();
+    newCell.originalRoom = parsedJson["originalRoom"].toString();
+    newCell.teacher = parsedJson["teacher"].toString() ;
+    newCell.originalTeacher = parsedJson["originalTeacher"].toString() ;
+    newCell.text = parsedJson["text"].toString();
+    newCell.footNoteTextId = parsedJson["footNoteTextId"].toString() ;
     final footnotes = parsedJson["footnotes"];
     if (footnotes != null) {
       newCell.footnotes = [];
       for (final footnoteJsonData in footnotes) {
-        newCell.footnotes.add(
+        newCell.footnotes!.add(
             Footnote.fromJsonData(footnoteJsonData as Map<String, dynamic>));
       }
     }
 
-    newCell.isSubstitute = parsedJson["isSubstitute"] as bool ?? false;
-    newCell.isDropped = parsedJson["isDropped"] as bool ?? false;
+    newCell.isSubstitute = parsedJson["isSubstitute"] as bool? ?? false;
+    newCell.isDropped = parsedJson["isDropped"] as bool? ?? false;
     return newCell;
   }
 
   Map<String, dynamic> toJsonData() {
-    List<dynamic> footnotesJsonDataList;
+    List<dynamic>? footnotesJsonDataList;
     if (footnotes != null) {
       footnotesJsonDataList = <dynamic>[];
-      for (final footnote in footnotes) {
-        if (footnote != null) {
+      for (final footnote in footnotes!) {
           footnotesJsonDataList.add(footnote.toJsonData());
-        }
       }
     }
 

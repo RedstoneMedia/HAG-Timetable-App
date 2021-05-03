@@ -17,7 +17,7 @@ Future<void> overwriteContentWithSubsitutionPlan(
   // Get main substitutions
   final ret = await getCourseSubstitutionPlan(schoolClassName, Constants.substitutionLinkBase, client);
   final mainPlan = ret["substitutions"] as List<Map<String, String>>;
-  final weekDayMain = ret["substituteWeekday"] as int;
+  final weekDayMain = ret["substituteWeekday"] as int?;
   sharedState.weekSubstitutions.setDay(mainPlan, weekDayMain);
 
   //  Get course substitutions
@@ -32,9 +32,9 @@ Future<void> overwriteContentWithSubsitutionPlan(
   }
 
   // Write substitutions to content.
-  for (final weekDayString in sharedState.weekSubstitutions.weekSubstitutions.keys) {
+  for (final weekDayString in sharedState.weekSubstitutions.weekSubstitutions!.keys) {
     final weekDay = int.parse(weekDayString);
-    writeSubstitutionPlan(sharedState.weekSubstitutions.weekSubstitutions[weekDayString], weekDay, content, subjects);
+    writeSubstitutionPlan(sharedState.weekSubstitutions.weekSubstitutions![weekDayString]!, weekDay, content, subjects);
   }
 }
 
@@ -42,22 +42,22 @@ void writeSubstitutionPlan(List<Map<String, dynamic>> plan, int weekDay,
     Content content, List<String> subjects)
 {
   for (var i = 0; i < plan.length; i++) {
-    final hours = strip(plan[i]["Stunde"] as String).split("-");
+    final hours = customStrip(plan[i]["Stunde"] as String).split("-");
 
     // Fill cell
     final cell = Cell();
-    cell.subject = strip(plan[i]["Fach"] as String);
-    cell.originalSubject = strip(plan[i]["statt Fach"] as String);
+    cell.subject = customStrip(plan[i]["Fach"] as String);
+    cell.originalSubject = customStrip(plan[i]["statt Fach"] as String);
     if (!subjects.contains(cell.originalSubject)) {
       // If user dose not have that subject skip that class
       continue;
     }
-    cell.teacher = strip(plan[i]["Vertretung"] as String);
-    cell.originalTeacher = strip(plan[i]["statt Lehrer"] as String);
-    cell.room = strip(plan[i]["Raum"] as String);
-    cell.originalRoom = strip(plan[i]["statt Raum"] as String);
+    cell.teacher = customStrip(plan[i]["Vertretung"] as String);
+    cell.originalTeacher = customStrip(plan[i]["statt Lehrer"] as String);
+    cell.room = customStrip(plan[i]["Raum"] as String);
+    cell.originalRoom = customStrip(plan[i]["statt Raum"] as String);
     cell.text = plan[i]["Text"] as String;
-    cell.isDropped = strip(plan[i]["Entfall"] as String) == "x";
+    cell.isDropped = customStrip(plan[i]["Entfall"] as String) == "x";
     if (!cell.isDropped) {
       cell.isSubstitute = true;
     }
@@ -97,7 +97,7 @@ Future<Map<String, dynamic>> getCourseSubstitutionPlan(String course, String lin
   }
 
   // Get weekday for that substitute table
-  final headerText = strip(document
+  final headerText = customStrip(document
       .getElementsByTagName("body")[0]
       .children[0]
       .children[0]
@@ -105,11 +105,11 @@ Future<Map<String, dynamic>> getCourseSubstitutionPlan(String course, String lin
       .text
       .replaceAll("  ", "/"));
   final regexp = RegExp(r"^\w+\/(?<day>\d+).(?<month>\d+).");
-  final match = regexp.firstMatch(headerText);
+  final match = regexp.firstMatch(headerText)!;
   var substituteWeekday = DateTime(
-          DateTime.now().year,
-          int.parse(match.namedGroup("month")),
-          int.parse(match.namedGroup("day")))
+      DateTime.now().year,
+      int.parse(match.namedGroup("month")!),
+      int.parse(match.namedGroup("day")!))
       .weekday;
   if (substituteWeekday > 5) {
     substituteWeekday = min(DateTime.now().weekday, 5);

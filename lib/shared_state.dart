@@ -12,12 +12,12 @@ class SharedState {
   SharedPreferences preferences;
 
   Theme theme = darkTheme;
-  int height = Constants.defaultHeight;
+  int? height = Constants.defaultHeight;
   Content content;
   WeekSubstitutions weekSubstitutions = WeekSubstitutions({});
   ProfileManager profileManager = ProfileManager();
 
-  SharedState(this.preferences);
+  SharedState(this.preferences, this.content);
 
   void saveState() {
     final saveFileData = <String, dynamic>{};
@@ -36,10 +36,10 @@ class SharedState {
     // Week substitutions
     preferences.setString("weekSubstitutions", jsonEncode(weekSubstitutions.weekSubstitutions));
 
-    // Save theme and profiles to file
+    // Save theme and profiles to file<
     saveToFile(jsonEncode(saveFileData), Constants.saveDataFileLocation);
 
-    preferences.setInt("height", height);
+    preferences.setInt("height", height!);
   }
 
   Theme themeFromJsonData(dynamic jsonThemeData) {
@@ -47,10 +47,7 @@ class SharedState {
   }
 
   bool loadStateAndCheckIfFirstTime() {
-    final String themeDataString = preferences.getString("theme");
-    if (themeDataString == null) {
-      theme = darkTheme;
-    }
+    final String themeDataString = preferences.getString("theme") ?? "dark";
     height = preferences.getInt("height");
 
     // If first time using app
@@ -60,12 +57,12 @@ class SharedState {
     }
 
     // Load week substitutions
-    final weekSubstitutionsJsonString = preferences.get("weekSubstitutions").toString();
-    if (weekSubstitutionsJsonString != null) {
+    final String weekSubstitutionsJsonString = preferences.get("weekSubstitutions").toString();
+    if (weekSubstitutionsJsonString != "") {
       weekSubstitutions = WeekSubstitutions(jsonDecode(weekSubstitutionsJsonString));
     }
 
-    loadThemeAndProfileManagerFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")));
+    loadThemeAndProfileManagerFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")!));
     return false;
   }
 
@@ -84,8 +81,8 @@ class SharedState {
   }
 
   void loadContent() {
-    final contentJsonString = preferences.get("cachedContent").toString();
-    if (contentJsonString == null) return;
+    final String contentJsonString = preferences.get("cachedContent").toString();
+    if (contentJsonString == "") return;
     final decodedJson = jsonDecode(contentJsonString) as List<dynamic>;
     content = Content.fromJsonData(decodedJson);
     log("[LOADED] lastUpdated: ${content.lastUpdated}", name: "cache");
@@ -102,7 +99,7 @@ class SharedState {
     for (final schoolGradeList in Constants.defaultSubjectsMap.keys) {
       if (schoolGradeList.contains(profileManager.schoolGrade)) {
         final defaultSubjects =
-            List<String>.from(Constants.defaultSubjectsMap[schoolGradeList]);
+            List<String>.from(Constants.defaultSubjectsMap[schoolGradeList]!);
         defaultSubjects.addAll(Constants.alwaysDefaultSubjects);
         return defaultSubjects;
       }

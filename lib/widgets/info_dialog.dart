@@ -9,7 +9,7 @@ import '../shared_state.dart';
 
 Future<void> showInfoDialog(
     Cell cell, BuildContext context, SharedState sharedState) async {
-  final showFootnotes = cell.footnotes != null && cell.footnotes.length > 1;
+  final showFootnotes = cell.footnotes != null && cell.footnotes!.length > 1;
 
   return showDialog<void>(
     context: context,
@@ -28,7 +28,7 @@ Future<void> showInfoDialog(
                   width: 200,
                   child: ListView.builder(
                     shrinkWrap: true,
-                    itemCount: cell.footnotes.length,
+                    itemCount: cell.footnotes!.length,
                     itemBuilder: (_, i) {
                       return Row(
                         children: [
@@ -58,19 +58,19 @@ Future<void> showInfoDialog(
                           Flexible(
                             child: Column(
                               children: [
-                                Text(cell.footnotes[i].subject,
+                                Text(cell.footnotes![i].subject,
                                     textAlign: TextAlign.left,
                                     style: TextStyle(
                                         color: sharedState.theme.textColor)),
-                                Text(cell.footnotes[i].room ?? "---",
+                                Text(cell.footnotes![i].room,
                                     textAlign: TextAlign.left,
                                     style: TextStyle(
                                         color: sharedState.theme.textColor)),
-                                Text(cell.footnotes[i].teacher,
+                                Text(cell.footnotes![i].teacher,
                                     textAlign: TextAlign.left,
                                     style: TextStyle(
                                         color: sharedState.theme.textColor)),
-                                Text(cell.footnotes[i].text,
+                                Text(cell.footnotes![i].text,
                                     textAlign: TextAlign.left,
                                     style: TextStyle(
                                         color: sharedState.theme.textColor)),
@@ -221,7 +221,7 @@ Future<void> showInfoDialog(
                                             color:
                                                 sharedState.theme.textColor)),
                                     if (cell.footnotes != null &&
-                                        cell.footnotes[0].text.codeUnitAt(0) !=
+                                        cell.footnotes![0].text.codeUnitAt(0) !=
                                             160)
                                       Text("Text:",
                                           textAlign: TextAlign.left,
@@ -248,9 +248,9 @@ Future<void> showInfoDialog(
                                             color:
                                                 sharedState.theme.textColor)),
                                     if (cell.footnotes != null &&
-                                        cell.footnotes[0].text.codeUnitAt(0) !=
+                                        cell.footnotes![0].text.codeUnitAt(0) !=
                                             160)
-                                      Text(cell.footnotes[0].text,
+                                      Text(cell.footnotes![0].text,
                                           textAlign: TextAlign.left,
                                           style: TextStyle(
                                               color:
@@ -264,7 +264,7 @@ Future<void> showInfoDialog(
                 ),
         ),
         actions: <Widget>[
-          FlatButton(
+          TextButton(
             onPressed: () {
               Navigator.of(context).pop();
             },

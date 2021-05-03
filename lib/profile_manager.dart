@@ -10,7 +10,7 @@ class ProfileManager {
     final jsonProfileManagerData = <String, dynamic>{};
     final jsonProfilesData = <String, Map>{};
     for (final profileName in profiles.keys) {
-      final profile = profiles[profileName];
+      final profile = profiles[profileName]!;
       jsonProfilesData[profileName] = profile.getJsonData();
     }
     jsonProfileManagerData["profiles"] = jsonProfilesData;
@@ -48,7 +48,7 @@ class ProfileManager {
 
   void renameAllProfiles() {
     for (final profileName in List.from(profiles.keys)) {
-      final profile = profiles[profileName];
+      final profile = profiles[profileName]!;
       profiles.remove(profileName);
       final newProfileName = findNewProfileName(profile.toString());
       if (profileName == currentProfileName) {
@@ -59,7 +59,7 @@ class ProfileManager {
   }
 
   Profile get currentProfile {
-    return profiles[currentProfileName];
+    return profiles[currentProfileName]!;
   }
 
   // Current Profile attributes

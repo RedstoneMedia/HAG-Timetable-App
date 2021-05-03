@@ -8,11 +8,11 @@ import 'info_dialog.dart';
 
 class WeekdayGridObject extends StatelessWidget {
   WeekdayGridObject(
-      {@required this.weekday,
-      @required this.x,
-      @required this.needsLeftBorder,
-      @required this.needsRightBorder,
-      @required this.sharedState});
+      {/*required*/  required this.weekday,
+      /*required*/  required this.x,
+      /*required*/ required this.needsLeftBorder,
+      /*required*/ required this.needsRightBorder,
+      /*required*/ required this.sharedState});
 
   final String weekday;
   final int x;
@@ -53,12 +53,12 @@ class WeekdayGridObject extends StatelessWidget {
 
 class ClassGridObject extends StatelessWidget {
   const ClassGridObject(
-      {@required this.content,
-      @required this.sharedState,
-      @required this.x,
-      @required this.y,
-      @required this.needsLeftBorder,
-      @required this.context});
+      {/*required*/ required this.content,
+       /*required*/ required this.sharedState,
+       /*required*/ required this.x,
+       /*required*/ required this.y,
+       /*required*/ required this.needsLeftBorder,
+       /*required*/ required this.context});
 
   final Content content;
   final SharedState sharedState;
@@ -76,9 +76,9 @@ class ClassGridObject extends StatelessWidget {
               color: sharedState.theme.textColor.withAlpha(10),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(
-                    (y == sharedState.height - 2 && x == 1) ? 5 : 0),
+                    (y == sharedState.height! - 2 && x == 1) ? 5 : 0),
                 bottomRight: Radius.circular(
-                    (y == sharedState.height - 2 && x == Constants.width - 1)
+                    (y == sharedState.height! - 2 && x == Constants.width - 1)
                         ? 5
                         : 0),
               ),
@@ -128,14 +128,14 @@ class ClassGridObject extends StatelessWidget {
                             : sharedState.theme.subjectColor
                         : sharedState.theme.subjectDropOutColor,
                     border: Border(
-                        bottom: BorderSide(
-                            color: (y - 1) % 2 == 0
-                                ? Colors.black54
-                                : Colors.black26),
-                        right:
-                            const BorderSide(width: 0.5, color: Colors.black26),
-                        left: const BorderSide(
-                            width: 0.5, color: Colors.black26)),
+                      bottom: BorderSide(
+                          color: (y - 1) % 2 == 0
+                              ? Colors.black54
+                              : Colors.black26),
+                      right:
+                          const BorderSide(width: 0.5, color: Colors.black26),
+                      left: const BorderSide(width: 0.5, color: Colors.black26),
+                    ),
                   ),
                   child: Column(
                     children: content.cells[y][x].isDropped
@@ -243,14 +243,14 @@ class TimeGridObject extends StatefulWidget {
 
   final int y;
   final SharedState sharedState;
-  TimeOfDay startCellTime;
-  TimeOfDay endCellTime;
+  late TimeOfDay startCellTime;
+  late TimeOfDay endCellTime;
 }
 
 class _TimeGridObjectState extends State<TimeGridObject> {
   TimeOfDay timeOfDay = TimeOfDay.now();
   bool isActive = false;
-  SharedState sharedState;
+  late SharedState sharedState;
 
   @override
   void initState() {

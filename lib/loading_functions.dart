@@ -19,7 +19,7 @@ Future<void> openSetupPageAndCheckForFile(SharedState sharedState, BuildContext 
     await loadProfileManagerAndThemeFromFile(sharedState);
   }
   // Making sure the Frame has been completely drawn and everything has loaded before navigating to new Page
-  WidgetsBinding.instance.addPostFrameCallback((_) {
+  WidgetsBinding.instance!.addPostFrameCallback((_) {
     // Opening the setupPage
     Navigator.push(
       context,
@@ -42,7 +42,7 @@ Future<bool> checkForFilePermissionsAndShowDialog(BuildContext context) async {
           content: const Text(
               "Diese App benötigt zugriff auf den Speicher deines Gerätes um Fächer und Themes verlässlich zu speichern."),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Ok'),
             ),

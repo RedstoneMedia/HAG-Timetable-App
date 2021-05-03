@@ -7,16 +7,16 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:yaml/yaml.dart'; // Contains a client for making API calls
 
 class Version {
-  int majorVersion;
-  int minorVersion;
-  int microVersion;
+  late int majorVersion;
+  late int minorVersion;
+  late int microVersion;
 
   Version(String versionString) {
     final regExp = RegExp(r"(?<major>\d).(?<minor>\d).(?<micro>\d)");
-    final match = regExp.firstMatch(versionString);
-    majorVersion = int.parse(match.namedGroup("major"));
-    minorVersion = int.parse(match.namedGroup("minor"));
-    microVersion = int.parse(match.namedGroup("micro"));
+    final match = regExp.firstMatch(versionString)!;
+    majorVersion = int.parse(match.namedGroup("major")!);
+    minorVersion = int.parse(match.namedGroup("minor")!);
+    microVersion = int.parse(match.namedGroup("micro")!);
   }
 
   @override
@@ -39,8 +39,8 @@ class Version {
 }
 
 class UpdateNotifier {
-  Version currentVersion;
-  Client client;
+  late Version currentVersion;
+  late Client client;
 
   Future<void> init() async {
     final packageInfo = await PackageInfo.fromPlatform();
@@ -50,7 +50,8 @@ class UpdateNotifier {
   }
 
   Future<Version> getNewestVersion() async {
-    final response = await client.get(Uri.parse(Constants.newestVersionPubspecUrl));
+    final response =
+        await client.get(Uri.parse(Constants.newestVersionPubspecUrl));
     final pubspecYamlData = loadYaml(response.body);
     return Version(pubspecYamlData["version"].toString());
   }
@@ -82,18 +83,27 @@ class UpdateNotifier {
             ),
           ),
           actions: <Widget>[
-            RaisedButton(
-              color: sharedState.theme.subjectColor.withOpacity(0.9),
+            ElevatedButton(
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(
+                  sharedState.theme.subjectColor.withOpacity(0.9),
+                ),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
               child: Text('Ok',
                   style: TextStyle(color: sharedState.theme.textColor)),
             ),
-            RaisedButton(
-              color: sharedState.theme.subjectColor,
+            ElevatedButton(
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(
+                  sharedState.theme.subjectColor,
+                ),
+              ),
               onPressed: () async {
-                final newReleaseUrl = Constants.newestReleaseUrlPart + newVersion.toString();
+                final newReleaseUrl =
+                    Constants.newestReleaseUrlPart + newVersion.toString();
                 if (await canLaunch(newReleaseUrl)) {
                   await launch(newReleaseUrl);
                 }

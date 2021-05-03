@@ -25,7 +25,12 @@ void main() {
   SharedPreferences.getInstance().then((prefs) {
     runApp(
       MaterialApp(
-        home: MyApp(SharedState(prefs)),
+        home: MyApp(
+          SharedState(
+            prefs,
+            Content(0, 0),
+          ),
+        ),
       ),
     );
   });
@@ -41,14 +46,14 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  SharedState sharedState;
+  late SharedState sharedState;
   UpdateNotifier updateNotifier = UpdateNotifier();
   Connectivity connectivity = Connectivity();
 
-  DateTime date;
+  DateTime? date;
   bool loading = true;
-  String day;
-  Timer everyMinute;
+  String? day;
+  Timer? everyMinute;
 
   bool couldLoad = true;
 
@@ -62,7 +67,7 @@ class _MyAppState extends State<MyApp> {
 
     // Setup the sharedState
     sharedState = widget.sharedState;
-    sharedState.content = Content(Constants.width, sharedState.height);
+    sharedState.content = Content(Constants.width, sharedState.height!);
 
     // Calls set state every minute to update current school hour if changed
     everyMinute = Timer.periodic(const Duration(minutes: 1), (Timer timer) {
@@ -107,7 +112,7 @@ class _MyAppState extends State<MyApp> {
                   content: const Text(
                       "Die App konnte den Stundenplan nicht aus dem Internet oder dem Cache laden."),
                   actions: <Widget>[
-                    FlatButton(
+                    TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       child: const Text('Ok'),
                     ),
@@ -157,8 +162,8 @@ class _MyAppState extends State<MyApp> {
                 )
               : !couldLoad
                   ? Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Center(
@@ -169,7 +174,9 @@ class _MyAppState extends State<MyApp> {
                                   fontWeight: FontWeight.w700),
                             ),
                           ),
-                          Container(height: 10.0,),
+                          Container(
+                            height: 10.0,
+                          ),
                           Center(
                             child: Text(
                               "Versuche eine Internetverbindung herzustellen und starte die App neu.",
@@ -181,7 +188,7 @@ class _MyAppState extends State<MyApp> {
                           ),
                         ],
                       ),
-                  )
+                    )
                   : PullDownToRefresh(
                       onRefresh: () {
                         isInternetAvailable(connectivity)
