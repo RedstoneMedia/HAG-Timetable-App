@@ -24,27 +24,30 @@ class WeekdayGridObject extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(needsLeftBorder ? 5 : 0),
-              topRight: Radius.circular(needsRightBorder ? 5 : 0),
-            ),
-            border: Border.all(width: 0.75, color: Colors.black26),
-            color: x == weekdayToday
-                ? sharedState.theme.textColor
-                : sharedState.theme.textColor.withAlpha(25)),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Center(
-              child: Text(
-            weekday,
-            style: GoogleFonts.poppins(
-                fontWeight: FontWeight.bold,
-                color: x == weekdayToday
-                    ? sharedState.theme.invertedTextColor
-                    : sharedState.theme.textColor),
-          )),
+      child: Opacity(
+        opacity: sharedState.holidayWeekdays.contains(x) ? 0.5 : 1.0,
+        child: Container(
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(needsLeftBorder ? 5 : 0),
+                topRight: Radius.circular(needsRightBorder ? 5 : 0),
+              ),
+              border: Border.all(width: 0.75, color: Colors.black26),
+              color: x == weekdayToday
+                  ? sharedState.theme.textColor
+                  : sharedState.theme.textColor.withAlpha(25)),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Center(
+                child: Text(
+              weekday,
+              style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  color: x == weekdayToday
+                      ? sharedState.theme.invertedTextColor
+                      : sharedState.theme.textColor),
+            )),
+          ),
         ),
       ),
     );
@@ -69,9 +72,11 @@ class ClassGridObject extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return content.cells[y][x].isEmpty()
-        ? Expanded(
-            child: Container(
+    return Expanded(
+      child: Opacity(
+        opacity:sharedState.holidayWeekdays.contains(x) ? 0.5 : 1.0,
+        child: content.cells[y][x].isEmpty()
+            ? Container(
             decoration: BoxDecoration(
               color: sharedState.theme.textColor.withAlpha(10),
               borderRadius: BorderRadius.only(
@@ -113,9 +118,8 @@ class ClassGridObject extends StatelessWidget {
                 ),
               ],
             ),
-          ))
-        : Expanded(
-            child: Material(
+              )
+            : Material(
               child: InkWell(
                 onTap: () {
                   showInfoDialog(content.cells[y][x], context, sharedState);
@@ -203,7 +207,8 @@ class ClassGridObject extends StatelessWidget {
                 ),
               ),
             ),
-          );
+      ),
+    );
   }
 }
 
