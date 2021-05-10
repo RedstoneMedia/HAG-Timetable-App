@@ -67,7 +67,7 @@ List<int> getHolidayWeekDays() {
         holidayWeekDays.add(i + 1);
         // Check if the holiday is on a Thursday -> Friday is a bridge day
         if(i == 3) holidayWeekDays.add(i + 2);
-        // Check if the Tuesday is on a Thursday -> Monday is a bridge day
+        // Check if the holiday is on a Tuesday -> Monday is a bridge day
         if(i == 1) holidayWeekDays.add(i);
       }
     }
