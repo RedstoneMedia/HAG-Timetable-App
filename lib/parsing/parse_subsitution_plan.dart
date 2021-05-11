@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
 import 'package:http/http.dart';  // Contains a client for making API calls
 import 'package:stundenplan/constants.dart';
@@ -49,8 +48,12 @@ void writeSubstitutionPlan(List<Map<String, dynamic>> plan, int weekDay,
     cell.subject = customStrip(plan[i]["Fach"] as String);
     cell.originalSubject = customStrip(plan[i]["statt Fach"] as String);
     if (!subjects.contains(cell.originalSubject)) {
-      // If user dose not have that subject skip that class
-      continue;
+      // Unicode 00A0 (Non breaking space, because that makes sense) indicates that
+      // the subject replaces all other lessons taking place in the same time
+      if (cell.originalSubject != "\u{00A0}") {
+        // If user dose not have that subject skip that class
+        continue;
+      }
     }
     cell.teacher = customStrip(plan[i]["Vertretung"] as String);
     cell.originalTeacher = customStrip(plan[i]["statt Lehrer"] as String);
