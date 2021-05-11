@@ -77,16 +77,23 @@ class Content {
   void combine(Content other) {
     for (var y = 0; y < cells.length; y++) {
       for (var x = 0; x < cells[y].length; x++) {
-        final myCell = cells[y][x];
-        final otherCell = other.cells[y][x];
-        // If current cell is empty set cell to other
-        if (myCell.isEmpty()) {
-          setCell(y, x, otherCell);
-        }
-        // If other cell is not empty set cell to current
-        if (!otherCell.isEmpty()) {
-          setCell(y, x, otherCell);
-        }
+
+          final myCell = cells[y][x];
+          Cell otherCell;
+          try {
+            otherCell = other.cells[y][x];
+          } catch(e) {
+            otherCell = Cell();
+          }
+          // If current cell is empty set cell to other
+          if (myCell.isEmpty()) {
+            setCell(y, x, otherCell);
+          }
+          // If other cell is not empty set cell to current
+          if (!otherCell.isEmpty()) {
+            setCell(y, x, otherCell);
+          }
+
       }
     }
   }
