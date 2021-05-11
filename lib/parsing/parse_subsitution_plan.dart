@@ -76,7 +76,11 @@ void writeSubstitutionPlan(List<Map<String, dynamic>> plan, int weekDay,
       final hourEnd = int.parse(hours[1]);
       for (var i = hourStart; i < hourEnd + 1; i++) {
         cell.footnotes = content.getCell(i -1, weekDay).footnotes;
-        content.setCell(i - 1, weekDay, cell);
+        // Check if there is a subject that replaces all other subjects
+        // (indicated by Unicode 00A0)
+        if(content.getCell(i - 1, weekDay).originalSubject != "\u{00A0}") {
+          content.setCell(i - 1, weekDay, cell);
+        }
       }
     }
   }
