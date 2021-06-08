@@ -81,7 +81,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> asyncInit() async {
     // Check if the App is opened for the first time
-    if (!sharedState.loadStateAndCheckIfFirstTime()) {
+    if (sharedState.loadStateAndCheckIfFirstTime()) {
       // App is opened for the firs time -> load settings from file
       await openSetupPageAndCheckForFile(sharedState, context);
     } else {
