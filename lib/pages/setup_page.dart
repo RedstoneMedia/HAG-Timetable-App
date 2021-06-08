@@ -87,7 +87,7 @@ class _SetupPageState extends State<SetupPage> {
       return true;
     }
     final text = subClassTextEdetingController.text;
-    final regExp = RegExp(r"^[a-zA-Z]{0,3}\d{0,2}$");
+    final regExp = RegExp(r"^[a-zA-Z]{0,3}\d{1,2}$");
     final hasMatch = regExp.hasMatch(text);
     if (hasMatch) {
       setState(() {
