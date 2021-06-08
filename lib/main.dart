@@ -9,6 +9,7 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/helper_functions.dart';
+import 'package:stundenplan/parsing/calendar_parse.dart';
 import 'package:stundenplan/parsing/parse.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/update_notify.dart';
@@ -93,6 +94,7 @@ class _MyAppState extends State<MyApp> {
         couldLoad = await checkForUpdateAndLoadTimetable(
             updateNotifier, sharedState, context);
         loading = false;
+        await loadCalendarData();
         // Update the Page to remove the loading Icon
         setState(() {});
       } else {
@@ -186,6 +188,21 @@ class _MyAppState extends State<MyApp> {
                               textAlign: TextAlign.center,
                             ),
                           ),
+                          ElevatedButton(onPressed: () => {
+                            setState(() {
+                              couldLoad = true;
+                            })
+                          },
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all<Color>(
+                                sharedState.theme.subjectColor.withOpacity(0.9),
+                              ),
+                            ), child:
+                            Text(
+                              "Leeren/Alten Stundenplan anzeigen",
+                              style: TextStyle(color: sharedState.theme.textColor),
+                            )
+                          )
                         ],
                       ),
                     )

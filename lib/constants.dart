@@ -12,6 +12,7 @@ class Constants {
       "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/svertretung/svertretungen";
   static const String timeTableLinkBase =
       "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
+  static const String calDavBaseUrl = "https://hag-iserv.de/caldav";
   static const String newestVersionPubspecUrl =
       "https://raw.githubusercontent.com/RedstoneMedia/HAG-Timetable-App/master/pubspec.yaml";
   static const List<String> alwaysDefaultSubjects = [
