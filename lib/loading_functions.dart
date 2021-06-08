@@ -7,11 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/helper_functions.dart';
+import 'package:stundenplan/pages/intro/class_selection.dart';
 import 'package:stundenplan/parsing/parse.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/update_notify.dart';
 
-import 'pages/setup_page.dart';
 
 Future<void> openSetupPageAndCheckForFile(SharedState sharedState, BuildContext context) async {
   // Only load from file when file permissions are granted
@@ -23,7 +23,7 @@ Future<void> openSetupPageAndCheckForFile(SharedState sharedState, BuildContext 
     // Opening the setupPage
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SetupPage(sharedState)),
+      MaterialPageRoute(builder: (context) => ClassSelectionPage(sharedState)),
     );
   });
 }

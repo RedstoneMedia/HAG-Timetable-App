@@ -23,7 +23,7 @@ class BaseIntroScreen extends StatelessWidget {
       color: sharedState.theme.backgroundColor,
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 50.0),
+          padding: const EdgeInsets.symmetric(vertical: 50.0, horizontal: 20.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -36,13 +36,17 @@ class BaseIntroScreen extends StatelessWidget {
                       style: TextStyle(
                           color: sharedState.theme.textColor,
                           fontWeight: FontWeight.bold,
-                          fontSize: 40.0),
+                          fontSize: 40.0
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                   Text(
                     subtitle,
                     style: TextStyle(
-                        color: sharedState.theme.textColor, fontSize: 18.0),
+                        color: sharedState.theme.textColor, fontSize: 18.0
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
