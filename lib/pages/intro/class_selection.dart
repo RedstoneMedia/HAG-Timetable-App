@@ -37,7 +37,7 @@ class _ClassSelectionPageState extends State<ClassSelectionPage> {
   bool validateSubClassInput() {
     if (!subSchoolClassEnabled) return true;
     final text = subClassTextEditingController.text;
-    final regExp = RegExp(r"^[a-zA-Z]{0,3}\d{1,2}$");
+    final regExp = RegExp(r"^[a-zA-Z]{0,3}\d{0,2}$");
     final hasMatch = regExp.hasMatch(text);
     if (hasMatch) {
       setState(() {
