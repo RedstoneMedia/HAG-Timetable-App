@@ -31,8 +31,13 @@ class _ClassSelectionPageState extends State<CourseSelectionPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
     courses = widget.sharedState.profileManager.subjects;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return BaseIntroScreen(
       sharedState: widget.sharedState,
       onPressed: () {

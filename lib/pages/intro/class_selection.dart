@@ -20,6 +20,13 @@ class _ClassSelectionPageState extends State<ClassSelectionPage> {
   bool subSchoolClassIsCorrect = true;
   TextEditingController subClassTextEditingController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    schoolGrade = widget.sharedState.profileManager.schoolGrade;
+    subClassTextEditingController.text = widget.sharedState.profileManager.subSchoolClass;
+  }
+
   /// Sets input school grade and sets if the sub class input field should be disabled accordingly.
   void setSchoolGrade(String schoolGrade) {
     setState(() {
