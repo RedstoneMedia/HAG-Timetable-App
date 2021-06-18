@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 final darkTheme = Theme(
-  "dark", // Theme name
+  "Dark", // Theme name
   const Color.fromRGBO(25, 25, 25, 1.0), // Background color
   Colors.white.withAlpha(200), // Text color
   const Color.fromRGBO(38 - 20, 222 - 20, 129 - 20, 1.0), // Subject color
@@ -11,8 +11,19 @@ final darkTheme = Theme(
       252 - 30, 92 - 30, 101 - 30, 1.0), // Subject substitution color
 );
 
+final arcticTheme = Theme(
+  "Arctic", // Theme name
+  const Color.fromRGBO(25, 25, 25, 1.0), // Background color
+  Colors.white.withAlpha(200), // Text color
+  const Color.fromRGBO(18, 195, 201, 1.0), // Subject color
+  const Color.fromRGBO(
+      209 - 160, 216 - 160, 224 - 160, 1.0), // Subject drop out color
+  const Color.fromRGBO(
+      252 - 30, 92 - 30, 101 - 30, 1.0), // Subject substitution color
+);
+
 final lightTheme = Theme(
-  "light", // Theme name
+  "Light", // Theme name
   const Color.fromRGBO(240, 240, 240, 1.0), // Background color
   Colors.black, // Text color
   const Color.fromRGBO(38, 222, 129, 1.0), // Subject color
@@ -21,7 +32,7 @@ final lightTheme = Theme(
 );
 
 final neonTheme = Theme(
-  "nein danke", // Theme name
+  "Nein danke", // Theme name
   const Color.fromRGBO(0, 255, 255, 1), // Background color
   const Color.fromRGBO(255, 255, 0, 1), // Text color
   const Color.fromRGBO(255, 0, 255, 1), // Subject color
@@ -32,7 +43,7 @@ final neonTheme = Theme(
 
 // Theses colors are just the standard colors for the custom theme and can be changed.
 final customTheme = Theme(
-  "Benutzerdefiniert", // Theme name
+  "Eigenes", // Theme name
   const Color.fromRGBO(25, 25, 25, 1.0), // Background color
   Colors.white.withAlpha(200), // Text color
   const Color.fromRGBO(38 - 20, 222 - 20, 129 - 20, 1.0), // Subject color
@@ -43,7 +54,7 @@ final customTheme = Theme(
 );
 
 
-final themes = [darkTheme, lightTheme, neonTheme, customTheme];
+final themes = [darkTheme, arcticTheme,lightTheme, customTheme];
 
 
 Map<String, dynamic> colorToJsonData(Color color) {
