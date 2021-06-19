@@ -7,17 +7,52 @@ import 'package:http/http.dart'; // Contains a client for making API calls
 import 'package:stundenplan/parsing/parsing_util.dart'; // Contains parsing utils
 import 'package:stundenplan/content.dart';
 
+
 /// This will fill the input content with a timetable based on the other arguments
 Future<void> fillTimeTable(String course, String linkBase, Client client,
     Content content, List<String> subjects) async
 {
+  final tables = await getTimeTableTables(course, linkBase, client);
+  if (tables != null) {
+    final mainTimeTable = tables[0];
+    final footnoteTable = tables[1];
+    final footnoteMap =
+    parseFootnoteTable(footnoteTable); // Parse the footnote table
+    parseMainTimeTable(content, subjects, mainTimeTable, footnoteMap, course); // Parse the main timetable
+  }
+}
+
+Future<List<dom.Element>?> getTimeTableTables(String course, String linkBase, Client client) async {
   // Get the html file
   final response = await client.get(Uri.parse('${linkBase}_$course.htm'));
   if (response.statusCode != 200) {
     log("Cannot get timetable", name: "parsing.timetable");
-    return;
+    return null;
+  }
+  final dom.Document document = getParsedDocumentFromResponse(response);
+  if (document.outerHtml.contains("Fatal error")) {
+    log("Cannot get timetable", name: "parsing.timetable");
+    return null;
   }
 
+  // Find all elements with attr rules
+  final tables = <dom.Element>[];
+  final elements =
+      document.getElementsByTagName("body")[0].children[0].children;
+  for (var i = 0; i < elements.length; i++) {
+    if (elements[i].attributes.containsKey("rules")) {
+      tables.add(elements[i]);
+    }
+  }
+  // Check if tables exists if not don't parse the table
+  if (tables.length > 1) {
+    return tables;
+  }
+  return null;
+}
+
+
+dom.Document getParsedDocumentFromResponse(Response response) {
   // Change the encoding manually because the encoding is somehow wrong on the website it self and the property on the parse method dose nothing yay.
   final headers = <String, String>{};
   response.headers.forEach((key, value) {
@@ -33,30 +68,7 @@ Future<void> fillTimeTable(String course, String linkBase, Client client,
 
   // Init the parser
   final document = parse(modResponse.body, encoding: "ISO-8859-1");
-
-  if (document.outerHtml.contains("Fatal error")) {
-    log("Cannot get timetable", name: "parsing.timetable");
-    return;
-  }
-
-  // Find all elements with attr rules
-  final tables = <dom.Element>[];
-  final elements =
-      document.getElementsByTagName("body")[0].children[0].children;
-  for (var i = 0; i < elements.length; i++) {
-    if (elements[i].attributes.containsKey("rules")) {
-      tables.add(elements[i]);
-    }
-  }
-  // Check if tables exists if not don't parse the table
-  if (tables.length > 1) {
-    final mainTimeTable = tables[0];
-    final footnoteTable = tables[1];
-    final footnoteMap =
-        parseFootnoteTable(footnoteTable); // Parse the footnote table
-    parseMainTimeTable(content, subjects, mainTimeTable, footnoteMap,
-        course); // Parse the main timetable
-  }
+  return document;
 }
 
 /// This class is used internally by parseFootnoteTable to parse the footnotes
@@ -280,6 +292,63 @@ void parseMainTimeTable(
       }
     }
   }
+}
+
+
+HashSet<String> getAvailableSubjectNamesInTimetable(dom.Element mainTimeTable) {
+  final rows = mainTimeTable.children[0].children; // Gets all <tr> elements of the main table
+  rows.removeAt(0); // Removes header
+  final HashSet<String> availableSubjects = HashSet();
+  // Loop over all rows
+  for (var y = 0; y < rows.length; y++) {
+    final row = rows[y];
+    final columns = row.children; // Gets the columns within that row
+    // Ignore this row if its empty
+    if (columns.isEmpty) {
+      continue;
+    }
+    for (final cellDom in columns) {
+      final subjectName = getSubjectName(cellDom);
+      if (subjectName != null) {
+        availableSubjects.add(subjectName);
+      }
+    }
+  }
+  return availableSubjects;
+}
+
+
+Future<HashSet<String>> getAvailableSubjectNames(String course, String linkBase, Client client) async {
+  final HashSet<String> availableSubjects = HashSet();
+
+  final tables = await getTimeTableTables(course, linkBase, client);
+  if (tables != null) {
+    final mainTimeTable = tables[0];
+    final footnoteTable = tables[1];
+    // Add subjects from timetable
+    for (final subject in getAvailableSubjectNamesInTimetable(mainTimeTable)) {
+      availableSubjects.add(subject);
+    }
+    final footnoteMap = parseFootnoteTable(footnoteTable); // Parse the footnote table
+    // Add subject in footnotes
+    for (final footnotes in footnoteMap.values) {
+      for (final footnote in footnotes) {
+        availableSubjects.add(footnote.subject);
+      }
+    }
+  }
+  availableSubjects.remove("---");
+  return availableSubjects;
+}
+
+
+String? getSubjectName(dom.Element cellDom) {
+  final cellData = cellDom.children[0].children[0].children;
+  if (cellData.length >= 2) {
+    final subjectAndFootnote = cellData[1].children;
+    return customStrip(subjectAndFootnote[0].text);
+  }
+  return null;
 }
 
 void parseOneCell(
