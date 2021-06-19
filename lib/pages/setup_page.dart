@@ -505,7 +505,7 @@ class _SetupPageState extends State<SetupPage> {
                     ),
                   ),
                 ),
-                if (themeName == "Benutzerdefiniert")
+                if (themeName == "Eigenes")
                   Padding(
                       padding: const EdgeInsets.only(bottom: 12.0, top: 15.0),
                       child: Column(
