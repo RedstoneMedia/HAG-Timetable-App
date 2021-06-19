@@ -61,9 +61,19 @@ void writeSubstitutionPlan(List<Map<String, dynamic>> plan, int weekDay,
     cell.originalRoom = customStrip(plan[i]["statt Raum"] as String);
     cell.text = plan[i]["Text"] as String;
     cell.isDropped = customStrip(plan[i]["Entfall"] as String) == "x";
-    if (!cell.isDropped) {
+
+    // Sometimes a substitution is set, but there is no data set which means that it is dropped.
+    if (cell.originalSubject == "\u{00A0}" && cell.subject == "\u{00A0}" && cell.room == "\u{00A0}" && cell.teacher == "\u{00A0}") {
+      cell.isDropped = true;
+    } else if (!cell.isDropped) {
       cell.isSubstitute = true;
     }
+
+    // Replace non breaking space with three dashes
+    // We need to do this because, otherwise the cell will not have any visible text and will just display a solid color.
+    if (cell.subject == "\u{00A0}") cell.subject = "---";
+    if (cell.teacher == "\u{00A0}") cell.teacher = "---";
+    if (cell.room == "\u{00A0}") cell.room = "---";
 
     if (hours.length == 1) {
       // No hour range (5)
