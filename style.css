@@ -9,18 +9,18 @@ body {
     background-color: var(--main-bg-color);
 }
 
+html {
+    pointer-events: none;
+}
+
 content-center {
     text-align: center;
     display: block;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 400px;
-    height: 400px;
-    margin: -200px 0 0 -200px;
+    min-width: 30%;
     padding: 10px;
     border-radius: 8px;
     color: var(--text-color);
+    pointer-events: auto;
     background-color: var(--content-bg-color);
 }
 
@@ -28,9 +28,7 @@ content-center {
     content-center {
         padding: 0px;
         padding-top: 5px;
-        width: 350px;
-        height: 500px;
-        margin: -250px 0 0 -175px;
+        width: 98%;
     }
 }
 
@@ -44,19 +42,57 @@ h1 {
     font-size: 2.5em;
 }
 
+h1:hover {
+    color: #335080;
+    font-size: 2.6em;
+}
+
+
 a {
     display: inline-block;
     text-decoration: none;
-    color: var(--content-bg-color);
     font-weight: bold;
     padding: 5px;
     font-size: 1.5em;
     margin: 5px;
-    color: #ecf0f1;
     border-radius: 5px;
+    color: #ecf0f1;
 }
 
+a:hover {
+    font-size: 1.8em;
+    color : var(--text-color)
+}
+
+
+content-center.animated > a {
+    transition-duration: 1s;
+    transition-timing-function: ease-in-out;
+    transition-property: font-size, color;
+}
+
+content-center.animated > h1 {
+    transition-duration: 1s;
+    transition-timing-function: ease-in-out;
+    transition-property: font-size, color;
+}
+
+
 #particles-js {
-    overflow: hidden;
+    z-index: -1;
+    position: absolute;
+    top: 0;
+    left: 0;
     height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    pointer-events: auto;
+}
+
+#container-center {
+    pointer-events: none;
+    display: grid;
+    height: 100vh;
+    overflow: hidden;
+    place-items: center;
 }

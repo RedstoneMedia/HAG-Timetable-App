@@ -19,23 +19,23 @@
     <meta name="description" content="Die Stundenplan und Vertretungsplan App für das Hannah-Arendt-Gymnasium.">
 
     <!--favicons-->
-    <link rel="shortcut icon" href="/HAG-Timetable-App/assets/favicon.ico">
-	<link rel="icon" sizes="16x16 32x32 64x64" href="/HAG-Timetable-App/assets/favicon.ico">
-	<link rel="icon" type="image/png" sizes="196x196" href="/HAG-Timetable-App/assets/favicon-192.png">
-	<link rel="icon" type="image/png" sizes="160x160" href="/HAG-Timetable-App/assets/favicon-160.png">
-	<link rel="icon" type="image/png" sizes="96x96" href="/HAG-Timetable-App/assets/favicon-96.png">
-	<link rel="icon" type="image/png" sizes="64x64" href="/HAG-Timetable-App/assets/favicon-64.png">
-	<link rel="icon" type="image/png" sizes="32x32" href="/HAG-Timetable-App/assets/favicon-32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="/HAG-Timetable-App/assets/favicon-16.png">
-	<link rel="apple-touch-icon" href="/HAG-Timetable-App/assets/favicon-57.png">
-	<link rel="apple-touch-icon" sizes="114x114" href="/HAG-Timetable-App/assets/favicon-114.png">
-	<link rel="apple-touch-icon" sizes="72x72" href="/HAG-Timetable-App/assets/favicon-72.png">
-	<link rel="apple-touch-icon" sizes="144x144" href="/HAG-Timetable-App/assets/favicon-144.png">
-	<link rel="apple-touch-icon" sizes="60x60" href="/HAG-Timetable-App/assets/favicon-60.png">
-	<link rel="apple-touch-icon" sizes="120x120" href="/HAG-Timetable-App/assets/favicon-120.png">
-	<link rel="apple-touch-icon" sizes="76x76" href="/HAG-Timetable-App/assets/favicon-76.png">
-	<link rel="apple-touch-icon" sizes="152x152" href="/HAG-Timetable-App/assets/favicon-152.png">
-	<link rel="apple-touch-icon" sizes="180x180" href="/HAG-Timetable-App/assets/favicon-180.png">
+    <link class="replace-src-path"  rel="shortcut icon" href="/HAG-Timetable-App/assets/favicon.ico">
+	<link class="replace-src-path"  rel="icon" sizes="16x16 32x32 64x64" href="/HAG-Timetable-App/assets/favicon.ico">
+	<link class="replace-src-path"  rel="icon" type="image/png" sizes="196x196" href="/HAG-Timetable-App/assets/favicon-192.png">
+	<link class="replace-src-path"  rel="icon" type="image/png" sizes="160x160" href="/HAG-Timetable-App/assets/favicon-160.png">
+	<link class="replace-src-path"  rel="icon" type="image/png" sizes="96x96" href="/HAG-Timetable-App/assets/favicon-96.png">
+	<link class="replace-src-path"  rel="icon" type="image/png" sizes="64x64" href="/HAG-Timetable-App/assets/favicon-64.png">
+	<link class="replace-src-path"  rel="icon" type="image/png" sizes="32x32" href="/HAG-Timetable-App/assets/favicon-32.png">
+	<link class="replace-src-path"  rel="icon" type="image/png" sizes="16x16" href="/HAG-Timetable-App/assets/favicon-16.png">
+	<link class="replace-src-path"  rel="apple-touch-icon" href="/HAG-Timetable-App/assets/favicon-57.png">
+	<link class="replace-src-path"  rel="apple-touch-icon" sizes="114x114" href="/HAG-Timetable-App/assets/favicon-114.png">
+	<link class="replace-src-path"  rel="apple-touch-icon" sizes="72x72" href="/HAG-Timetable-App/assets/favicon-72.png">
+	<link class="replace-src-path"  rel="apple-touch-icon" sizes="144x144" href="/HAG-Timetable-App/assets/favicon-144.png">
+	<link class="replace-src-path"  rel="apple-touch-icon" sizes="60x60" href="/HAG-Timetable-App/assets/favicon-60.png">
+	<link class="replace-src-path"  rel="apple-touch-icon" sizes="120x120" href="/HAG-Timetable-App/assets/favicon-120.png">
+	<link class="replace-src-path"  rel="apple-touch-icon" sizes="76x76" href="/HAG-Timetable-App/assets/favicon-76.png">
+	<link class="replace-src-path"  rel="apple-touch-icon" sizes="152x152" href="/HAG-Timetable-App/assets/favicon-152.png">
+	<link class="replace-src-path" rel="apple-touch-icon" sizes="180x180" href="/HAG-Timetable-App/assets/favicon-180.png">
 	<meta name="msapplication-TileColor" content="#2C3E50">
 	<meta name="msapplication-TileImage" content="/HAG-Timetable-App/assets/favicon-144.png">
 	<meta name="msapplication-config" content="/HAG-Timetable-App/assets/browserconfig.xml">
@@ -44,14 +44,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
 
     <!--Style-->
-    <link href="/HAG-Timetable-App/style.css" rel="stylesheet">
+    <link class="replace-src-path" href="/HAG-Timetable-App/style.css" rel="stylesheet">
 </head>
 <body>
-    <div id="particles-js">
+    <div id="particles-js"></div>
+    <div id="container-center">
         <content-center>
             <h1>HAG-Timetable-App</h1>
             <p>Die Stundenplan und Vertretungsplan App für das Hannah-Arendt-Gymnasium.</p>
-            <img src="/HAG-Timetable-App/assets/undraw_App_installation_re_h36x.svg" height="220">
+            <img class="replace-src-path" src="/HAG-Timetable-App/assets/undraw_App_installation_re_h36x.svg" height="220">
             <br>
             <br>
             <a href="https://github.com/RedstoneMedia/HAG-Timetable-App/releases" style="background-color: #1abc9c;">
@@ -67,6 +68,28 @@
         </content-center>
     </div>
     <script src= "https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-    <script src="/HAG-Timetable-App/main.js"></script>
+    <script class="replace-src-path" src="/HAG-Timetable-App/main.js"></script>
+    <script>
+        if (!window.location.hostname.endsWith("github.io")) {
+            let tags = document.getElementsByClassName("replace-src-path");
+            for (let i = 0; i < tags.length; i++) {
+                const tag = tags[i];
+                if (tag.src != null) {
+                    let newSrc = tag.src.replace("/HAG-Timetable-App", "");
+                    if (tag.tagName == "SCRIPT") {
+                        tag.remove();
+                        let new_script = document.createElement("script");
+                        new_script.src = newSrc;
+                        new_script.type = 'text/javascript';
+                        document.getElementsByTagName("body")[0].appendChild(new_script);
+                    } else {
+                        tag.setAttribute("src", newSrc);
+                    }
+                } else if (tag.href != null) {
+                    tag.setAttribute("href", tag.href.replace("/HAG-Timetable-App", ""));
+                }
+            }
+        }
+    </script>
 </body>
 </html>
