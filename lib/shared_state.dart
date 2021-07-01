@@ -35,9 +35,6 @@ class SharedState {
     saveFileData["jsonProfileManagerData"] = jsonProfileManagerData;
     preferences.setString("jsonProfileManagerData", jsonEncode(jsonProfileManagerData));
 
-    // Week substitutions
-    preferences.setString("weekSubstitutions", jsonEncode(weekSubstitutions.weekSubstitutions));
-
     // Save theme and profiles to file<
     saveToFile(jsonEncode(saveFileData), Constants.saveDataFileLocation);
 
@@ -58,12 +55,6 @@ class SharedState {
       return true;
     }
 
-    // Load week substitutions
-    final String weekSubstitutionsJsonString = preferences.get("weekSubstitutions").toString();
-    if (weekSubstitutionsJsonString != "") {
-      weekSubstitutions = WeekSubstitutions(jsonDecode(weekSubstitutionsJsonString));
-    }
-
     loadThemeAndProfileManagerFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")!));
     return false;
   }
@@ -76,6 +67,9 @@ class SharedState {
   // Content
 
   void saveContent() {
+    // Week substitutions
+    preferences.setString("weekSubstitutions", jsonEncode(weekSubstitutions.toJson()));
+    // Save content
     content.updateLastUpdated();
     log("[SAVED] lastUpdated: ${content.lastUpdated}", name: "cache");
     final encodedContent = jsonEncode(content.toJsonData());
@@ -83,6 +77,12 @@ class SharedState {
   }
 
   void loadContent() {
+    // Load week substitutions
+    final String weekSubstitutionsJsonString = preferences.get("weekSubstitutions").toString();
+    if (weekSubstitutionsJsonString != "") {
+      weekSubstitutions = WeekSubstitutions(jsonDecode(weekSubstitutionsJsonString));
+    }
+    // Load content
     final String contentJsonString = preferences.get("cachedContent").toString();
     if (contentJsonString == "") return;
     final decodedJson = jsonDecode(contentJsonString) as List<dynamic>;

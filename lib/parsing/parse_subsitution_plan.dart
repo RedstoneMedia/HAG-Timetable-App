@@ -16,8 +16,8 @@ Future<void> overwriteContentWithSubsitutionPlan(
   // Get main substitutions
   final ret = await getCourseSubstitutionPlan(schoolClassName, Constants.substitutionLinkBase, client);
   final mainPlan = ret["substitutions"] as List<Map<String, String>>;
-  final weekDayMain = ret["substituteWeekday"] as int?;
-  sharedState.weekSubstitutions.setDay(mainPlan, weekDayMain);
+  final mainSubstituteDate = ret["substituteDate"] as DateTime;
+  sharedState.weekSubstitutions.setDay(mainPlan, mainSubstituteDate);
 
   //  Get course substitutions
   if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
@@ -26,14 +26,15 @@ Future<void> overwriteContentWithSubsitutionPlan(
         Constants.substitutionLinkBase,
         client);
     final coursePlan = courseRet["substitutions"] as List<Map<String, String>>;
-    final weekDayCourse = courseRet["substituteWeekday"] as int;
-    sharedState.weekSubstitutions.setDay(coursePlan, weekDayCourse);
+    final courseSubstituteDate = ret["substituteDate"] as DateTime;
+    sharedState.weekSubstitutions.setDay(coursePlan, courseSubstituteDate);
   }
 
   // Write substitutions to content.
   for (final weekDayString in sharedState.weekSubstitutions.weekSubstitutions!.keys) {
     final weekDay = int.parse(weekDayString);
-    writeSubstitutionPlan(sharedState.weekSubstitutions.weekSubstitutions![weekDayString]!, weekDay, content, subjects);
+    final daySubstitution = sharedState.weekSubstitutions.weekSubstitutions![weekDayString]!;
+    writeSubstitutionPlan(daySubstitution.item1, weekDay, content, subjects);
   }
 }
 
@@ -123,11 +124,12 @@ Future<Map<String, dynamic>> getCourseSubstitutionPlan(String course, String lin
       .replaceAll("  ", "/"));
   final regexp = RegExp(r"^\w+\/(?<day>\d+).(?<month>\d+).");
   final match = regexp.firstMatch(headerText)!;
-  var substituteWeekday = DateTime(
+
+  final substituteDate = DateTime(
       DateTime.now().year,
       int.parse(match.namedGroup("month")!),
-      int.parse(match.namedGroup("day")!))
-      .weekday;
+      int.parse(match.namedGroup("day")!));
+  var substituteWeekday = substituteDate.weekday;
   if (substituteWeekday > 5) {
     substituteWeekday = min(DateTime.now().weekday, 5);
   }
@@ -167,6 +169,7 @@ Future<Map<String, dynamic>> getCourseSubstitutionPlan(String course, String lin
 
   return {
     "substitutions" : substitutions,
+    "substituteDate" : substituteDate,
     "substituteWeekday" : substituteWeekday
   };
 }
