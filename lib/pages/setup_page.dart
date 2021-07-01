@@ -5,6 +5,7 @@ import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/main.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/theme.dart' as my_theme;
+import 'package:stundenplan/widgets/course_autocomplete_add_input.dart';
 import 'package:stundenplan/widgets/course_select_list.dart';
 
 // ignore: must_be_immutable
@@ -428,27 +429,17 @@ class _SetupPageState extends State<SetupPage> {
                         fontSize: 26.0),
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CourseAutoCompleteAddInput(sharedState: sharedState, onAdd: (courseName) {
+                    setState(() {
+                      courses.add(courseName);
+                    });
+                  }),
+                ),
                 CourseSelectList(
                   sharedState,
                   courses,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: MaterialButton(
-                    onPressed: () {
-                      setState(() {
-                        courses.add("");
-                      });
-                    },
-                    color: sharedState.theme.textColor,
-                    padding: const EdgeInsets.all(15.0),
-                    shape: const CircleBorder(),
-                    child: Icon(
-                      Icons.add,
-                      color: sharedState.theme.subjectColor,
-                      size: 50,
-                    ),
-                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
