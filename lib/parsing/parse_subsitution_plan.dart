@@ -102,6 +102,7 @@ Future<Map<String, dynamic>> getCourseSubstitutionPlan(String course, String lin
   if (response.statusCode != 200) {
     return {
       "substitutions" : <Map<String, String>>[],
+      "substituteDate" : DateTime.now(),
       "substituteWeekday" : 1
     };
   }
@@ -110,6 +111,7 @@ Future<Map<String, dynamic>> getCourseSubstitutionPlan(String course, String lin
   if (document.outerHtml.contains("Fatal error")) {
     return {
       "substitutions" : <Map<String, String>>[],
+      "substituteDate" : DateTime.now(),
       "substituteWeekday" : 1
     };
   }
