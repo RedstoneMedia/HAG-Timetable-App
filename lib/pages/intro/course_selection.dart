@@ -18,7 +18,6 @@ class _ClassSelectionPageState extends State<CourseSelectionPage> {
 
   TextEditingController courseAddNameTextEditingController = TextEditingController();
   List<String> courses = [];
-  List<String> options = [];
 
   _ClassSelectionPageState();
 
