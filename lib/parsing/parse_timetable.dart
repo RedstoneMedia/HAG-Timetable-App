@@ -9,15 +9,13 @@ import 'package:stundenplan/content.dart';
 
 
 /// This will fill the input content with a timetable based on the other arguments
-Future<void> fillTimeTable(String course, String linkBase, Client client,
+Future<void> fillTimeTable(String course, List<dom.Element>? tables,
     Content content, List<String> subjects) async
 {
-  final tables = await getTimeTableTables(course, linkBase, client);
   if (tables != null) {
     final mainTimeTable = tables[0];
     final footnoteTable = tables[1];
-    final footnoteMap =
-    parseFootnoteTable(footnoteTable); // Parse the footnote table
+    final footnoteMap = parseFootnoteTable(footnoteTable); // Parse the footnote table
     parseMainTimeTable(content, subjects, mainTimeTable, footnoteMap, course); // Parse the main timetable
   }
 }
@@ -318,10 +316,9 @@ HashSet<String> getAvailableSubjectNamesInTimetable(dom.Element mainTimeTable) {
 }
 
 
-Future<HashSet<String>> getAvailableSubjectNames(String course, String linkBase, Client client) async {
+HashSet<String> getAvailableSubjectNames(List<dom.Element>? tables) {
   final HashSet<String> availableSubjects = HashSet();
 
-  final tables = await getTimeTableTables(course, linkBase, client);
   if (tables != null) {
     final mainTimeTable = tables[0];
     final footnoteTable = tables[1];

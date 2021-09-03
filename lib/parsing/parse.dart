@@ -7,30 +7,57 @@ import 'package:stundenplan/parsing/parse_subsitution_plan.dart';
 import 'package:stundenplan/parsing/parse_timetable.dart';
 import 'package:stundenplan/shared_state.dart';
 
+
 Future<void> parsePlans(Content content, SharedState sharedState) async {
   final client = Client();
+  final schoolClassName = "${sharedState.profileManager.schoolGrade}${sharedState.profileManager.subSchoolClass}";
+
+  log("Parsing main time table", name: "parsing");
+  final mainTables = await getTimeTableTables(schoolClassName, Constants.timeTableLinkBase, client);
+  // Don't know why but for some reason main tables gets modified by getAvailableSubjectNames so we need to clone it.
+  final mainAvailableSubjects = getAvailableSubjectNames(mainTables!.map((e) => e.clone(true)).toList());
+
   final allSubjects = <String>[];
   // Add the subject that the user selected
   for (final subject in sharedState.profileManager.subjects) {
-    allSubjects.add(subject);
+    // Check how often the subject exists when ignoring capitalization in the timetable.
+    final possibleSubjects = mainAvailableSubjects.where((element) => element.toLowerCase() == subject.toLowerCase());
+    if (possibleSubjects.isEmpty) continue;
+    if (possibleSubjects.length <= 1) {
+      allSubjects.add(possibleSubjects.single);
+    } else {
+      // Pick the subject that matches the closest with the inputted capitalization.
+      final possibleSubjectList = possibleSubjects.toList();
+      possibleSubjectList.sort((String a, String b) {
+        final aRightLetters = List.generate(subject.length, (i) => i)
+            .where((i) => a.substring(i, i+1) == subject.substring(i, i+1))
+            .length;
+        final bRightLetters = List.generate(subject.length, (i) => i)
+            .where((i) => b.substring(i, i+1) == subject.substring(i, i+1))
+            .length;
+        if (aRightLetters > bRightLetters) return -1;
+        return 1;
+      });
+      allSubjects.add(possibleSubjectList.first);
+    }
   }
   // Add the default subjects that can not be changed by the user
   for (final defaultSubject in sharedState.defaultSubjects) {
     allSubjects.add(defaultSubject);
   }
 
-  final schoolClassName = "${sharedState.profileManager.schoolGrade}${sharedState.profileManager.subSchoolClass}";
-  log("Parsing main time table", name: "parsing");
-  await fillTimeTable(schoolClassName, Constants.timeTableLinkBase, client, content, allSubjects)
+  //mainTables = await getTimeTableTables(schoolClassName, Constants.timeTableLinkBase, client);
+  await fillTimeTable(schoolClassName, mainTables, content, allSubjects)
       .timeout(Constants.clientTimeout);
 
   if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
+    final courseName = "${sharedState.profileManager.schoolGrade}K";
     log("Parsing course only time table", name: "parsing");
+    final courseTables = await getTimeTableTables(courseName, Constants.timeTableLinkBase, client);
     final courseTimeTableContent = Content(Constants.width, sharedState.height!);
     await fillTimeTable(
-            "${sharedState.profileManager.schoolGrade}K",
-            Constants.timeTableLinkBase,
-            client,
+            courseName,
+            courseTables,
             courseTimeTableContent,
             allSubjects)
         .timeout(Constants.clientTimeout);

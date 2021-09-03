@@ -25,9 +25,12 @@ class _CourseAutoCompleteAddInput extends State<CourseAutoCompleteAddInput> {
 
   Future<void> setOptions() async {
     final client = Client();
-    options = (await getAvailableSubjectNames(widget.sharedState.profileManager.currentProfileName, Constants.timeTableLinkBase, client)).toList();
+    final fullSchoolGradeName = widget.sharedState.profileManager.schoolGrade + widget.sharedState.profileManager.subSchoolClass;
+    final tablesMain = await getTimeTableTables(fullSchoolGradeName, Constants.timeTableLinkBase, client);
+    options = (await getAvailableSubjectNames(tablesMain)).toList();
     if (!Constants.displayFullHeightSchoolGrades.contains(widget.sharedState.profileManager.schoolGrade)) {
-      options.addAll(await getAvailableSubjectNames("${widget.sharedState.profileManager.schoolGrade}K", Constants.timeTableLinkBase, client));
+      final tablesCourse = await getTimeTableTables("${fullSchoolGradeName}K", Constants.timeTableLinkBase, client);
+      options.addAll(await getAvailableSubjectNames(tablesCourse));
     }
   }
 
@@ -59,7 +62,7 @@ class _CourseAutoCompleteAddInput extends State<CourseAutoCompleteAddInput> {
                       return const Iterable<String>.empty();
                     }
                     return options.where((String option) {
-                      return option.contains(textEditingValue.text.toLowerCase());
+                      return option.contains(textEditingValue.text);
                     });
                   },
                   fieldViewBuilder: (
