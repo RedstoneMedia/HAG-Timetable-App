@@ -35,7 +35,7 @@ class SharedState {
     saveFileData["jsonProfileManagerData"] = jsonProfileManagerData;
     preferences.setString("jsonProfileManagerData", jsonEncode(jsonProfileManagerData));
 
-    // Save theme and profiles to file<
+    // Save theme and profiles to file
     saveToFile(jsonEncode(saveFileData), Constants.saveDataFileLocation);
 
     preferences.setInt("height", height!);
