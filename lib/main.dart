@@ -68,7 +68,7 @@ class _MyAppState extends State<MyApp> {
 
     // Setup the sharedState
     sharedState = widget.sharedState;
-    sharedState.content = Content(Constants.width, sharedState.height!);
+    sharedState.content = Content(Constants.width, Constants.defaultHeight); // Temp initialize content
 
     // Calls set state every minute to update current school hour if changed
     everyMinute = Timer.periodic(const Duration(minutes: 1), (Timer timer) {
@@ -85,6 +85,7 @@ class _MyAppState extends State<MyApp> {
       // App is opened for the firs time -> load settings from file
       await openSetupPageAndCheckForFile(sharedState, context);
     } else {
+      sharedState.content = Content(Constants.width, sharedState.height!); // Initialize content with correct height, after loading the corrected
       // If not the first time -> Check if Internet is available
       final bool result = await isInternetAvailable(connectivity);
       // Internet is available

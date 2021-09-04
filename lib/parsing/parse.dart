@@ -46,7 +46,7 @@ Future<void> parsePlans(Content content, SharedState sharedState) async {
     allSubjects.add(defaultSubject);
   }
 
-  //mainTables = await getTimeTableTables(schoolClassName, Constants.timeTableLinkBase, client);
+  log("content length : ${content.cells.length}", name: "parse");
   await fillTimeTable(schoolClassName, mainTables, content, allSubjects)
       .timeout(Constants.clientTimeout);
 
