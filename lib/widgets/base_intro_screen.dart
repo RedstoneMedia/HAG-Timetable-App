@@ -8,12 +8,14 @@ class BaseIntroScreen extends StatelessWidget {
       required this.subtitle,
       required this.child,
       required this.onPressed,
-      this.buttonText = "Weiter"});
+      this.buttonText = "Weiter",
+      this.noButton = false});
 
   final SharedState sharedState;
   final String title;
   final String subtitle;
   final String buttonText;
+  final bool noButton;
   final Widget child;
   final VoidCallback onPressed;
 
@@ -51,7 +53,7 @@ class BaseIntroScreen extends StatelessWidget {
                 ],
               ),
               child,
-              ElevatedButton(
+              if (noButton) Container() else ElevatedButton(
                 onPressed: onPressed,
                 style: ButtonStyle(
                   shape:  MaterialStateProperty.all<RoundedRectangleBorder>(

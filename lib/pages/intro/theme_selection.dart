@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:stundenplan/pages/intro/course_input_method_selection.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/widgets/base_intro_screen.dart';
 import 'package:stundenplan/widgets/buttons.dart';
 import 'package:stundenplan/theme.dart' as my_theme;
-
-import 'course_selection.dart';
 
 class ThemeSelectionPage extends StatefulWidget {
   final SharedState sharedState;
@@ -36,7 +35,7 @@ class _ClassSelectionPageState extends State<ThemeSelectionPage> {
       sharedState: widget.sharedState,
       onPressed: () {
         Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => CourseSelectionPage(widget.sharedState)));
+            builder: (context) => CourseInputMethodSelectionPage(widget.sharedState)));
       },
       title: "Theme",
       subtitle: "Diese App unterstützt verschiedene Themes.",
