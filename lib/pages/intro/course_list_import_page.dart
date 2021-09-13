@@ -99,7 +99,7 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
       });
     } else {
       setState(() {
-        subtitle = "Es gab einen Fehler, probiere es bitte noch einmal\n(Kopfzeile muss Sehbar sein)";
+        subtitle = "Es gab einen Fehler, probiere es bitte noch einmal\n(Kopfzeile muss Sichtbar sein)";
       });
       log("Could not detect the table", name: "scan");
       return;
