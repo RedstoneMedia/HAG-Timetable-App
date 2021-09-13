@@ -46,3 +46,28 @@ Future<String> loadFromFile(String path) async {
   // Read from the File
   return saveFile.readAsString();
 }
+
+String? getCharAt(String string, int index, {bool ignoreLength = false}) {
+  if (ignoreLength && string.length <= index) {
+    return null;
+  }
+  return string.substring(index, index+1);
+}
+
+int getRightLettersCount(String a, String b) {
+  final rightLetters = List.generate(a.length > b.length ? a.length : b.length, (i) => i)
+      .where((i) => getCharAt(a, i, ignoreLength: true) == getCharAt(b, i, ignoreLength: true))
+      .length;
+  return rightLetters;
+}
+
+String findClosestStringInList(List<String> stringList, String string) {
+  final clonedStringList = List<String>.from(stringList);
+  clonedStringList.sort((String a, String b) {
+    final aRightLetters = getRightLettersCount(string, a);
+    final bRightLetters = getRightLettersCount(string, b);
+    if (aRightLetters > bRightLetters) return -1;
+    return 1;
+  });
+  return clonedStringList.first;
+}

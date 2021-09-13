@@ -3,10 +3,12 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/main.dart';
+import 'package:stundenplan/pages/intro/class_selection.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/theme.dart' as my_theme;
 import 'package:stundenplan/widgets/course_autocomplete_add_input.dart';
 import 'package:stundenplan/widgets/course_select_list.dart';
+import 'package:flutter/foundation.dart';
 
 // ignore: must_be_immutable
 class SetupPage extends StatefulWidget {
@@ -534,8 +536,7 @@ class _SetupPageState extends State<SetupPage> {
                   padding: const EdgeInsets.only(bottom: 12.0, top: 15.0),
                   child: ElevatedButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(
-                          sharedState.theme.subjectColor),
+                      backgroundColor: MaterialStateProperty.all<Color>(sharedState.theme.subjectColor),
                       shape: MaterialStateProperty.all<OutlinedBorder>(
                         RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.0),
@@ -557,6 +558,52 @@ class _SetupPageState extends State<SetupPage> {
                     ),
                   ),
                 ),
+                if (!kReleaseMode) Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5.0, vertical: 4.0),
+                      child: Divider(
+                        thickness: 2.0,
+                        color: sharedState.theme.textColor.withAlpha(200),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: Text(
+                        "Debug",
+                        style: GoogleFonts.poppins(
+                            color: sharedState.theme.textColor.withAlpha(150),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22.0),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 5.0),
+                      child : ElevatedButton(
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all<Color>(sharedState.theme.subjectDropOutColor),
+                          shape: MaterialStateProperty.all<OutlinedBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5.0),
+                            ),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => ClassSelectionPage(widget.sharedState)));
+                        },
+                        child: Text(
+                          "Show intro screen",
+                          style: GoogleFonts.poppins(
+                              color: sharedState.theme.textColor.withAlpha(150),
+                              fontSize: 9.0,
+                              fontWeight: FontWeight.normal),
+                        ),
+                      ),
+                    ),
+                  ],
+                ) else
+                  Container(),
               ],
             ),
           ],

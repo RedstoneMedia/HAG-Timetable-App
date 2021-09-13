@@ -1,14 +1,18 @@
 import 'dart:developer';
+import 'package:http/http.dart';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:stundenplan/helper_functions.dart';
+import 'package:stundenplan/parsing/parse_timetable.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/widgets/base_intro_screen.dart';
 import 'package:stundenplan/widgets/course_select_list.dart';
+import 'package:stundenplan/constants.dart';
+import 'package:stundenplan/main.dart';
 
-import '../../main.dart';
 
 class CourseListImportPage extends StatefulWidget {
   final SharedState sharedState;
@@ -19,15 +23,31 @@ class CourseListImportPage extends StatefulWidget {
   _CourseListImportPageState createState() => _CourseListImportPageState();
 }
 
+const String introScreenCourseListImportPageSubtitle = "Mach ein Foto von deinem Stundenplan";
+
 class _CourseListImportPageState extends State<CourseListImportPage> {
 
   final ImagePicker picker = ImagePicker();
   final textDetector = GoogleMlKit.vision.textDetector();
+  String subtitle = introScreenCourseListImportPageSubtitle;
   List<String> courses = [];
+  List<String> availableCourses = [];
 
   @override
   void initState() {
     super.initState();
+    getAvailableCourses();
+  }
+
+  Future<void> getAvailableCourses() async {
+    final client = Client();
+    final fullSchoolGradeName = widget.sharedState.profileManager.schoolGrade + widget.sharedState.profileManager.subSchoolClass;
+    final tablesMain = await getTimeTableTables(fullSchoolGradeName, Constants.timeTableLinkBase, client);
+    availableCourses = getAvailableSubjectNames(tablesMain).toList();
+    if (!Constants.displayFullHeightSchoolGrades.contains(widget.sharedState.profileManager.schoolGrade)) {
+      final tablesCourse = await getTimeTableTables("${fullSchoolGradeName}K", Constants.timeTableLinkBase, client);
+      availableCourses.addAll(getAvailableSubjectNames(tablesCourse));
+    }
   }
 
   void saveDataToProfile() {
@@ -37,6 +57,20 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
       widget.sharedState.profileManager.subjects = coursesSet.toList();
       widget.sharedState.saveState();
     });
+  }
+
+  String? getCorrectCourseName(String courseName) {
+    if (availableCourses.isEmpty) {
+      return courseName;
+    }
+    if (availableCourses.contains(courseName)) {
+      return courseName;
+    }
+    final closestAvailableCourseName = findClosestStringInList(availableCourses, courseName);
+    final wrongLettersCount = (getRightLettersCount(courseName, closestAvailableCourseName) - closestAvailableCourseName.length).abs();
+    if (wrongLettersCount <= 1) {
+      return closestAvailableCourseName;
+    }
   }
 
   Future<void> scan() async {
@@ -58,16 +92,31 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
         }
       }
     }
+
     if (headerLocations.length == headerNames.length) {
-      log(courseNamesCandidates.join(" "), name: "scan");
       setState(() {
-        courses = courseNamesCandidates.toList();
+        subtitle = introScreenCourseListImportPageSubtitle;
       });
     } else {
+      setState(() {
+        subtitle = "Es gab einen Fehler, probiere es bitte noch einmal\n(Kopfzeile muss Sehbar sein)";
+      });
       log("Could not detect the table", name: "scan");
+      return;
     }
 
-    // TODO : Only add courses that exist in the current class and if they do not exists try to find the closest matching course if it is only off by one letter
+    // Only add courses that exist in the current class and if they do not exists try to find the closest matching course if it is only off by one letter
+    courses = [];
+    for (final course in courseNamesCandidates.toList()) {
+      final correctCourseName = getCorrectCourseName(course);
+      if (correctCourseName != null) {
+        courses.add(correctCourseName);
+      }
+    }
+    log("Found courses : ${courses.join(" ")}", name: "scan");
+    setState(() {
+      courses = courses;
+    });
   }
 
   @override
@@ -78,7 +127,7 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
           saveDataToProfile();
           Navigator.of(context).push(MaterialPageRoute(builder: (context) => MyApp(widget.sharedState)));
         },
-        subtitle: "Mach ein Foto von deinem Stundenplan",
+        subtitle: subtitle,
         title: "Scanen",
         noButton: courses.isEmpty,
         child: Column(

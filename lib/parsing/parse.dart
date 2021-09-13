@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:http/http.dart'; // Contains a client for making API calls
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
+import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/parsing/parse_subsitution_plan.dart';
 import 'package:stundenplan/parsing/parse_timetable.dart';
 import 'package:stundenplan/shared_state.dart';
@@ -28,17 +29,7 @@ Future<void> parsePlans(Content content, SharedState sharedState) async {
     } else {
       // Pick the subject that matches the closest with the inputted capitalization.
       final possibleSubjectList = possibleSubjects.toList();
-      possibleSubjectList.sort((String a, String b) {
-        final aRightLetters = List.generate(subject.length, (i) => i)
-            .where((i) => a.substring(i, i+1) == subject.substring(i, i+1))
-            .length;
-        final bRightLetters = List.generate(subject.length, (i) => i)
-            .where((i) => b.substring(i, i+1) == subject.substring(i, i+1))
-            .length;
-        if (aRightLetters > bRightLetters) return -1;
-        return 1;
-      });
-      allSubjects.add(possibleSubjectList.first);
+      allSubjects.add(findClosestStringInList(possibleSubjectList, subject));
     }
   }
   // Add the default subjects that can not be changed by the user
