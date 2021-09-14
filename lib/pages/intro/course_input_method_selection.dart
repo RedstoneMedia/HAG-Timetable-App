@@ -16,7 +16,6 @@ class CourseInputMethodSelectionPage extends StatefulWidget {
   _CourseInputMethodSelectionPageState createState() => _CourseInputMethodSelectionPageState();
 }
 
-// TODO : Make this more pretty
 class _CourseInputMethodSelectionPageState extends State<CourseInputMethodSelectionPage> {
 
   final ImagePicker picker = ImagePicker();
@@ -41,61 +40,81 @@ class _CourseInputMethodSelectionPageState extends State<CourseInputMethodSelect
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15.0),
-              child: ElevatedButton(
-                style: ButtonStyle(
-                  padding: MaterialStateProperty.all(const EdgeInsets.all(10.0)),
-                  backgroundColor: MaterialStateProperty.all<Color>(widget.sharedState.theme.subjectDropOutColor),
-                  shape: MaterialStateProperty.all<OutlinedBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.66,
+                decoration: BoxDecoration(
+                  color:Colors.transparent,
+                  border: Border.all(
+                      color: widget.sharedState.theme.textColor
                   ),
+                  borderRadius: BorderRadius.circular(12.0),
                 ),
-                onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => CourseListImportPage(widget.sharedState)));
-                },
-                child: Column(
-                  children: [
-                    const Icon(Icons.document_scanner_outlined),
-                    Text("Automatisch",
-                        style: GoogleFonts.poppins(
-                            color: widget.sharedState.theme.textColor,
-                            fontSize: 26.0,
-                            fontWeight: FontWeight.bold
-                        )
-                    )
-                  ]
+                child: ElevatedButton(
+                  style: ButtonStyle(
+                    padding: MaterialStateProperty.all(const EdgeInsets.symmetric(vertical: 35.0, horizontal: 10.0)),
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.transparent),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => CourseListImportPage(widget.sharedState)));
+                  },
+                  child: Column(
+                    children: [
+                       Icon(
+                        Icons.document_scanner_outlined,
+                        color: widget.sharedState.theme.textColor,
+                        size: 80,
+                      ),
+                      const SizedBox(height: 10.0),
+                      Text("Automatisch",
+                          style: GoogleFonts.poppins(
+                              color: widget.sharedState.theme.textColor,
+                              fontSize: 30.0,
+                              fontWeight: FontWeight.bold
+                          )
+                      )
+                    ]
+                  ),
                 ),
               )
             ),
             const SizedBox(height: 30),
             Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                child: ElevatedButton (
-                  style: ButtonStyle(
-                    padding: MaterialStateProperty.all(const EdgeInsets.all(10.0)),
-                    backgroundColor: MaterialStateProperty.all<Color>(widget.sharedState.theme.subjectDropOutColor),
-                    shape: MaterialStateProperty.all<OutlinedBorder>(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.66,
+                  decoration: BoxDecoration(
+                    color:Colors.transparent,
+                    border: Border.all(
+                      color: widget.sharedState.theme.textColor
                     ),
+                    borderRadius: BorderRadius.circular(12.0),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => CourseSelectionPage(widget.sharedState)));
-                  },
-                  child: Column(
-                      children: [
-                        const Icon(Icons.edit),
-                        Text("Manuell",
-                          style: GoogleFonts.poppins(
-                              color: widget.sharedState.theme.textColor,
-                              fontSize: 26.0,
-                              fontWeight: FontWeight.bold
+                  child: ElevatedButton (
+                    style: ButtonStyle(
+                      padding: MaterialStateProperty.all(const EdgeInsets.symmetric(vertical: 35.0, horizontal: 10.0)),
+                      backgroundColor: MaterialStateProperty.all<Color>(Colors.transparent),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => CourseSelectionPage(widget.sharedState)));
+                    },
+                    child: Column(
+                        children: [
+                          Icon(
+                            Icons.edit,
+                            color: widget.sharedState.theme.textColor,
+                            size: 80,
+                          ),
+                          const SizedBox(height: 10.0),
+                          Text("Manuell",
+                            style: GoogleFonts.poppins(
+                                color: widget.sharedState.theme.textColor,
+                                fontSize: 30.0,
+                                fontWeight: FontWeight.bold
+                            )
                           )
-                        )
-                      ]
-                  )
+                        ]
+                    )
+                  ),
                 )
             ),
           ],
