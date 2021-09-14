@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/shared_state.dart';
 
 class BaseIntroScreen extends StatelessWidget {
@@ -35,7 +36,7 @@ class BaseIntroScreen extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 10.0),
                     child: Text(
                       title,
-                      style: TextStyle(
+                      style: GoogleFonts.poppins(
                           color: sharedState.theme.textColor,
                           fontWeight: FontWeight.bold,
                           fontSize: 40.0
@@ -45,7 +46,7 @@ class BaseIntroScreen extends StatelessWidget {
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: GoogleFonts.poppins(
                         color: sharedState.theme.textColor, fontSize: 18.0
                     ),
                     textAlign: TextAlign.center,
@@ -69,7 +70,7 @@ class BaseIntroScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 20.0),
                   child: Text(
                     buttonText,
-                    style: TextStyle(
+                    style: GoogleFonts.poppins(
                         color: sharedState.theme.textColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 28.0),
