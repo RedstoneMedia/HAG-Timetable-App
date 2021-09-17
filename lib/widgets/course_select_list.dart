@@ -20,8 +20,26 @@ class _CourseSelectListState extends State<CourseSelectList> {
   void initState() {
     super.initState();
     for (var i = 0; i < widget.courses.length; i++) {
-      controllers.add(TextEditingController());
+      addController();
     }
+    setCoursesText();
+  }
+
+  @override
+  void dispose() {
+    for (final controller in controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(CourseSelectList oldWidget) {
+    while (widget.courses.length > controllers.length) {
+      addController();
+    }
+    setCoursesText();
+    super.didUpdateWidget(oldWidget);
   }
 
   void addController() {
@@ -38,59 +56,59 @@ class _CourseSelectListState extends State<CourseSelectList> {
 
   @override
   Widget build(BuildContext context) {
-    while (widget.courses.length > controllers.length) {
-      addController();
-    }
-    setCoursesText();
-
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Container(
         decoration: BoxDecoration(
             color: widget.sharedState.theme.textColor.withAlpha(15),
             borderRadius: BorderRadius.circular(5)),
-        child: ListView.builder(
+        child: ListView(
             physics: const BouncingScrollPhysics(),
             shrinkWrap: true,
-            itemCount: widget.courses.length,
-            itemBuilder: (_, index) {
-              return Dismissible(
-                key: UniqueKey(),
+            children: [for (var index = 0; index < widget.courses.length; index++)
+              Dismissible(
+                key: ObjectKey(widget.courses[index]), // Never use a UniqueKey here
                 background: Container(
                   color: Colors.red,
                 ),
                 onDismissed: (_) {
                   setState(() {
                     widget.courses.removeAt(index);
+                    controllers[index].dispose();
                     controllers.removeAt(index);
                   });
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Center(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        prefixIcon: Icon(
-                          Icons.edit,
-                          color: widget.sharedState.theme.textColor,
-                        ),
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: widget.sharedState.theme.textColor),
+                  child: Column(
+                    children: [
+                      Center(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(
+                              Icons.edit,
+                              color: widget.sharedState.theme.textColor,
+                            ),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: widget.sharedState.theme.textColor),
+                            ),
+                          ),
+                          onChanged: (text) {
+                            widget.courses[index] = text;
+                          },
+                          controller: controllers[index],
+                          style: GoogleFonts.poppins(
+                              color: widget.sharedState.theme.textColor,
+                              fontSize: 25),
                         ),
                       ),
-                      onChanged: (text) {
-                        widget.courses[index] = text;
-                      },
-                      controller: controllers[index],
-                      style: GoogleFonts.poppins(
-                          color: widget.sharedState.theme.textColor,
-                          fontSize: 25),
-                    ),
+                    ],
                   ),
                 ),
-              );
-            }),
+              ),
+            ],
+        ),
       ),
     );
   }
