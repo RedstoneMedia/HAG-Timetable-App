@@ -13,6 +13,8 @@ Die Kurseingabe kann auch automatisch, beim Einscannen seines Papierstundenplans
 
 Zudem bietet die App die Option das Farbschema so einzustellen, wie man das gerne hätte.
 
+Zuletzt bietet die App auch ein Profil System an, mit dem man schnell und bequem z. B. den Stundenplan von einem Freund anschauen kann.
+
 [Zur Website](https://redstonemedia.github.io/HAG-Timetable-App/)
 
 ## Screenshots
