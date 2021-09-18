@@ -32,6 +32,7 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
   String subtitle = introScreenCourseListImportPageSubtitle;
   List<String> courses = [];
   List<String> availableCourses = [];
+  bool loading = false;
 
   @override
   void initState() {
@@ -74,6 +75,9 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
   }
 
   Future<void> scan() async {
+    setState(() {
+      loading = true;
+    });
     final XFile? photo = await picker.pickImage(source: ImageSource.camera);
     final inputImage = InputImage.fromFilePath(photo!.path);
     final RecognisedText recognisedText = await textDetector.processImage(inputImage);
@@ -99,9 +103,12 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
       });
     } else {
       setState(() {
-        subtitle = "Es gab einen Fehler, probiere es bitte noch einmal\n(Kopfzeile muss Sichtbar sein)";
+        subtitle = "Es gab einen Fehler, probiere es bitte noch einmal.\n\nAlles, also auch die Kopfzeile mit \"Montag\" \"Dienstag\" \"Mittwoch\" usw. muss zu sehen sein.";
       });
       log("Could not detect the table", name: "scan");
+      setState(() {
+        loading = false;
+      });
       return;
     }
 
@@ -116,6 +123,9 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
     log("Found courses : ${courses.join(" ")}", name: "scan");
     setState(() {
       courses = courses;
+    });
+    setState(() {
+      loading = false;
     });
   }
 
@@ -142,8 +152,8 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
                   ),
                 ),
               ),
-              onPressed: scan,
-              child: Text(
+              onPressed: !loading ? scan : () {},
+              child: loading ? CircularProgressIndicator(color: widget.sharedState.theme.textColor,) : Text(
                 courses.isNotEmpty ? "Neues Foto Machen" : "Foto Machen",
                 style: GoogleFonts.poppins(
                   color: widget.sharedState.theme.textColor,

@@ -75,81 +75,91 @@ class _ClassSelectionPageState extends State<ClassSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BaseIntroScreen(
-        sharedState: widget.sharedState,
-        onPressed: () {
-          if (validateSubClassInput()) {
-            saveDataToProfile();
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => ThemeSelectionPage(widget.sharedState)));
-          }
-        },
-        subtitle: "In welcher Klasse bist du ?",
-        title: "Klasse",
-        child: SizedBox(
-          width: 140,
-          child: Column(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: widget.sharedState.theme.textColor.withAlpha(200),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                  child: DropdownButton<String>(
-                    isExpanded: true,
-                    value: schoolGrade,
-                    icon: const Icon(Icons.keyboard_arrow_down),
-                    elevation: 16,
-                    dropdownColor: widget.sharedState.theme.textColor.withAlpha(255),
-                    style: TextStyle(color: widget.sharedState.theme.invertedTextColor),
-                    underline: Container(),
-                    onChanged: (String? newValue) {
-                      setSchoolGrade(newValue!);
-                    },
-                    items: Constants.schoolGrades.map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 16.0),
-                          child: Text(
-                            value,
-                            style: GoogleFonts.poppins(fontSize: 30.0),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: BaseIntroScreen(
+          sharedState: widget.sharedState,
+          onPressed: () {
+            if (validateSubClassInput()) {
+              saveDataToProfile();
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => ThemeSelectionPage(widget.sharedState)));
+            }
+          },
+          subtitle: "In welcher Klasse bist du?",
+          title: "Klasse",
+          child: SizedBox(
+            width: 140,
+            child: Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: widget.sharedState.theme.textColor.withAlpha(200),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-              ),
-              const SizedBox(height: 15),
-              Container(
-                decoration: BoxDecoration(
-                  color: subSchoolClassEnabled
-                      ? widget.sharedState.theme.textColor.withAlpha(200)
-                      : widget.sharedState.theme.textColor.withAlpha(100),
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(
-                      color: subSchoolClassIsCorrect ? Colors.transparent : Colors.red,
-                      width: subSchoolClassIsCorrect ? 0 : 2.0),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                  child: TextField(
-                    enabled: subSchoolClassEnabled,
-                    controller: subClassTextEditingController,
-                    style: GoogleFonts.poppins(color: widget.sharedState.theme.invertedTextColor, fontSize: 30.0),
-                    decoration: InputDecoration(
-                      hintText: "a",
-                      hintStyle: GoogleFonts.poppins(
-                          color: widget.sharedState.theme.invertedTextColor.withAlpha(80), fontSize: 30.0),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: schoolGrade,
+                      icon: const Icon(Icons.keyboard_arrow_down),
+                      elevation: 16,
+                      dropdownColor: widget.sharedState.theme.textColor.withAlpha(255),
+                      style: TextStyle(color: widget.sharedState.theme.invertedTextColor),
+                      itemHeight: 58.0,
+                      underline: Container(),
+                      onChanged: (String? newValue) {
+                        setSchoolGrade(newValue!);
+                      },
+                      items: Constants.schoolGrades.map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 16.0),
+                            child: Text(
+                              value,
+                              style: GoogleFonts.poppins(fontSize: 30.0),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        )
+                const SizedBox(height: 15),
+                Container(
+                  decoration: BoxDecoration(
+                    color: subSchoolClassEnabled
+                        ? widget.sharedState.theme.textColor.withAlpha(200)
+                        : widget.sharedState.theme.textColor.withAlpha(100),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: subSchoolClassIsCorrect ? Colors.transparent : Colors.red,
+                        width: subSchoolClassIsCorrect ? 0 : 2.0),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                    child: SizedBox(
+                      height: 58.0,
+                      child: Center(
+                        child: TextField(
+                          enabled: subSchoolClassEnabled,
+                          controller: subClassTextEditingController,
+                          style: GoogleFonts.poppins(color: widget.sharedState.theme.invertedTextColor, fontSize: 30.0, height: 1.0),
+                          decoration: InputDecoration(
+                            hintText: "a",
+                            border: InputBorder.none,
+                            hintStyle: GoogleFonts.poppins(
+                                color: widget.sharedState.theme.invertedTextColor.withAlpha(80), fontSize: 30.0),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+      ),
     );
   }
 }

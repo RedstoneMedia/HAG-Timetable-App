@@ -75,6 +75,7 @@ class _CourseAutoCompleteAddInput extends State<CourseAutoCompleteAddInput> {
                     return TextField(
                       controller: fieldTextEditingController,
                       focusNode: fieldFocusNode,
+                      decoration: InputDecoration(border: InputBorder.none, hintText: "En"),
                       style: GoogleFonts.poppins(color: widget.sharedState.theme.invertedTextColor, fontSize: 30.0),
                     );
                   },
