@@ -87,4 +87,8 @@ class ProfileManager {
   set subjects(List<String> subjects) {
     currentProfile.subjects = subjects;
   }
+
+  Map<String, String> get calendarUrls {
+    return currentProfile.calendarUrls;
+  }
 }

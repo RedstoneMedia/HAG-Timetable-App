@@ -95,7 +95,7 @@ class _MyAppState extends State<MyApp> {
         couldLoad = await checkForUpdateAndLoadTimetable(
             updateNotifier, sharedState, context);
         loading = false;
-        await loadCalendarData();
+        sharedState.calendarData = await loadCalendarData(sharedState);
         // Update the Page to remove the loading Icon
         setState(() {});
       } else {

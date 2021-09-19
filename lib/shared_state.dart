@@ -5,6 +5,7 @@ import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
 import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/holiday_calculator.dart';
+import 'package:stundenplan/calendar_data.dart';
 import 'package:stundenplan/profile_manager.dart';
 import 'package:stundenplan/theme.dart';
 import 'package:stundenplan/week_subsitutions.dart';
@@ -18,6 +19,7 @@ class SharedState {
   WeekSubstitutions weekSubstitutions = WeekSubstitutions({});
   ProfileManager profileManager = ProfileManager();
   List<int> holidayWeekdays = getHolidayWeekDays();
+  CalendarData calendarData = CalendarData();
 
   SharedState(this.preferences, this.content);
 

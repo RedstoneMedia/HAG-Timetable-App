@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
+import 'package:stundenplan/calendar_data.dart';
 import 'package:stundenplan/shared_state.dart';
+import 'package:stundenplan/widgets/calender_info_diaglog.dart';
 import 'info_dialog.dart';
 
 class WeekdayGridObject extends StatelessWidget {
@@ -23,30 +25,40 @@ class WeekdayGridObject extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dataPoints = sharedState.calendarData.days[x-1];
+    final isHoliday = sharedState.holidayWeekdays.contains(x) || dataPoints.where((element) => element.calendarType == CalendarType.holiday).isNotEmpty;
     return Expanded(
       child: Opacity(
-        opacity: sharedState.holidayWeekdays.contains(x) ? 0.5 : 1.0,
-        child: Container(
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(needsLeftBorder ? 5 : 0),
-                topRight: Radius.circular(needsRightBorder ? 5 : 0),
-              ),
-              border: Border.all(width: 0.75, color: Colors.black26),
-              color: x == weekdayToday
-                  ? sharedState.theme.textColor
-                  : sharedState.theme.textColor.withAlpha(25)),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Center(
-                child: Text(
-              weekday,
-              style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  color: x == weekdayToday
-                      ? sharedState.theme.invertedTextColor
-                      : sharedState.theme.textColor),
-            )),
+        opacity:
+          isHoliday ? 0.5 : 1.0,
+        child: InkWell(
+          onTap: () {
+            if (dataPoints.isNotEmpty) {
+              showCalenderInfoDialog(dataPoints, context, sharedState);
+            }
+          },
+          child: Container(
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(needsLeftBorder ? 5 : 0),
+                  topRight: Radius.circular(needsRightBorder ? 5 : 0),
+                ),
+                border: Border.all(width: 0.75, color: Colors.black26),
+                color: x == weekdayToday ? sharedState.theme.textColor
+                      : dataPoints.isNotEmpty ? sharedState.theme.subjectDropOutColor
+                      : sharedState.theme.textColor.withAlpha(25)),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Center(
+                  child: Text(
+                weekday,
+                style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    color: x == weekdayToday
+                        ? sharedState.theme.invertedTextColor
+                        : sharedState.theme.textColor),
+              )),
+            ),
           ),
         ),
       ),
@@ -74,7 +86,8 @@ class ClassGridObject extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Opacity(
-        opacity:sharedState.holidayWeekdays.contains(x) ? 0.5 : 1.0,
+        opacity:
+          sharedState.holidayWeekdays.contains(x) || sharedState.calendarData.days[x-1].where((element) => element.calendarType == CalendarType.holiday).isNotEmpty ? 0.5 : 1.0,
         child: content.cells[y][x].isEmpty()
             ? Container(
             decoration: BoxDecoration(
@@ -130,7 +143,7 @@ class ClassGridObject extends StatelessWidget {
                         ? content.cells[y][x].isSubstitute
                             ? sharedState.theme.subjectSubstitutionColor
                             : sharedState.theme.subjectColor
-                        : sharedState.theme.subjectDropOutColor,
+                        : sharedState.theme.subjectDropOutColor.withAlpha(25),
                     border: Border(
                       bottom: BorderSide(
                           color: (y - 1) % 2 == 0
