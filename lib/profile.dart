@@ -2,12 +2,7 @@ class Profile {
   String schoolGrade = "11";
   String subSchoolClass = "e";
   List<String> subjects = [];
-  // TODO : Add way to input these urls in the settings (Maybe in a submenu since the setup page is already to long)
-  Map<String, String> calendarUrls = {
-    "Aufgabe" : "https://hag-iserv.de/iserv/public/calendar/ics/feed/plugin/randomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandom/calendar.ics",
-    "Klausur" : "https://hag-iserv.de/iserv/public/calendar/ics/feed/plugin/randomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandom/calendar.ics",
-    "Feiertag": "https://hag-iserv.de/iserv/public/calendar/ics/feed/plugin/randomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandomrandom/calendar.ics"
-  };
+  Map<String, String> calendarUrls = {};
 
   Map getJsonData() {
     final jsonData = {

@@ -68,7 +68,7 @@ Future<void> showCalenderInfoDialog(List<CalendarDataPoint> dataPoints, BuildCon
                                   color: sharedState.theme.textColor)),
                         ),
                         Expanded(
-                          child: Text("${dataPoints[i].endDate.hour}:${dataPoints[i].endDate.minute}",
+                          child: Text("${dataPoints[i].endDate.hour.toString().padLeft(2, "0")}:${dataPoints[i].endDate.minute.toString().padLeft(2, "0")}",
                               textAlign: TextAlign.right,
                               style: TextStyle(
                                   color: sharedState.theme.textColor)),

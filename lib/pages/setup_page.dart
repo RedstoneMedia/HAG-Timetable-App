@@ -3,9 +3,11 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/main.dart';
+import 'package:stundenplan/pages/calendar_settings_page.dart';
 import 'package:stundenplan/pages/intro/class_selection.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/theme.dart' as my_theme;
+import 'package:stundenplan/widgets/buttons.dart';
 import 'package:stundenplan/widgets/course_autocomplete_add_input.dart';
 import 'package:stundenplan/widgets/course_select_list.dart';
 import 'package:flutter/foundation.dart';
@@ -442,6 +444,17 @@ class _SetupPageState extends State<SetupPage> {
                 CourseSelectList(
                   sharedState,
                   courses,
+                ),
+                StandardButton(
+                  text : "Kalender Optionen",
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => CalendarSettingsPage(widget.sharedState)));
+                  },
+                  sharedState: sharedState,
+                  color: sharedState.theme.subjectSubstitutionColor.withAlpha(150),
+                  fontSize: 12,
+                  size: 0.5,
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/theme.dart' as my_theme;
 
 class SelectableButton extends StatelessWidget {
@@ -231,6 +232,51 @@ class _ColorPickerButtonState extends State<ColorPickerButton> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class StandardButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onPressed;
+  final SharedState sharedState;
+  final Color color;
+  final double fontSize;
+  final double size;
+
+  const StandardButton({
+    required this.text,
+    required this.onPressed,
+    required this.sharedState,
+    required this.color,
+    this.fontSize = 20,
+    this.size = 1
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ButtonStyle(
+        shape:  MaterialStateProperty.all<RoundedRectangleBorder>(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5.0),
+            )
+        ),
+        backgroundColor: MaterialStateProperty.all<Color>(
+          color,
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 6.0 * size, horizontal: 10.0 * size),
+        child: Text(
+          text,
+          style: GoogleFonts.poppins(
+              color: sharedState.theme.textColor,
+              fontWeight: FontWeight.bold,
+              fontSize: fontSize),
         ),
       ),
     );

@@ -51,7 +51,10 @@ class CalendarData {
 
   void addCalendarDataPoint(CalendarDataPoint dataPoint) {
     final now = DateTime.now();
-    final weekStartDate = now.subtract(Duration(days: now.weekday-1));
+    var weekStartDate = now.subtract(Duration(days: now.weekday-1));
+    if (now.weekday > 5) {
+      weekStartDate = weekStartDate.add(const Duration(days: 7));
+    }
 
     for (final day in days) {
       day.removeWhere((element) => element.name == dataPoint.name);
