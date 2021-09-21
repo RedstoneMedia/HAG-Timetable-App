@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:flutter/services.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,9 @@ import 'widgets/custom_widgets.dart';
 void main() {
   // Make sure the widget fully loads before doing stuff
   WidgetsFlutterBinding.ensureInitialized();
+  // Disable landscape mode for the app
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   // Create a SharedPreferences instance; [Used for caching and storing settings]
   SharedPreferences.getInstance().then((prefs) {
     runApp(
