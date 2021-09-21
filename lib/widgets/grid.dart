@@ -143,7 +143,7 @@ class ClassGridObject extends StatelessWidget {
                         ? content.cells[y][x].isSubstitute
                             ? sharedState.theme.subjectSubstitutionColor
                             : sharedState.theme.subjectColor
-                        : sharedState.theme.subjectDropOutColor.withAlpha(25),
+                        : sharedState.theme.subjectDropOutColor,
                     border: Border(
                       bottom: BorderSide(
                           color: (y - 1) % 2 == 0

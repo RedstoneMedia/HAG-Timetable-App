@@ -29,6 +29,9 @@ class _CourseInputMethodSelectionPageState
 
   @override
   Widget build(BuildContext context) {
+    final buttonHeight = MediaQuery.of(context).size.height * 0.281;
+    final buttonWidth = buttonHeight * 1.18;
+
     return BaseIntroScreen(
         sharedState: widget.sharedState,
         onPressed: () {
@@ -44,8 +47,8 @@ class _CourseInputMethodSelectionPageState
             Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15.0),
                 child: Container(
-                  width: 245.0,
-                  height: 230.0,
+                  width: buttonWidth,
+                  height: buttonHeight,
                   decoration: BoxDecoration(
                     color: Colors.transparent,
                     border:
@@ -86,8 +89,8 @@ class _CourseInputMethodSelectionPageState
             Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15.0),
                 child: Container(
-                  width: 245.0,
-                  height: 230.0,
+                  width: buttonWidth,
+                  height: buttonHeight,
                   decoration: BoxDecoration(
                     color: Colors.transparent,
                     border:
