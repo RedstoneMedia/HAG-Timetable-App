@@ -31,6 +31,7 @@ dependencies:
   icalendar_parser : ^0.6.0
   image_picker: ^0.8.4
   google_ml_kit: ^0.7.2
+  flutter_secure_storage: ^4.2.1
 
 flutter_icons:
   android: "launcher_icon"

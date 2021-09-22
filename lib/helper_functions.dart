@@ -2,8 +2,10 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:stundenplan/shared_state.dart';
+import 'package:tuple/tuple.dart';
 import 'pages/setup_page.dart';
 
 Future<bool> isInternetAvailable(Connectivity connectivity) async {
@@ -70,4 +72,21 @@ String findClosestStringInList(List<String> stringList, String string) {
     return 1;
   });
   return clonedStringList.first;
+}
+
+Future<Tuple2<String, String>?> getIServCredentials() async {
+  if (Platform.isAndroid || Platform.isIOS || Platform.isLinux) {
+    FlutterSecureStorage? storage = FlutterSecureStorage();
+    final lastSavedString = await storage.read(key: "credentialsLastSaved");
+    if (lastSavedString == null) return null; // No credentials are defined
+    final lastSaved = DateTime.parse(lastSavedString);
+    if (DateTime.now().difference(lastSaved).inDays > 30) {
+      await storage.deleteAll();
+      return null;
+    }
+    final userName = await storage.read(key: "username");
+    final password = await storage.read(key: "password");
+    storage = null;
+    return Tuple2(userName!, password!);
+  }
 }

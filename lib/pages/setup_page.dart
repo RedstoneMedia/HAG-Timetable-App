@@ -5,6 +5,7 @@ import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/main.dart';
 import 'package:stundenplan/pages/calendar_settings_page.dart';
 import 'package:stundenplan/pages/intro/class_selection.dart';
+import 'package:stundenplan/pages/iserv_login_settings_page.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/theme.dart' as my_theme;
 import 'package:stundenplan/widgets/buttons.dart';
@@ -445,16 +446,32 @@ class _SetupPageState extends State<SetupPage> {
                   sharedState,
                   courses,
                 ),
-                StandardButton(
-                  text : "Kalender Optionen",
-                  onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => CalendarSettingsPage(widget.sharedState)));
-                  },
-                  sharedState: sharedState,
-                  color: sharedState.theme.subjectSubstitutionColor.withAlpha(150),
-                  fontSize: 12,
-                  size: 0.5,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    StandardButton(
+                      text : "Kalender Optionen",
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => CalendarSettingsPage(widget.sharedState)));
+                      },
+                      sharedState: sharedState,
+                      color: sharedState.theme.subjectSubstitutionColor.withAlpha(150),
+                      fontSize: 12,
+                      size: 0.5,
+                    ),
+                    StandardButton(
+                      text: "IServ Login Optionen",
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => IServLoginSettingsPage(widget.sharedState)));
+                      },
+                      sharedState: sharedState,
+                      color: sharedState.theme.subjectDropOutColor.withAlpha(150),
+                      fontSize: 12,
+                      size : 0.5
+                    )
+                  ],
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(

@@ -8,8 +8,9 @@ class LabeledTextInput extends StatefulWidget {
   final List<String> outputList;
   final int index;
   final double fontSize;
+  final bool obscureText;
 
-  const LabeledTextInput(this.labelText, this.sharedState, this.outputList, this.index, {this.fontSize = 20});
+  const LabeledTextInput(this.labelText, this.sharedState, this.outputList, this.index, {this.fontSize = 20, this.obscureText = false});
 
   @override
   _LabeledTextInputState createState() => _LabeledTextInputState();
@@ -47,6 +48,7 @@ class _LabeledTextInputState extends State<LabeledTextInput> {
             padding: const EdgeInsets.symmetric(horizontal: 10.0),
             child: TextField(
               controller: textEditingController,
+              obscureText: widget.obscureText,
               decoration: const InputDecoration(border: InputBorder.none),
               style: GoogleFonts.poppins(color: widget.sharedState.theme.invertedTextColor, fontSize: widget.fontSize),
               onChanged: (text) {
