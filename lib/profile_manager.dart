@@ -80,6 +80,10 @@ class ProfileManager {
     currentProfile.subSchoolClass = subSchoolClass;
   }
 
+  String get schoolClassFullName {
+    return currentProfile.schoolGrade + currentProfile.subSchoolClass;
+  }
+
   List<String> get subjects {
     return currentProfile.subjects;
   }

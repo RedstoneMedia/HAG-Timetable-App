@@ -217,13 +217,14 @@ class _MyAppState extends State<MyApp> {
                             .then((internetAvailable) {
                           if (internetAvailable) {
                             try {
-                              setState(() {
-                                parsePlans(sharedState.content, sharedState)
-                                    .then((value) {
-                                  sharedState.saveContent();
-                                  _refreshController.refreshCompleted();
-                                });
-                              });
+                              // ignore: prefer_function_declarations_over_variables
+                              VoidFutureCallBack reloadAsync = () async {
+                                await parsePlans(sharedState.content, sharedState);
+                                sharedState.calendarData = await loadCalendarData(sharedState);
+                                sharedState.saveContent();
+                                _refreshController.refreshCompleted();
+                              };
+                              reloadAsync().then((_) => setState(() {}));
                             } on TimeoutException catch (_) {
                               log("Timeout !", name: "network");
                               _refreshController.refreshFailed();

@@ -29,6 +29,12 @@ class _LabeledTextInputState extends State<LabeledTextInput> {
   }
 
   @override
+  void didUpdateWidget(LabeledTextInput oldWidget) {
+    textEditingController.text = widget.outputList[widget.index];
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: [

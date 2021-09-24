@@ -1,8 +1,14 @@
 enum CalendarType {
   exercise,
   holiday,
-  exam
+  exam,
+  public,
+  schoolClass,
+  students,
+  personal
 }
+
+const pluginCalendarTypes = [CalendarType.exam, CalendarType.exercise, CalendarType.holiday];
 
 extension CalendarTypeExtension on CalendarType {
 
@@ -14,6 +20,14 @@ extension CalendarTypeExtension on CalendarType {
         return "Aufgabe";
       case CalendarType.holiday:
         return "Feiertag";
+      case CalendarType.public:
+        return "Öffentlich";
+      case CalendarType.schoolClass:
+        return "Klasse";
+      case CalendarType.students:
+        return "Schüler";
+      case CalendarType.personal:
+        return "Persönlich";
     }
   }
 
@@ -25,11 +39,18 @@ extension CalendarTypeExtension on CalendarType {
         return CalendarType.exercise;
       case "Feiertag":
         return CalendarType.holiday;
+      case "Öffentlich":
+        return CalendarType.public;
+      case "Klasse":
+        return CalendarType.schoolClass;
+      case "Schüler":
+        return CalendarType.students;
+      case "Persönlich":
+        return CalendarType.personal;
       default:
         return null;
     }
   }
-
 }
 
 class CalendarDataPoint {
@@ -56,6 +77,7 @@ class CalendarData {
       weekStartDate = weekStartDate.add(const Duration(days: 7));
     }
 
+    // TODO: Only remove data points with the same name up to a day where they arent continues anymore. Example : P = Point E = Empty "PPEPPP" should turn into "EPEEEP"
     for (final day in days) {
       day.removeWhere((element) => element.name == dataPoint.name);
     }

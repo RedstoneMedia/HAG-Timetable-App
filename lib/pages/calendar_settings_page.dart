@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/calendar_data.dart';
+import 'package:stundenplan/parsing/calendar_parse.dart';
 import 'package:stundenplan/widgets/buttons.dart';
 import 'package:stundenplan/widgets/labeled_text_input.dart';
 
@@ -26,7 +27,7 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
   void initState() {
     super.initState();
     sharedState = widget.sharedState;
-    for (final calendarType in CalendarType.values) {
+    for (final calendarType in pluginCalendarTypes) {
       final currentUrl = sharedState.profileManager.calendarUrls[calendarType.name()];
       if (currentUrl != null) {
         urlList.add(currentUrl);
@@ -39,12 +40,22 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
       final text = urlList[i];
       final urlRegex = RegExp(r"^https:\/\/hag-iserv.de\/(caldav\/.+\/calendar|iserv\/public\/calendar\/ics\/feed\/plugin\/[a-z0-9]{128}\/calendar.ics)$");
       if (urlRegex.hasMatch(text)) {
-        final calendarTypeName = CalendarType.values[i].name();
+        final calendarTypeName = pluginCalendarTypes[i].name();
         log("set $text as $calendarTypeName url", name: "calendar settings");
         sharedState.profileManager.calendarUrls[calendarTypeName] = text;
       }
     }
     Navigator.of(context).pop();
+  }
+
+  Future<void> autoFillUrls() async {
+    final calendarUrls = (await enableAllCalendarPluginUrls())!;
+    // Update urls
+    setState(() {
+      for (var i = 0; i < urlList.length; i++) {
+        urlList[i] = calendarUrls[pluginCalendarTypes[i].name()]!;
+      }
+    });
   }
 
   @override
@@ -79,14 +90,23 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
                       textAlign: TextAlign.center
                   ),
                   const Divider(height: 15),
-                  for (var i = 0; i < CalendarType.values.length; i++)
+                  for (var i = 0; i < pluginCalendarTypes.length; i++)
                     Column(
                       children: [
-                        LabeledTextInput("${CalendarType.values[i].name()} Link", sharedState, urlList, i, fontSize: 15),
+                        LabeledTextInput("${pluginCalendarTypes[i].name()} Link", sharedState, urlList, i, fontSize: 15),
                         const Divider(height: 15)
                       ],
                     )
                   ,
+                  StandardButton(
+                    text: "Automatisch füllen",
+                    onPressed: autoFillUrls,
+                    sharedState: sharedState,
+                    color: sharedState.theme.subjectSubstitutionColor.withAlpha(180),
+                    size: 0.5,
+                    fontSize: 15,
+                  ),
+                  const Divider(height: 30),
                   StandardButton(
                     text: "Fertig",
                     onPressed: saveAndGoBack,
