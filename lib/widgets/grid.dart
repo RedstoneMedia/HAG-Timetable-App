@@ -45,7 +45,7 @@ class WeekdayGridObject extends StatelessWidget {
                 ),
                 border: Border.all(width: 0.75, color: Colors.black26),
                 color: x == weekdayToday ? sharedState.theme.textColor
-                      : dataPoints.isNotEmpty ? sharedState.theme.subjectDropOutColor
+                      : dataPoints.isNotEmpty ? sharedState.theme.subjectDropOutColor.withAlpha(150)
                       : sharedState.theme.textColor.withAlpha(25)),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
