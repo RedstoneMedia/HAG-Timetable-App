@@ -74,21 +74,32 @@ class CalendarData {
     final now = DateTime.now();
     var weekStartDate = now.subtract(Duration(days: now.weekday-1));
     if (now.weekday > 5) {
-      weekStartDate = weekStartDate.add(const Duration(days: 7));
+      weekStartDate = weekStartDate.add(const Duration(days: 6));
     }
 
-    // TODO: Only remove data points with the same name up to a day where they arent continues anymore. Example : P = Point E = Empty "PPEPPP" should turn into "EPEEEP"
-    for (final day in days) {
-      day.removeWhere((element) => element.name == dataPoint.name);
+    // TODO: Check if this works and if its really necessary ?
+    if (dataPoint.endDate.difference(dataPoint.startDate).inDays <= 0) {
+      for (var i = 0; i < days.length; i++) {
+        if (i == 0) continue;
+        days[i-1].removeWhere((e) => days[i].where((element) => element.name == dataPoint.name).isNotEmpty);
+      }
     }
 
-    // TODO: Handle other date representations, where the startDate is not equal to the endDate
+    final daysBetween = dataPoint.endDate.difference(dataPoint.startDate).inDays;
+    var daysToAdd = dataPoint.endDate.difference(dataPoint.startDate).inDays;
+    if (daysBetween == 0) {
+      daysToAdd += 1;
+    }
 
-    final weekDay = dataPoint.startDate.weekday-1;
-    if (weekDay > 4) return;
-    if (dataPoint.startDate.isBefore(weekStartDate)) return;
-    if (dataPoint.endDate.isAfter(weekStartDate.add(const Duration(days: 6)))) return;
-    days[weekDay].add(dataPoint);
+    // Add days between start and end date
+    for (var i = 0; i < daysToAdd; i++) {
+      final newDate = dataPoint.startDate.add(Duration(days: i));
+      final weekDay = newDate.weekday-1;
+      if (weekDay > 4) continue;
+      if (newDate.isBefore(weekStartDate)) continue;
+      if (newDate.isAfter(weekStartDate.add(const Duration(days: 6)))) break;
+      days[weekDay].add(dataPoint);
+    }
   }
 
   @override

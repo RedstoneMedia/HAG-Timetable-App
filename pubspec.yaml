@@ -28,10 +28,11 @@ dependencies:
   tuple: ^2.0.0
   url_launcher: ^6.0.3
   yaml: ^3.1.0
-  icalendar_parser : ^0.6.0
+  icalendar_parser : ^1.0.0
   image_picker: ^0.8.4
   google_ml_kit: ^0.7.2
   flutter_secure_storage: ^4.2.1
+  rrule: ^0.2.3
 
 flutter_icons:
   android: "launcher_icon"

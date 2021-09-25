@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:http/http.dart'; // Contains a client for making API calls
 import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
 import 'package:icalendar_parser/icalendar_parser.dart';
+import 'package:rrule/rrule.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/parsing/parsing_util.dart';
@@ -20,6 +21,7 @@ Future<CalendarData> loadCalendarData(SharedState sharedState) async {
     await getPluginCalendarData(calenderUrlEntry.value, calenderType, client, calendarData);
   }
   await getCaldavCalendarData("${Constants.calDavBaseUrl}/+public/calendar", CalendarType.public, client, calendarData);
+  // TODO: This calendar does not always exist, we should find out if it does and only then try to get it
   await getCaldavCalendarData("${Constants.calDavBaseUrl}/klasse.${sharedState.profileManager.schoolClassFullName.toLowerCase()}/calendar", CalendarType.public, client, calendarData);
   await getCaldavCalendarData("${Constants.calDavBaseUrl}/schueler/calendar", CalendarType.students, client, calendarData);
   {
@@ -52,9 +54,10 @@ Future<Map<String, String>?> enableAllCalendarPluginUrls() async {
     log("Enabling $pluginName feed url");
     // Enable plugin calendarPluginUrl
     final calendarPluginUrl = await enableCalendarPluginUrl(client, cookies, feedId);
+    if (calendarPluginUrl == null) continue;
     // Get correct calendar type string from plugin name
     final calendarTypeString = pluginCalendarTypes.where((calendarType) => pluginName.toLowerCase().contains(calendarType.name().toLowerCase())).first.name();
-    calendarPluginUrls[calendarTypeString] = calendarPluginUrl!;
+    calendarPluginUrls[calendarTypeString] = calendarPluginUrl;
   }
   return calendarPluginUrls;
 }
@@ -99,7 +102,7 @@ Future<CalendarData> getCaldavCalendarData(String url, CalendarType type, Client
 
 
 DateTime parseTimeString(String string) {
-  final splitString = string.split(":")[1].split("T");
+  final splitString = string.split("T");
   final datePart = splitString[0];
   final timePart = splitString[1];
   final year = int.parse(datePart.substring(0, 4));
@@ -112,28 +115,47 @@ DateTime parseTimeString(String string) {
   return DateTime(year, month, day, hour, minute, second);
 }
 
+
+void executeIcsRecurrenceRule(String rRuleString, CalendarDataPoint origDataPoint, CalendarData calendarData) {
+  final rRule = RecurrenceRule.fromString("RRULE:$rRuleString");
+  // Add repeating calendar entries based on rRule
+  final instances = rRule.getInstances(start: DateTime.now().toUtc());
+  for (final instance in instances) {
+    final newStartDate = DateTime(instance.year, instance.month, instance.day, origDataPoint.startDate.hour, origDataPoint.startDate.minute, origDataPoint.startDate.second);
+    final newEndDate = DateTime(instance.year, instance.month, instance.day, origDataPoint.endDate.hour, origDataPoint.endDate.minute, origDataPoint.endDate.second);
+    calendarData.addCalendarDataPoint(CalendarDataPoint(origDataPoint.calendarType, origDataPoint.name, newStartDate, newEndDate));
+  }
+}
+
 CalendarData parseToCalendarData(String iCalendarString, CalendarType type, CalendarData calendarData) {
   final parsedData = ICalendar.fromString(iCalendarString).data;
-  for (final data in parsedData!) {
+  for (final data in parsedData) {
     if (data["type"] == "VEVENT") {
-      final dateStart = data["dtstart"];
-      final dateEnd = data["dtend"];
+      final IcsDateTime dateStart = data["dtstart"] as IcsDateTime;
+      final IcsDateTime dateEnd = data["dtend"] as IcsDateTime;
       DateTime dateStartDateTime;
       DateTime dateEndDateTime;
 
-      if (dateStart is DateTime) {
-        dateStartDateTime = dateStart;
+      if (dateStart.toDateTime() != null) {
+        dateStartDateTime = dateStart.toDateTime()!;
       } else {
-        dateStartDateTime = parseTimeString(dateStart as String);
+        dateStartDateTime = parseTimeString(dateStart.dt.split(":")[1]);
       }
-      if (dateEnd is DateTime) {
-        dateEndDateTime = dateEnd;
+      if (dateEnd.toDateTime() != null) {
+        dateEndDateTime = dateEnd.toDateTime()!;
       } else {
-        dateEndDateTime = parseTimeString(dateEnd as String);
+        dateEndDateTime = parseTimeString(dateEnd.dt.split(":")[1]);
       }
 
       final summary = data["summary"] as String;
-      calendarData.addCalendarDataPoint(CalendarDataPoint(type, summary, dateStartDateTime, dateEndDateTime));
+      final dataPoint = CalendarDataPoint(type, summary, dateStartDateTime, dateEndDateTime);
+
+      final String? rRule = data["rrule"] as String?;
+      if (rRule != null) {
+        executeIcsRecurrenceRule(rRule, dataPoint, calendarData);
+      } else {
+        calendarData.addCalendarDataPoint(dataPoint);
+      }
     }
   }
   return calendarData;

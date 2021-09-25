@@ -20,6 +20,14 @@ Future<void> showCalenderInfoDialog(List<CalendarDataPoint> dataPoints, BuildCon
             child: ListView.builder(
               itemCount: dataPoints.length,
               itemBuilder: (_, i) {
+                final dataPoint = dataPoints[i];
+                final String timeString;
+                if (dataPoint.startDate == dataPoint.endDate) {
+                  timeString = "${dataPoint.endDate.hour.toString().padLeft(2, "0")}:${dataPoint.endDate.minute.toString().padLeft(2, "0")}";
+                } else {
+                  timeString = "${dataPoint.startDate.day.toString().padLeft(2, "0")}.${dataPoint.startDate.month.toString().padLeft(2, "0")} - ${dataPoint.endDate.day.toString().padLeft(2, "0")}.${dataPoint.endDate.month.toString().padLeft(2, "0")}";
+                }
+
                 return Column(
                   children: [
                     Row(
@@ -32,7 +40,7 @@ Future<void> showCalenderInfoDialog(List<CalendarDataPoint> dataPoints, BuildCon
                                   color: sharedState.theme.textColor)),
                         ),
                         Expanded(
-                          child: Text(dataPoints[i].name,
+                          child: Text(dataPoint.name,
                               textAlign: TextAlign.right,
                               style: TextStyle(
                                   color: sharedState.theme.textColor)),
@@ -50,7 +58,7 @@ Future<void> showCalenderInfoDialog(List<CalendarDataPoint> dataPoints, BuildCon
                                   color: sharedState.theme.textColor)),
                         ),
                         Expanded(
-                          child: Text(dataPoints[i].calendarType.name(),
+                          child: Text(dataPoint.calendarType.name(),
                               textAlign: TextAlign.right,
                               style: TextStyle(
                                   color: sharedState.theme.textColor)),
@@ -68,7 +76,7 @@ Future<void> showCalenderInfoDialog(List<CalendarDataPoint> dataPoints, BuildCon
                                   color: sharedState.theme.textColor)),
                         ),
                         Expanded(
-                          child: Text("${dataPoints[i].endDate.hour.toString().padLeft(2, "0")}:${dataPoints[i].endDate.minute.toString().padLeft(2, "0")}",
+                          child: Text(timeString,
                               textAlign: TextAlign.right,
                               style: TextStyle(
                                   color: sharedState.theme.textColor)),

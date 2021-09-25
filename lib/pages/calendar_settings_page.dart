@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/calendar_data.dart';
+import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/parsing/calendar_parse.dart';
 import 'package:stundenplan/widgets/buttons.dart';
 import 'package:stundenplan/widgets/labeled_text_input.dart';
@@ -22,10 +23,12 @@ class CalendarSettingsPage extends StatefulWidget {
 class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
   late SharedState sharedState;
   final urlList = <String>[];
+  bool areCredentialsAvailable = false;
 
   @override
   void initState() {
     super.initState();
+    areIServCredentialsSet().then((value) => setState(() {areCredentialsAvailable = value;}));
     sharedState = widget.sharedState;
     for (final calendarType in pluginCalendarTypes) {
       final currentUrl = sharedState.profileManager.calendarUrls[calendarType.name()];
@@ -102,9 +105,10 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
                     text: "Automatisch füllen",
                     onPressed: autoFillUrls,
                     sharedState: sharedState,
-                    color: sharedState.theme.subjectSubstitutionColor.withAlpha(180),
+                    color: areCredentialsAvailable ? sharedState.theme.subjectSubstitutionColor.withAlpha(180) : sharedState.theme.subjectDropOutColor.withAlpha(80),
                     size: 0.5,
                     fontSize: 15,
+                    disabled: !areCredentialsAvailable,
                   ),
                   const Divider(height: 30),
                   StandardButton(

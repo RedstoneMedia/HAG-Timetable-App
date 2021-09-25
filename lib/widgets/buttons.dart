@@ -245,6 +245,7 @@ class StandardButton extends StatelessWidget {
   final Color color;
   final double fontSize;
   final double size;
+  final bool disabled;
 
   const StandardButton({
     required this.text,
@@ -252,13 +253,14 @@ class StandardButton extends StatelessWidget {
     required this.sharedState,
     required this.color,
     this.fontSize = 20,
-    this.size = 1
+    this.size = 1,
+    this.disabled = false
   });
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: onPressed,
+      onPressed: disabled ? null : onPressed,
       style: ButtonStyle(
         shape:  MaterialStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(

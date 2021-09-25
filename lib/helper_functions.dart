@@ -90,3 +90,14 @@ Future<Tuple2<String, String>?> getIServCredentials() async {
     return Tuple2(userName!, password!);
   }
 }
+
+Future<bool> areIServCredentialsSet() async {
+  if (Platform.isAndroid || Platform.isIOS || Platform.isLinux) {
+    FlutterSecureStorage? storage = FlutterSecureStorage();
+    final lastSavedString = await storage.read(key: "credentialsLastSaved");
+    if (lastSavedString == null) return false; // No credentials are defined
+    storage = null;
+    return true;
+  }
+  return false;
+}
