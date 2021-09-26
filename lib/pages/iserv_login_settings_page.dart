@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/widgets/buttons.dart';
 import 'package:stundenplan/widgets/labeled_text_input.dart';
+import '../helper_functions.dart';
 import '../shared_state.dart';
 
 class IServLoginSettingsPage extends StatefulWidget {
@@ -19,10 +20,12 @@ class IServLoginSettingsPage extends StatefulWidget {
 class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
 
   final credentialsOutputList = <String>[];
+  bool areCredentialsAvailable = false;
 
   @override
   void initState() {
     super.initState();
+    areIServCredentialsSet().then((value) => setState(() {areCredentialsAvailable = value;}));
   }
 
   Future<void> saveIServCredentialsAndGoBack() async {
@@ -32,8 +35,18 @@ class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
       const FlutterSecureStorage storage = FlutterSecureStorage();
       await storage.write(key: "username", value: credentialsOutputList[0]);
       await storage.write(key: "password", value: credentialsOutputList[1]);
-      await storage.write(key: "credentialsLastSaved", value: DateTime.now().toIso8601String());
+      await storage.write(key: "credentialsLastLoaded", value: DateTime.now().toIso8601String());
     }
+
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
+
+  Future<void> deleteIServCredentials() async {
+    const FlutterSecureStorage storage = FlutterSecureStorage();
+    await storage.deleteAll();
+
+    if (!mounted) return;
     Navigator.of(context).pop();
   }
 
@@ -64,6 +77,19 @@ class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
                   const Divider(height: 15),
                   LabeledTextInput("Passwort", widget.sharedState, credentialsOutputList, 1, obscureText: true),
                   const Divider(height: 15),
+                  if (areCredentialsAvailable)
+                    Column(
+                      children: [
+                        StandardButton(
+                          text: "Daten Löschen",
+                          onPressed: deleteIServCredentials,
+                          sharedState: widget.sharedState,
+                          color: widget.sharedState.theme.subjectSubstitutionColor.withAlpha(220)
+                        ),
+                        const Divider(height: 30)
+                      ],
+                    )
+                  else Container(),
                   StandardButton(
                       text: "Speichern",
                       onPressed: saveIServCredentialsAndGoBack,

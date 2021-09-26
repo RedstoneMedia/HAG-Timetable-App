@@ -94,8 +94,8 @@ class _MyAppState extends State<MyApp> {
       final bool result = await isInternetAvailable(connectivity);
       // Internet is available
       if (result) {
+        if (!mounted) return;
         // Check for App-Updates und Load the Timetable
-        // ignore: unused_local_variable
         couldLoad = await checkForUpdateAndLoadTimetable(
             updateNotifier, sharedState, context);
         loading = false;
@@ -116,6 +116,7 @@ class _MyAppState extends State<MyApp> {
         } catch (e) {
           log("Loading from Network or Cache failed.", name: "loading");
           couldLoad = false;
+          if (!mounted) return;
           await showDialog(
               context: context,
               builder: (context) {
