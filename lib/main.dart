@@ -99,15 +99,20 @@ class _MyAppState extends State<MyApp> {
         couldLoad = await checkForUpdateAndLoadTimetable(
             updateNotifier, sharedState, context);
         loading = false;
-        sharedState.calendarData = await loadCalendarData(sharedState);
         // Update the Page to remove the loading Icon
         setState(() {});
+        // Load the calendar data if the timetable data could be loaded.
+        if (couldLoad) {
+          sharedState.calendarData = await loadCalendarData(sharedState);
+          sharedState.saveCache();
+          setState(() {});
+        }
       } else {
         // Internet is not available
         log("No connection !", name: "network");
         // Load cached content
         try {
-          sharedState.loadContent();
+          sharedState.loadCache();
         } catch (e) {
           log("Loading from Network or Cache failed.", name: "loading");
           couldLoad = false;
@@ -217,14 +222,19 @@ class _MyAppState extends State<MyApp> {
                             .then((internetAvailable) {
                           if (internetAvailable) {
                             try {
+                              // Reload timetable data
                               // ignore: prefer_function_declarations_over_variables
-                              VoidFutureCallBack reloadAsync = () async {
+                              final VoidFutureCallBack reloadAsync = () async {
                                 await parsePlans(sharedState.content, sharedState);
-                                sharedState.calendarData = await loadCalendarData(sharedState);
-                                sharedState.saveContent();
+                                sharedState.saveCache();
                                 _refreshController.refreshCompleted();
                               };
                               reloadAsync().then((_) => setState(() {}));
+                              // Reload calendar data
+                              loadCalendarData(sharedState).then((value) => setState(() {
+                                sharedState.calendarData = value;
+                                sharedState.saveCache();
+                              }));
                             } on TimeoutException catch (_) {
                               log("Timeout !", name: "network");
                               _refreshController.refreshFailed();

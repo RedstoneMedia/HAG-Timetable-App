@@ -61,6 +61,24 @@ class CalendarDataPoint {
 
   CalendarDataPoint(this.calendarType, this.name, this.startDate, this.endDate);
 
+  // ignore: prefer_constructors_over_static_methods
+  static CalendarDataPoint fromJson(Map<String, dynamic> jsonData) {
+    final calendarType = CalendarTypeExtension.fromString(jsonData["calendarType"] as String);
+    final name = jsonData["name"] as String;
+    final startDate = DateTime.parse(jsonData["startDate"] as String);
+    final endDate = DateTime.parse(jsonData["endDate"] as String);
+    return CalendarDataPoint(calendarType!, name, startDate, endDate);
+  }
+
+  Map<String, dynamic> toJson() {
+    final outputJson = <String, dynamic>{};
+    outputJson["calendarType"] = calendarType.name();
+    outputJson["name"] = name;
+    outputJson["startDate"] = startDate.toIso8601String();
+    outputJson["endDate"] = startDate.toIso8601String();
+    return outputJson;
+  }
+
   @override
   String toString() {
     return '<"$name" ${startDate.month}.${startDate.day}>';
@@ -100,6 +118,30 @@ class CalendarData {
       if (newDate.isAfter(weekStartDate.add(const Duration(days: 6)))) break;
       days[weekDay].add(dataPoint);
     }
+  }
+
+  // ignore: prefer_constructors_over_static_methods
+  static CalendarData fromJson(List<dynamic> jsonData) {
+    final calendarData = CalendarData();
+    for (final day in jsonData) {
+      for (final dataPointJson in day as List<dynamic>) {
+        final dataPoint = CalendarDataPoint.fromJson(dataPointJson as Map<String, dynamic>);
+        calendarData.addCalendarDataPoint(dataPoint);
+      }
+    }
+    return calendarData;
+  }
+
+  List<dynamic> toJson() {
+    final outputJson = <List<dynamic>>[];
+    for (final day in days) {
+      final dayDataPointsJson =<Map<String, dynamic>>[];
+      for (final dataPoint in day) {
+        dayDataPointsJson.add(dataPoint.toJson());
+      }
+      outputJson.add(dayDataPointsJson);
+    }
+    return outputJson;
   }
 
   @override

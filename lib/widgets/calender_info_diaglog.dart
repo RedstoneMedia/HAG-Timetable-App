@@ -24,8 +24,10 @@ Future<void> showCalenderInfoDialog(List<CalendarDataPoint> dataPoints, BuildCon
                 final String timeString;
                 if (dataPoint.startDate == dataPoint.endDate) {
                   timeString = "${dataPoint.endDate.hour.toString().padLeft(2, "0")}:${dataPoint.endDate.minute.toString().padLeft(2, "0")}";
-                } else {
+                } else if (dataPoint.endDate.difference(dataPoint.startDate).inDays > 0){
                   timeString = "${dataPoint.startDate.day.toString().padLeft(2, "0")}.${dataPoint.startDate.month.toString().padLeft(2, "0")} - ${dataPoint.endDate.day.toString().padLeft(2, "0")}.${dataPoint.endDate.month.toString().padLeft(2, "0")}";
+                } else {
+                  timeString = "${dataPoint.startDate.hour.toString().padLeft(2, "0")}:${dataPoint.startDate.minute.toString().padLeft(2, "0")} - ${dataPoint.endDate.hour.toString().padLeft(2, "0")}:${dataPoint.endDate.minute.toString().padLeft(2, "0")}";
                 }
 
                 return Column(
