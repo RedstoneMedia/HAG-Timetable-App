@@ -83,18 +83,17 @@ Future<bool> checkForUpdateAndLoadTimetable(UpdateNotifier updateNotifier, Share
         .then((value) {
       log("State was set to : ${sharedState.content}", name: "state");
       // Cache the Timetable
-      sharedState.saveContent();
-      return false;
+      sharedState.saveCache();
     });
   } on TimeoutException catch (e) {
       log("Timeout ! Can't read timetable from Network", name: "network", error: e);
       // Load cached Timetable
-      sharedState.loadContent();
+      sharedState.loadCache();
       return false;
   } on SocketException catch (e) {
     log("Timeout ! Can't reach page", name: "network", error: e);
     // Load cached Timetable
-    sharedState.loadContent();
+    sharedState.loadCache();
     return false;
   }
   return true;

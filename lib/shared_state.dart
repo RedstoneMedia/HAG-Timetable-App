@@ -68,9 +68,11 @@ class SharedState {
 
   // Content
 
-  void saveContent() {
-    // Week substitutions
+  void saveCache() {
+    // Save week substitutions
     preferences.setString("weekSubstitutions", jsonEncode(weekSubstitutions.toJson()));
+    // Save calendar data
+    preferences.setString("calendarData", jsonEncode(calendarData.toJson()));
     // Save content
     content.updateLastUpdated();
     log("[SAVED] lastUpdated: ${content.lastUpdated}", name: "cache");
@@ -78,11 +80,16 @@ class SharedState {
     preferences.setString("cachedContent", encodedContent);
   }
 
-  void loadContent() {
+  void loadCache() {
     // Load week substitutions
     final String weekSubstitutionsJsonString = preferences.get("weekSubstitutions").toString();
     if (weekSubstitutionsJsonString != "") {
       weekSubstitutions = WeekSubstitutions(jsonDecode(weekSubstitutionsJsonString));
+    }
+    // Load calendar data
+    final String calendarDataJsonString = preferences.get("calendarData").toString();
+    if (calendarDataJsonString != "") {
+      calendarData = CalendarData.fromJson(jsonDecode(calendarDataJsonString) as List<dynamic>);
     }
     // Load content
     final String contentJsonString = preferences.get("cachedContent").toString();
