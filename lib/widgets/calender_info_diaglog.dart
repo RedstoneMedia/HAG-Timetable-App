@@ -22,10 +22,18 @@ Future<void> showCalenderInfoDialog(List<CalendarDataPoint> dataPoints, BuildCon
               itemBuilder: (_, i) {
                 final dataPoint = dataPoints[i];
                 final String timeString;
+                final hourDifference = dataPoint.endDate.difference(dataPoint.startDate).inHours;
                 if (dataPoint.startDate == dataPoint.endDate) {
                   timeString = "${dataPoint.endDate.hour.toString().padLeft(2, "0")}:${dataPoint.endDate.minute.toString().padLeft(2, "0")}";
-                } else if (dataPoint.endDate.difference(dataPoint.startDate).inDays > 0){
-                  timeString = "${dataPoint.startDate.day.toString().padLeft(2, "0")}.${dataPoint.startDate.month.toString().padLeft(2, "0")} - ${dataPoint.endDate.day.toString().padLeft(2, "0")}.${dataPoint.endDate.month.toString().padLeft(2, "0")}";
+                } else if (hourDifference == 24) {
+                  timeString = "Ganztägig";
+                } else if (hourDifference > 24) {
+                  // Turn 00:00:00 into 24:00:00 on the day before.
+                  var endDate = dataPoint.endDate;
+                  if (dataPoint.endDate.hour == 0 && dataPoint.endDate.minute == 0 && dataPoint.endDate.second == 0) {
+                    endDate = dataPoint.endDate.subtract(const Duration(microseconds: 1));
+                  }
+                  timeString = "${dataPoint.startDate.day.toString().padLeft(2, "0")}.${dataPoint.startDate.month.toString().padLeft(2, "0")} - ${endDate.day.toString().padLeft(2, "0")}.${endDate.month.toString().padLeft(2, "0")}";
                 } else {
                   timeString = "${dataPoint.startDate.hour.toString().padLeft(2, "0")}:${dataPoint.startDate.minute.toString().padLeft(2, "0")} - ${dataPoint.endDate.hour.toString().padLeft(2, "0")}:${dataPoint.endDate.minute.toString().padLeft(2, "0")}";
                 }

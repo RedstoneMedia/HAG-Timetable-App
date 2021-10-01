@@ -94,18 +94,11 @@ class CalendarData {
     if (now.weekday > 5) {
       weekStartDate = weekStartDate.add(const Duration(days: 6));
     }
+    // Strip time out of the date so that the current time does not influence the isBefore and isAfter functions
+    weekStartDate = DateTime(weekStartDate.year, weekStartDate.month, weekStartDate.day);
 
-    /*
-    // TODO: Check if this works and if its really necessary
-    if (dataPoint.endDate.difference(dataPoint.startDate).inDays <= 0) {
-      for (var i = 0; i < days.length; i++) {
-        if (i == 0) continue;
-        //days[i-1].removeWhere((e) => days[i].where((element) => element.name == dataPoint.name).isNotEmpty);
-      }
-    }*/
-
-    final daysBetween = dataPoint.endDate.difference(dataPoint.startDate).inDays;
-    var daysToAdd = dataPoint.endDate.difference(dataPoint.startDate).inDays;
+    final daysBetween = (dataPoint.endDate.difference(dataPoint.startDate).inHours / 24).ceil();
+    var daysToAdd = daysBetween;
     if (daysBetween == 0) {
       daysToAdd += 1;
     }
