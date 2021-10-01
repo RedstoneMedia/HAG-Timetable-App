@@ -119,7 +119,9 @@ DateTime parseTimeString(String string) {
 void executeIcsRecurrenceRule(String rRuleString, CalendarDataPoint origDataPoint, CalendarData calendarData) {
   final rRule = RecurrenceRule.fromString("RRULE:$rRuleString");
   // Add repeating calendar entries based on rRule
-  final instances = rRule.getInstances(start: DateTime.now().toUtc());
+  final now = DateTime.now();
+  final weekStartDate = now.subtract(Duration(days: now.weekday));
+  final instances = rRule.getInstances(start: weekStartDate.toUtc());
   for (final instance in instances) {
     final newStartDate = DateTime(instance.year, instance.month, instance.day, origDataPoint.startDate.hour, origDataPoint.startDate.minute, origDataPoint.startDate.second);
     final newEndDate = DateTime(instance.year, instance.month, instance.day, origDataPoint.endDate.hour, origDataPoint.endDate.minute, origDataPoint.endDate.second);

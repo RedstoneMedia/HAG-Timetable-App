@@ -95,13 +95,14 @@ class CalendarData {
       weekStartDate = weekStartDate.add(const Duration(days: 6));
     }
 
-    // TODO: Check if this works and if its really necessary ?
+    /*
+    // TODO: Check if this works and if its really necessary
     if (dataPoint.endDate.difference(dataPoint.startDate).inDays <= 0) {
       for (var i = 0; i < days.length; i++) {
         if (i == 0) continue;
-        days[i-1].removeWhere((e) => days[i].where((element) => element.name == dataPoint.name).isNotEmpty);
+        //days[i-1].removeWhere((e) => days[i].where((element) => element.name == dataPoint.name).isNotEmpty);
       }
-    }
+    }*/
 
     final daysBetween = dataPoint.endDate.difference(dataPoint.startDate).inDays;
     var daysToAdd = dataPoint.endDate.difference(dataPoint.startDate).inDays;
