@@ -7,11 +7,13 @@ Dies ist eine App für das HAG in Deutschland.
 
 Diese App existiert, da es für Minderjährige keinen anderen Weg gibt, den Stundenplan einzusehen, außer auf IServ.
 Die Darstellung auf IServ ist jedoch nicht intuitiv, nicht visuell interessant und ist nicht personalisiert, weswegen man oft überfordert ist.
-Zudem ist der Vertretungsplan und der Stundenplan nicht zusammengefasst.
+Dazu kommt, dass der Vertretungsplan und der Stundenplan nicht zusammengefasst ist.
 Die Personalisierung läuft über die Klasseneingabe und die Kurseingabe ab.
 Die Kurseingabe kann auch automatisch, beim Einscannen seines Papierstundenplans passieren.
 
 Zudem bietet die App die Option das Farbschema so einzustellen, wie man das gerne hätte.
+Optional gibt es noch die Möglichkeit, den IServ Kalender der aktuellen Woche einzubinden.
+Dieser ist dann bei Tippen auf den Tag (In der Kopfzeile) erreichbar.
 
 Zuletzt bietet die App auch ein Profil System an, mit dem man schnell und bequem z. B. den Stundenplan von einem Freund anschauen kann.
 
