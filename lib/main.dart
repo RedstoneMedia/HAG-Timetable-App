@@ -89,7 +89,6 @@ class _MyAppState extends State<MyApp> {
       // App is opened for the firs time -> load settings from file
       await openSetupPageAndCheckForFile(sharedState, context);
     } else {
-      sharedState.content = Content(Constants.width, sharedState.height!); // Initialize content with correct height, after loading the corrected
       // If not the first time -> Check if Internet is available
       final bool result = await isInternetAvailable(connectivity);
       // Internet is available
@@ -226,7 +225,7 @@ class _MyAppState extends State<MyApp> {
                               // Reload timetable data
                               // ignore: prefer_function_declarations_over_variables
                               final VoidFutureCallBack reloadAsync = () async {
-                                await parsePlans(sharedState.content, sharedState);
+                                await parsePlans(sharedState);
                                 sharedState.saveCache();
                                 _refreshController.refreshCompleted();
                               };

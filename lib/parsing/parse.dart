@@ -9,7 +9,8 @@ import 'package:stundenplan/parsing/parse_timetable.dart';
 import 'package:stundenplan/shared_state.dart';
 
 
-Future<void> parsePlans(Content content, SharedState sharedState) async {
+Future<void> parsePlans(SharedState sharedState) async {
+  final content = Content(Constants.width, sharedState.height!);
   final client = Client();
   final schoolClassName = "${sharedState.profileManager.schoolGrade}${sharedState.profileManager.subSchoolClass}";
 
@@ -58,4 +59,5 @@ Future<void> parsePlans(Content content, SharedState sharedState) async {
   log("Parsing substitution plan", name: "parsing");
   await overwriteContentWithSubsitutionPlan(sharedState, client, content, allSubjects, schoolClassName)
       .timeout(Constants.clientTimeout);
+  sharedState.content = content;
 }

@@ -79,7 +79,7 @@ Future<bool> checkForUpdateAndLoadTimetable(UpdateNotifier updateNotifier, Share
 
   // Parse the Timetable
   try {
-    await parsePlans(sharedState.content, sharedState)
+    await parsePlans(sharedState)
         .then((value) {
       log("State was set to : ${sharedState.content}", name: "state");
       // Cache the Timetable
