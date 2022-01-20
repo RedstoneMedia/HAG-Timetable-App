@@ -7,6 +7,7 @@ class WeekSubstitutions {
   WeekSubstitutions(dynamic savedSubstitutions) {
     // Remove old substitutions
     weekSubstitutions = <String, Tuple2<List<Map<String, dynamic>>, String>>{};
+    if (savedSubstitutions == null) {return;}
     final DateTime now = DateTime.now();
     int nowWeekDay = DateTime.now().weekday;
     if (nowWeekDay > 5) {
