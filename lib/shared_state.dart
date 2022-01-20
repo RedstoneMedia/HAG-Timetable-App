@@ -58,6 +58,7 @@ class SharedState {
     }
 
     loadThemeAndProfileManagerFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")!));
+    loadWeekSubstitutions();
     return false;
   }
 
@@ -80,12 +81,15 @@ class SharedState {
     preferences.setString("cachedContent", encodedContent);
   }
 
-  void loadCache() {
+  void loadWeekSubstitutions() {
     // Load week substitutions
     final String weekSubstitutionsJsonString = preferences.get("weekSubstitutions").toString();
     if (weekSubstitutionsJsonString != "") {
       weekSubstitutions = WeekSubstitutions(jsonDecode(weekSubstitutionsJsonString));
     }
+  }
+
+  void loadCache() {
     // Load calendar data
     final String calendarDataJsonString = preferences.get("calendarData").toString();
     if (calendarDataJsonString != "") {
