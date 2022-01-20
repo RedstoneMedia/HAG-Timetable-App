@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:http/http.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/shared_state.dart';
