@@ -33,7 +33,7 @@ dependencies:
   google_ml_kit: ^0.7.2
   flutter_secure_storage: ^5.0.2
   rrule: ^0.2.3
-  flutter_blue: ^0.8.0
+  flutter_nearby_connections: ^1.1.1
 
 flutter_icons:
   android: "launcher_icon"

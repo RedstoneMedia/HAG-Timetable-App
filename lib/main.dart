@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -12,6 +13,7 @@ import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/parsing/calendar_parse.dart';
 import 'package:stundenplan/parsing/parse.dart';
+import 'package:stundenplan/shared_data_store.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/update_notify.dart';
 import 'package:time_ago_provider/time_ago_provider.dart' as time_ago;
@@ -52,6 +54,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late SharedState sharedState;
+  SharedDataStore? sharedDataStore;
   UpdateNotifier updateNotifier = UpdateNotifier();
   Connectivity connectivity = Connectivity();
 
@@ -79,6 +82,10 @@ class _MyAppState extends State<MyApp> {
       setState(() {});
     });
 
+    if (Platform.isAndroid || Platform.isIOS) {
+      sharedDataStore = SharedDataStore();
+    }
+
     // Do all the Async Init stuff
     asyncInit();
   }
@@ -89,6 +96,10 @@ class _MyAppState extends State<MyApp> {
       // App is opened for the firs time -> load settings from file
       await openSetupPageAndCheckForFile(sharedState, context);
     } else {
+      // Start shared data Store
+      if (Platform.isAndroid || Platform.isIOS) {
+        unawaited(sharedDataStore?.start());
+      }
       // If not the first time -> Check if Internet is available
       final bool result = await isInternetAvailable(connectivity);
       // Internet is available
