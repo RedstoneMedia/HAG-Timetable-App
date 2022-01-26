@@ -103,7 +103,6 @@ class _MyAppState extends State<MyApp> {
       await openSetupPageAndCheckForFile(sharedState, context);
     } else {
       // Start shared data Store
-      log(sharedState.doUseSharedDataStore.toString());
       if ((Platform.isAndroid || Platform.isIOS) && sharedState.doUseSharedDataStore) {
         unawaited(sharedDataStore?.start());
       }

@@ -35,6 +35,8 @@ dependencies:
   rrule: ^0.2.3
   flutter_nearby_connections: ^1.1.1
   tflite_flutter: ^0.9.0
+  tflite_flutter_helper: ^0.3.1
+  image: ^3.1.1
 
 flutter_icons:
   android: "launcher_icon"
@@ -49,3 +51,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/models/
