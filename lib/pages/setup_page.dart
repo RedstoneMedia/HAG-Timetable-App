@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,7 +12,6 @@ import 'package:stundenplan/theme.dart' as my_theme;
 import 'package:stundenplan/widgets/buttons.dart';
 import 'package:stundenplan/widgets/course_autocomplete_add_input.dart';
 import 'package:stundenplan/widgets/course_select_list.dart';
-import 'package:flutter/foundation.dart';
 
 // ignore: must_be_immutable
 class SetupPage extends StatefulWidget {
@@ -39,6 +39,7 @@ class _SetupPageState extends State<SetupPage> {
   bool? subSchoolClassEnabled;
   bool subSchoolClassIsCorrect = true;
   Color? lastPickedColor;
+  bool doUseSharedDataStore = false;
 
   @override
   void initState() {
@@ -52,6 +53,7 @@ class _SetupPageState extends State<SetupPage> {
     courses = sharedState.profileManager.subjects;
     subSchoolClassEnabled =
         !Constants.displayFullHeightSchoolGrades.contains(schoolGrade);
+    doUseSharedDataStore = sharedState.doUseSharedDataStore;
   }
 
   void setSharedStateFromLocalStateVars() {
@@ -59,6 +61,7 @@ class _SetupPageState extends State<SetupPage> {
     sharedState.profileManager.subjects = [];
     sharedState.profileManager.subjects.addAll(courses);
     sharedState.profileManager.schoolGrade = schoolGrade;
+    sharedState.doUseSharedDataStore = doUseSharedDataStore;
 
     if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
       sharedState.profileManager.subSchoolClass = "";
@@ -445,6 +448,38 @@ class _SetupPageState extends State<SetupPage> {
                 CourseSelectList(
                   sharedState,
                   courses,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Text(
+                        "Geteilte Datenbank verwenden",
+                        style: GoogleFonts.poppins(
+                            color: sharedState.theme.textColor,
+                            fontWeight: FontWeight.normal,
+                            fontSize: 16.0),
+                      ),
+                      Switch(
+                        splashRadius: 0,
+                        value: doUseSharedDataStore,
+                        inactiveTrackColor: sharedState.theme.subjectSubstitutionColor,
+                        activeColor: sharedState.theme.subjectColor,
+                        thumbColor: MaterialStateProperty.resolveWith((states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return sharedState.theme.subjectColor;
+                          }
+                          return sharedState.theme.textColor;
+                        }),
+                        onChanged: (bool value) {
+                          setState(() {
+                            doUseSharedDataStore = value;
+                          });
+                        }
+                      ),
+                    ],
+                  )
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,

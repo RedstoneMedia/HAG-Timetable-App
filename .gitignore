@@ -1,4 +1,6 @@
 
+*.so
+
 # Created by https://www.toptal.com/developers/gitignore/api/flutter,dart,androidstudio
 # Edit at https://www.toptal.com/developers/gitignore?templates=flutter,dart,androidstudio
 

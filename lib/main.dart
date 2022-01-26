@@ -90,6 +90,12 @@ class _MyAppState extends State<MyApp> {
     asyncInit();
   }
 
+  @override
+  void dispose() async {
+    await sharedDataStore?.stop();
+    super.dispose();
+  }
+
   Future<void> asyncInit() async {
     // Check if the App is opened for the first time
     if (sharedState.loadStateAndCheckIfFirstTime()) {
@@ -97,7 +103,8 @@ class _MyAppState extends State<MyApp> {
       await openSetupPageAndCheckForFile(sharedState, context);
     } else {
       // Start shared data Store
-      if (Platform.isAndroid || Platform.isIOS) {
+      log(sharedState.doUseSharedDataStore.toString());
+      if ((Platform.isAndroid || Platform.isIOS) && sharedState.doUseSharedDataStore) {
         unawaited(sharedDataStore?.start());
       }
       // If not the first time -> Check if Internet is available

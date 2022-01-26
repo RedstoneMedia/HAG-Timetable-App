@@ -10,6 +10,12 @@ class SharedDataStore {
   Map<String, Tuple2<DateTime, dynamic>> data = {};
   bool running = false;
 
+  Future<void> stop() async {
+    if (!running) return;
+    await nearbyService.stopAdvertisingPeer();
+    await nearbyService.stopBrowsingForPeers();
+  }
+
   Future<void> start() async {
     if (running) return;
     running = true;
@@ -45,6 +51,7 @@ class SharedDataStore {
         nearbyService.sendMessage(fromDeviceId, jsonEncode(data));
       }
     });
+    log("Started", name: "Shared-Data-Store");
   }
 
 }

@@ -20,6 +20,7 @@ class SharedState {
   ProfileManager profileManager = ProfileManager();
   List<int> holidayWeekdays = getHolidayWeekDays();
   CalendarData calendarData = CalendarData();
+  bool doUseSharedDataStore = false;
 
   SharedState(this.preferences, this.content);
 
@@ -30,6 +31,9 @@ class SharedState {
     final themeData = theme.getJsonData();
     saveFileData["theme"] = themeData;
     preferences.setString("theme", jsonEncode(themeData));
+
+    preferences.setBool("doUseSharedDataStore", doUseSharedDataStore);
+    saveFileData["doUseSharedDataStore"] = doUseSharedDataStore;
 
     // Profiles
     profileManager.renameAllProfiles();
@@ -56,7 +60,7 @@ class SharedState {
       height = Constants.defaultHeight;
       return true;
     }
-
+    doUseSharedDataStore = preferences.getBool("doUseSharedDataStore") == null ? false : preferences.getBool("doUseSharedDataStore")!;
     loadThemeAndProfileManagerFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")!));
     loadWeekSubstitutions();
     return false;
