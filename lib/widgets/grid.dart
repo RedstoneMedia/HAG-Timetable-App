@@ -159,6 +159,7 @@ class ClassGridObject extends StatelessWidget {
                         ? [
                             Text(
                               content.cells[y][x].originalSubject,
+                              maxLines: 1,
                               style: TextStyle(
                                   color: sharedState.theme.textColor
                                       .withAlpha(214),
@@ -168,16 +169,19 @@ class ClassGridObject extends StatelessWidget {
                             ),
                             Text(
                               content.cells[y][x].subject,
+                              maxLines: 1,
                               style:
                                   TextStyle(color: sharedState.theme.textColor),
                             ),
                             Text(
                               content.cells[y][x].room,
+                              maxLines: 1,
                               style:
                                   TextStyle(color: sharedState.theme.textColor),
                             ),
                             Text(
                               content.cells[y][x].teacher,
+                              maxLines: 1,
                               style:
                                   TextStyle(color: sharedState.theme.textColor),
                             ),
@@ -185,6 +189,7 @@ class ClassGridObject extends StatelessWidget {
                         : [
                             Text(
                               content.cells[y][x].originalSubject,
+                              maxLines: 1,
                               style: const TextStyle(
                                 color: Colors.transparent,
                                 fontWeight: FontWeight.bold,
@@ -193,22 +198,26 @@ class ClassGridObject extends StatelessWidget {
                             ),
                             Text(
                               content.cells[y][x].subject,
+                              maxLines: 1,
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: sharedState.theme.textColor),
                             ),
                             Text(
                               content.cells[y][x].room,
+                              maxLines: 1,
                               style:
                                   TextStyle(color: sharedState.theme.textColor),
                             ),
                             Text(
                               content.cells[y][x].teacher,
+                              maxLines: 1,
                               style:
                                   TextStyle(color: sharedState.theme.textColor),
                             ),
                             Text(
                               content.cells[y][x].originalSubject,
+                              maxLines: 1,
                               style: const TextStyle(
                                 color: Colors.transparent,
                                 fontWeight: FontWeight.bold,
