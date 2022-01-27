@@ -68,12 +68,12 @@ class WeekdayGridObject extends StatelessWidget {
 
 class ClassGridObject extends StatelessWidget {
   const ClassGridObject(
-      {/*required*/ required this.content,
-       /*required*/ required this.sharedState,
-       /*required*/ required this.x,
-       /*required*/ required this.y,
-       /*required*/ required this.needsLeftBorder,
-       /*required*/ required this.context});
+      {required this.content,
+       required this.sharedState,
+       required this.x,
+       required this.y,
+       required this.needsLeftBorder,
+       required this.context});
 
   final Content content;
   final SharedState sharedState;
@@ -165,25 +165,25 @@ class ClassGridObject extends StatelessWidget {
                                       .withAlpha(214),
                                   decoration: TextDecoration.lineThrough,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16.0),
+                                  fontSize: 16.0),overflow: TextOverflow.ellipsis,                  maxLines: 1,
                             ),
                             Text(
                               content.cells[y][x].subject,
                               maxLines: 1,
                               style:
-                                  TextStyle(color: sharedState.theme.textColor),
+                                  TextStyle(color: sharedState.theme.textColor),overflow: TextOverflow.ellipsis,                  maxLines: 1,
                             ),
                             Text(
                               content.cells[y][x].room,
                               maxLines: 1,
                               style:
-                                  TextStyle(color: sharedState.theme.textColor),
+                                  TextStyle(color: sharedState.theme.textColor),overflow: TextOverflow.ellipsis,                  maxLines: 1,
                             ),
                             Text(
                               content.cells[y][x].teacher,
                               maxLines: 1,
                               style:
-                                  TextStyle(color: sharedState.theme.textColor),
+                                  TextStyle(color: sharedState.theme.textColor),overflow: TextOverflow.ellipsis,                  maxLines: 1,
                             ),
                           ]
                         : [
@@ -202,18 +202,24 @@ class ClassGridObject extends StatelessWidget {
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: sharedState.theme.textColor),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                             Text(
                               content.cells[y][x].room,
                               maxLines: 1,
                               style:
                                   TextStyle(color: sharedState.theme.textColor),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                             Text(
                               content.cells[y][x].teacher,
                               maxLines: 1,
                               style:
                                   TextStyle(color: sharedState.theme.textColor),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                             Text(
                               content.cells[y][x].originalSubject,
@@ -223,6 +229,8 @@ class ClassGridObject extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                                 fontSize: 8.5,
                               ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ],
                   ),
