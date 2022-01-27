@@ -1,4 +1,8 @@
 # HAG-Stundenplan-App
+![Version](https://img.shields.io/github/v/release/RedstoneMedia/HAG-Timetable-App?include_prereleases&label=version&style=flat-square)
+![Downloads](https://img.shields.io/github/downloads/RedstoneMedia/HAG-TIMETABLE-APP/total?style=flat-square)
+![Last Commit](https://img.shields.io/github/last-commit/RedstoneMedia/HAG-Timetable-App?style=flat-square)
+![Bugs](https://img.shields.io/github/issues-raw/RedstoneMedia/HAG-Timetable-App/bug?label=bugs&style=flat-square)
 
 ![stundeplan_wide](https://user-images.githubusercontent.com/34373974/132096176-e38f8157-3571-4f8a-9582-b62a21d34f8b.png)
 [English version](README-eng.md)
