@@ -187,6 +187,74 @@ class _ImportSubstitutionPageState extends State<ImportSubstitutionPage> {
     return newPoints;
   }
 
+  Future<String> detectText(img.Image image) async {
+    final monitorImageTempFile = File("${(await getTemporaryDirectory()).path}/textDetect.tmp");
+    await monitorImageTempFile.writeAsBytes(img.encodeJpg(image, quality: 90));
+    final RecognisedText recognisedText = await textDetector.processImage(InputImage.fromFile(monitorImageTempFile));
+    await monitorImageTempFile.delete();
+    return recognisedText.text;
+  }
+
+  Future<img.Image?> warpToCorners(
+      Tuple2<int, int> start,
+      img.Image grayscaleImage,
+      img.Image image, {
+        int shrinkFactor = 1,
+        int minPointsLength = 8000,
+        int searchYDirection = 1,
+        int contourWindowSize = 5,
+        int contourMinChange = 45,
+        int cleanupMinNeighborCount = 5
+      }
+      ) async {
+    Set<Tuple2<int, int>> pointsSet = {};
+    final startX = start.item1;
+    int startY = start.item2;
+    // Trace contours
+    while (pointsSet.length <= minPointsLength) {
+      pointsSet = iterativeNeighborSearch(Tuple2(startX, startY), grayscaleImage, (_, color, position) {
+        return getMaxNeighborDifference(color, position, grayscaleImage, contourWindowSize) > contourMinChange;
+      });
+      startY += searchYDirection;
+      if (startY >= grayscaleImage.height || startY < 0) return null;
+    }
+    // Clean up contour by discarding contour points with low neighbors
+    final toRemovePoints = <Tuple2<int, int>>[];
+    for (final p in pointsSet) {
+      int neighborCount = 0;
+      for (final neighbor in getNeighbors(p, image, 3)) {
+        if (pointsSet.contains(neighbor)) neighborCount += 1;
+      }
+      if (neighborCount < cleanupMinNeighborCount) toRemovePoints.add(p);
+    }
+    for (final pointToRemove in toRemovePoints) {
+      pointsSet.remove(pointToRemove);
+    }
+    final points = pointsSet.toList(growable: false);
+    log("[Warp to Corners] Found contour ${points.length} points", name: "subst-import");
+    // Extract corner points
+    final topLeftAndBottomRight = findMaxTopLeftAndBottomRight(points);
+    final topRightAndBottomLeft = findMaxTopLeftAndBottomRight(flipPointsHorizontally(points, grayscaleImage.width));
+    final topLeft = topLeftAndBottomRight.item1;
+    final bottomRight = topLeftAndBottomRight.item2;
+    final topRight = flipPoint(topRightAndBottomLeft.item1, grayscaleImage.width);
+    final bottomLeft = flipPoint(topRightAndBottomLeft.item2, grayscaleImage.width);
+    // Calculate width and height
+    final width = topRight.item1 - bottomLeft.item1;
+    final height = bottomLeft.item2 - topRight.item2;
+    if (width.isNegative || height.isNegative) {
+      return null;
+    }
+    log("[Warp to Corners] Found corners: $topLeft $topRight $bottomLeft $bottomRight $width x $height", name: "subst-import");
+    // Warp image to fit corner points
+    final warpedImageBytes = await ImgProc.warpPerspectiveTransform(
+        Uint8List.fromList(img.encodeJpg(image, quality: 90)),
+        sourcePoints: [topLeft.item1 * shrinkFactor, topLeft.item2 * shrinkFactor, topRight.item1 * shrinkFactor, topRight.item2 * shrinkFactor, bottomLeft.item1 * shrinkFactor, bottomLeft.item2 * shrinkFactor, bottomRight.item1 * shrinkFactor, bottomRight.item2 * shrinkFactor],
+        destinationPoints: [0, 0, width, 0, 0, height, width, height],
+        outputSize: [width.toDouble(), height.toDouble()]) as Uint8List;
+    return img.decodeImage(warpedImageBytes.toList());
+  }
+
   Future<img.Image?> warpWithMonitorCorners(img.Image image) async {
     // Resized image to a more manageable size
     const shrinkFactor = 2;
@@ -197,67 +265,123 @@ class _ImportSubstitutionPageState extends State<ImportSubstitutionPage> {
     final grayscaleImage = img.grayscale(resizedImage.clone());
     final List<Tuple2<int, Tuple2<int, int>>> brightest = findBrightestPixels(grayscaleImage);
     // Trace contours starting at brightest pixel (should be somewhere in the monitor background, since the monitor background color is white) then going down
-    List<Tuple2<int, int>> points = [];
-    final startX = brightest[0].item2.item1;
-    int startY = brightest[0].item2.item2;
-    while (points.length <= 8000) {
-      points = iterativeNeighborSearch(Tuple2(startX, startY), grayscaleImage, (_, color, position) {
-        return getMaxNeighborDifference(color, position, resizedImage, 5) > 45;
-      }).toList();
-      startY += 1;
-      if (startY >= resizedImage.height) return null;
-    }
-    log("Found contour ${points.length} points", name: "subst-import");
-    // Extract corner points
-    final topLeftAndBottomRight = findMaxTopLeftAndBottomRight(points);
-    final topRightAndBottomLeft = findMaxTopLeftAndBottomRight(flipPointsHorizontally(points, resizedImage.width));
-    final topLeft = topLeftAndBottomRight.item1;
-    final bottomRight = topLeftAndBottomRight.item2;
-    final topRight = flipPoint(topRightAndBottomLeft.item1, resizedImage.width);
-    final bottomLeft = flipPoint(topRightAndBottomLeft.item2, resizedImage.width);
-    // Calculate width and height
-    final width = topRight.item1 - bottomLeft.item1;
-    final height = bottomLeft.item2 - topRight.item2;
-    if (width.isNegative || height.isNegative) {
-      return null;
-    }
-    log("Found corners: $topLeft $topRight $bottomLeft $bottomRight $width x $height", name: "subst-import");
-    // Warp image to fit corner points
-    final warpedImageBytes = await ImgProc.warpPerspectiveTransform(
-        Uint8List.fromList(img.encodeJpg(image, quality: 90)),
-        sourcePoints: [topLeft.item1 * shrinkFactor, topLeft.item2 * shrinkFactor, topRight.item1 * shrinkFactor, topRight.item2 * shrinkFactor, bottomLeft.item1 * shrinkFactor, bottomLeft.item2 * shrinkFactor, bottomRight.item1 * shrinkFactor, bottomRight.item2 * shrinkFactor],
-        destinationPoints: [0, 0, width, 0, 0, height, width, height],
-        outputSize: [width.toDouble(), height.toDouble()]) as Uint8List;
-    return img.decodeImage(warpedImageBytes.toList());
+    return warpToCorners(brightest[0].item2, grayscaleImage, image, shrinkFactor: shrinkFactor);
   }
 
-  Future<void> detectText(File imageFile) async {
-    final img.Image image = img.decodeImage(await imageFile.readAsBytes())!;
-    final monitorContent = await warpWithMonitorCorners(image);
-    if (monitorContent != null) {
-      displayImage(monitorContent);
-      final monitorImageTempFile = File("${(await getTemporaryDirectory()).path}/monitorImage.png");
-      await monitorImageTempFile.writeAsBytes(img.encodeJpg(monitorContent, quality: 90));
-      final RecognisedText recognisedText = await textDetector.processImage(InputImage.fromFile(monitorImageTempFile));
-      log(recognisedText.text, name: "subst-import");
-      await monitorImageTempFile.delete();
+  Tuple2<img.Image, img.Image>? separateTables(img.Image image) {
+    // Find X coordinate of longest continuous vertical white strip
+    final grayscaleImage = img.grayscale(image.clone());
+    int maxValueSum = 0;
+    int separateXCord = 0;
+    final whiteBalance = grayscaleImage.getWhiteBalance();
+    for (int x = (image.width / 2.8).round(); x < (image.width / 1.2).round(); x++) {
+      int valueSum = 0;
+      for (int y = 50; y < grayscaleImage.height; y++) {
+        final value = img.getRed(grayscaleImage.getPixel(x, y));
+        if (value >= whiteBalance) {
+          valueSum += value;
+        } else {
+          break;
+        }
+        valueSum += value;
+      }
+      if (valueSum > maxValueSum) {
+        maxValueSum = valueSum;
+        separateXCord = x;
+      }
     }
+    if (separateXCord == 0) return null;
+    log("Found Table X separation at : $separateXCord");
+    // Split image into two at table separation X
+    final leftTable = img.copyCrop(image, 0, 0, separateXCord, image.height);
+    final rightTable = img.copyCrop(image, separateXCord, 0, image.width, image.height);
+    return Tuple2(leftTable, rightTable);
   }
 
-  Future<void> importSubst() async {
-    final XFile? imageXFile = await picker.pickImage(source: ImageSource.gallery);
+  Future<void> importTable(img.Image image) async {
+    var grayscaleImage = img.grayscale(image.clone());
+    // Warp to corners of table. Starting at bottom then going up to find contours
+    final tableWarpedImage = await warpToCorners(
+        Tuple2((image.width / 2).round(), image.height-1),
+        grayscaleImage,
+        image,
+        minPointsLength: 10000,
+        searchYDirection: -1,
+        contourWindowSize: 3,
+        contourMinChange: 19
+    );
+    if (tableWarpedImage == null) return;
+    grayscaleImage = img.grayscale(tableWarpedImage.clone());
+    final whiteBalance = grayscaleImage.getWhiteBalance();
+
+    final rowSeparators = [];
+    // Go from bottom to top searching for horizontal black strips
+    for (int y = grayscaleImage.height-11; y >= 0; y--) {
+      final points = iterativeNeighborSearch(Tuple2((grayscaleImage.width / 2).round(), y), grayscaleImage, (_, color, position) {
+        return img.getRed(color) < whiteBalance && (position.item2-y).abs() <= 2;
+      });
+      if (points.length < 100) continue;
+      if (rowSeparators.isNotEmpty) if ((rowSeparators.last as int) - y < 15) continue;
+      rowSeparators.add(y);
+    }
+    // Go from left to right searching for vertical black strips
+    final columnSeparators = [];
+    for (int x = 0; x < grayscaleImage.width; x++) {
+      final points = iterativeNeighborSearch(Tuple2(x, (grayscaleImage.height / 2).round()), grayscaleImage, (_, color, position) {
+        return img.getRed(color) < whiteBalance && (position.item1-x).abs() <= 3;
+      });
+      if (points.length < 100) continue;
+      if (columnSeparators.isNotEmpty) if (x - (columnSeparators.last as int) < 10) continue;
+      columnSeparators.add(x);
+    }
+
+    // Display horizontal strips (debug)
+    for (int i = 0; i < rowSeparators.length; i++) {
+      final y = rowSeparators[i] as int;
+      final colors = img.hsvToRgb(i / rowSeparators.length, 1, 1);
+      for (int x = 0; x < grayscaleImage.width; x++) {
+        tableWarpedImage.setPixel(x, y, img.setBlue(img.setGreen(colors[0], colors[1]), colors[2]));
+      }
+    }
+    // Display vertical strips (debug)
+    for (int i = 0; i < columnSeparators.length; i++) {
+      final x = columnSeparators[i] as int;
+      final colors = img.hsvToRgb(i / columnSeparators.length, 1, 1);
+      for (int y = 0; y < grayscaleImage.height; y++) {
+        tableWarpedImage.setPixel(x, y, img.setBlue(img.setGreen(colors[0], colors[1]), colors[2]));
+      }
+    }
+
+    displayImage(tableWarpedImage);
+  }
+
+  Future<void> importSubstitutionPlan() async {
+    // Get image from camera
+    final XFile? imageXFile = await picker.pickImage(source: ImageSource.camera);
     if (imageXFile == null) return;
     final imageFile = File(imageXFile.path);
-    if (await isGoodImage(imageFile)) {
-      await detectText(imageFile);
-      setState(() {
-        result = "";
-      });
-    } else {
+    // Check if image passes the classifier
+    if (!await isGoodImage(imageFile)) {
       setState(() {
         imageWidget = Image.file(imageFile);
       });
+      return;
     }
+    // Extract monitor region and find tables in it
+    final img.Image image = img.decodeImage(await imageFile.readAsBytes())!;
+    final monitorContent = await warpWithMonitorCorners(image);
+    if (monitorContent == null) {
+      setState(() {result = "Monitor Ecken konnten nicht gefunden werden";});
+      return;
+    }
+    final tableImages = separateTables(monitorContent);
+    if (tableImages == null) {
+      setState(() {result = "Tabellen konnten nich speariert werden";});
+      return;
+    }
+    // Import data from table
+    await importTable(tableImages.item1);
+    setState(() {result = "";});
   }
 
   @override
@@ -288,7 +412,7 @@ class _ImportSubstitutionPageState extends State<ImportSubstitutionPage> {
                     ),
                   StandardButton(
                     text: "Kalender Importieren",
-                    onPressed: importSubst,
+                    onPressed: importSubstitutionPlan,
                     sharedState: widget.sharedState,
                     color: widget.sharedState.theme.subjectSubstitutionColor.withAlpha(180),
                     size: 0.5,
