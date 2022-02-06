@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
@@ -101,12 +102,12 @@ Tuple2<Tuple2<int, int>, Tuple2<int, int>> findMaxTopLeftAndBottomRight(List<Tup
   return Tuple2(topLeft, bottomRight);
 }
 
-Future<String> detectText(img.Image image, TextDetectorV2 textDetector) async {
+Future<RecognisedText> detectText(img.Image image, TextDetectorV2 textDetector) async {
   final monitorImageTempFile = File("${(await getTemporaryDirectory()).path}/textDetect.tmp");
   await monitorImageTempFile.writeAsBytes(img.encodeJpg(image, quality: 90));
   final RecognisedText recognisedText = await textDetector.processImage(InputImage.fromFile(monitorImageTempFile));
   await monitorImageTempFile.delete();
-  return recognisedText.text;
+  return recognisedText;
 }
 
 Tuple2<int, int> flipPoint(Tuple2<int, int> point, int width) {
@@ -179,4 +180,215 @@ Future<img.Image?> warpToCorners(
       destinationPoints: [0, 0, width, 0, 0, height, width, height],
       outputSize: [width.toDouble(), height.toDouble()]) as Uint8List;
   return img.decodeImage(warpedImageBytes.toList());
+}
+
+Future<img.Image?> warpWithMonitorCorners(img.Image image) async {
+  // Resized image to a more manageable size
+  const shrinkFactor = 2;
+  final resizedImage = img.copyResize(
+      image, width: (image.width / shrinkFactor).round(), height: (image.height / shrinkFactor).round(),
+      interpolation: img.Interpolation.average
+  );
+  final grayscaleImage = img.grayscale(resizedImage.clone());
+  final List<Tuple2<int, Tuple2<int, int>>> brightest = findBrightestPixels(grayscaleImage);
+  // Trace contours starting at brightest pixel (should be somewhere in the monitor background, since the monitor background color is white) then going down
+  return warpToCorners(brightest[0].item2, grayscaleImage, image, shrinkFactor: shrinkFactor);
+}
+
+Tuple2<img.Image, img.Image>? separateTables(img.Image image) {
+  // Find X coordinate of longest continuous vertical white strip
+  final grayscaleImage = img.grayscale(image.clone());
+  int maxValueSum = 0;
+  int separateXCord = 0;
+  final whiteBalance = grayscaleImage.getWhiteBalance();
+  for (int x = (image.width / 2.8).round(); x < (image.width / 1.2).round(); x++) {
+    int valueSum = 0;
+    for (int y = 50; y < grayscaleImage.height; y++) {
+      final value = img.getRed(grayscaleImage.getPixel(x, y));
+      if (value >= whiteBalance) {
+        valueSum += value;
+      } else {
+        break;
+      }
+      valueSum += value;
+    }
+    if (valueSum > maxValueSum) {
+      maxValueSum = valueSum;
+      separateXCord = x;
+    }
+  }
+  if (separateXCord == 0) return null;
+  log("Found Table X separation at : $separateXCord");
+  // Split image into two at table separation X
+  final leftTable = img.copyCrop(image, 0, 0, separateXCord, image.height);
+  final rightTable = img.copyCrop(image, separateXCord, 0, image.width, image.height);
+  return Tuple2(leftTable, rightTable);
+}
+
+Future<SplayTreeMap<Tuple2<int, int>, String>?> getCellsText(img.Image image, TextDetectorV2 textDetector) async {
+  var grayscaleImage = img.grayscale(image.clone());
+  // Warp to corners of table. Starting at bottom then going up to find contours
+  final tableWarpedImage = await warpToCorners(
+      Tuple2((image.width / 2).round(), image.height-1),
+      grayscaleImage,
+      image,
+      minPointsLength: 10000,
+      searchYDirection: -1,
+      contourWindowSize: 3,
+      contourMinChange: 19
+  );
+  if (tableWarpedImage == null) return null;
+  grayscaleImage = img.grayscale(tableWarpedImage.clone());
+  final whiteBalance = grayscaleImage.getWhiteBalance();
+
+  final rowSeparators = [];
+  // Go from bottom to top searching for horizontal black strips
+  for (int y = grayscaleImage.height-11; y >= 0; y--) {
+    final points = iterativeNeighborSearch(Tuple2((grayscaleImage.width / 2).round(), y), grayscaleImage, (_, color, position) {
+      return img.getRed(color) < whiteBalance && (position.item2-y).abs() <= 2;
+    });
+    if (points.length < 100) continue;
+    if (rowSeparators.isNotEmpty) if ((rowSeparators.last as int) - y < 15) continue;
+    rowSeparators.add(y);
+  }
+  // Go from left to right searching for vertical black strips
+  final columnSeparators = [];
+  for (int x = 0; x < grayscaleImage.width; x++) {
+    final points = iterativeNeighborSearch(Tuple2(x, (grayscaleImage.height / 2).round()), grayscaleImage, (_, color, position) {
+      return img.getRed(color) < whiteBalance && (position.item1-x).abs() <= 3;
+    });
+    if (points.length < 100) continue;
+    if (columnSeparators.isNotEmpty) if (x - (columnSeparators.last as int) < 10) continue;
+    columnSeparators.add(x);
+  }
+  // Find header end, by finding end of wide black strip at top
+  bool insideHeader = false;
+  int headerYEnd = 0;
+  for (int y = 0; y < grayscaleImage.height; y++) {
+    int blackPixels = 0;
+    for (int x = 0; x < grayscaleImage.width; x++) {
+      final value = img.getRed(grayscaleImage.getPixel(x, y));
+      if (value < (whiteBalance - 20)) blackPixels++;
+    }
+    if (blackPixels < grayscaleImage.width * 0.5) {
+      if (!insideHeader) {insideHeader = true;} else {
+        headerYEnd = y;
+        break;
+      }
+    }
+  }
+  // Remove separators that are above the header end and add header end as row separator
+  rowSeparators.removeWhere((separatorY) => separatorY as int <= headerYEnd);
+  rowSeparators.add(headerYEnd);
+  rowSeparators.add(0);
+  // TODO: Merge separators that are to close to each other
+  // Make sure that cells text positions are always in order for later processing
+  final cellsText = SplayTreeMap<Tuple2<int, int>, String>((a, b) {
+    if (a.item1 > b.item1) return 1;
+    if (a.item1 < b.item1) return -1;
+    if (a.item2 > b.item2) return 1;
+    if (a.item2 < b.item2) return -1;
+    return 0;
+  });
+  // Detect text in each column
+  for (int column = 0; column < columnSeparators.length; column++) {
+    final xStart = columnSeparators[column] as int;
+    final xEnd = column == columnSeparators.length-1 ? tableWarpedImage.width : columnSeparators[column+1] as int;
+    final width = xEnd-xStart;
+    final height = tableWarpedImage.height;
+    // Ensure that InputImage width is at least 32 (For text detection)
+    var cellImage = img.copyCrop(tableWarpedImage, xStart, 0, width, height);
+    int resizeFactor = 1;
+    if (width < 32) {
+      resizeFactor = (32 / width).ceil();
+      cellImage = img.copyResize(cellImage, width: width*resizeFactor, height: height*resizeFactor);
+    }
+    // Run text detection on whole column
+    final recognizedText = await detectText(cellImage, textDetector);
+    // Split recognized text lines by vertical separators into rows
+    for (int row = rowSeparators.length-1; row >= 0; row--) {
+      final yStart = (rowSeparators[row] as int) * resizeFactor;
+      final yEnd = row == 0 ? 0 : (rowSeparators[row - 1] as int) * resizeFactor;
+      String text = "";
+      for (final blocks in recognizedText.blocks) {
+        for (final line in blocks.lines) {
+          final rect = line.rect;
+          if (rect.bottom > yEnd) break;
+          if (rect.top >= yStart && rect.bottom <= yEnd) {
+            text += line.text + (text.isEmpty && line.text != " " ? "" : "\n");
+          }
+        }
+      }
+      log("Cell $row-$column contains: $text", name: "subst-import");
+      final rowColumnPosition = Tuple2(rowSeparators.length-1 - row, column);
+      cellsText[rowColumnPosition] = text.isEmpty ? "" : text;
+    }
+  }
+  return cellsText;
+}
+
+Future<Map<String, Map<String, String>>?> getCoursesSubstitutionsFromTable(img.Image image, TextDetectorV2 textDetector) async {
+  final cellsText = await getCellsText(image, textDetector);
+  if (cellsText == null) return null;
+  // Find header indices
+  final Map<String, int?> headerColumnIndices = {
+    "Klassen" : null,
+    "Std." : null,
+    "Fach" : null,
+    "Vertre." : null,
+    "Raum" : null,
+    "(Fach)" : null,
+    "(Leh.)" : null,
+    "(Raum)" : null,
+    "Ve..." : null,
+    "Entf." : null
+  };
+  for (final cellPos in cellsText.keys) {
+    if (cellPos.item1 > 0) break;
+    final cellText = cellsText[cellPos]!
+      .replaceAll(" ", "")
+      .replaceAll("\n", "")
+      .toLowerCase();
+    try {
+      final headerName = headerColumnIndices.keys.where((n) => n.toLowerCase() == cellText).single;
+      headerColumnIndices[headerName] = cellPos.item2;
+    } on StateError {}
+  }
+  final headerInformationMapping = {
+    "Klassen" : "Klassen",
+    "Std.": "Stunde",
+    "Fach": "Fach",
+    "Vertre.": "Vertretung",
+    "Raum": "Raum",
+    "(Fach)": "statt Fach",
+    "(Leh.)": "statt Lehrer",
+    "(Raum)": "statt Raum",
+    "Ve...": "Text",
+    "Entf.": "Entfall"
+  };
+  // Convert cells list to substitution list and rename column names to fit the online column names
+  final substitutions = <Map<String, String>>[{}];
+  int lastColumn = -1;
+  for (final cellPos in cellsText.keys) {
+    if (cellPos.item1 == 0) continue;
+    if (cellPos.item2 < lastColumn) substitutions.add({});
+    try {
+      final entry = headerColumnIndices.entries.firstWhere((entry) => cellPos.item2 == entry.value);
+      substitutions.last[headerInformationMapping[entry.key]!] = cellsText[cellPos]!;
+    } on StateError {}
+    lastColumn = cellPos.item2;
+  }
+  // Convert substitution list to substitutions per course
+  final coursesSubstitutions = <String, Map<String, String>>{};
+  for (final substitution in substitutions) {
+    if (!substitution.containsKey("Klassen")) continue; // TODO: Try to restore course name, if present substitution data matches data from the timetable
+    final className = substitution["Klassen"]!;
+    substitution.remove("Klassen");
+    coursesSubstitutions[className] = substitution;
+    // If a substitution has no substitute or change, but still exsists it can be assumed that the "X" in the drop out coulumn was not detected even when it should
+    if (substitution["Fach"]!.isEmpty && substitution["Vertretung"]!.isEmpty && substitution["Raum"]!.isEmpty && headerColumnIndices["Entf."] != null) {
+      substitution["Entfall"] = "X";
+    }
+  }
+  return coursesSubstitutions;
 }

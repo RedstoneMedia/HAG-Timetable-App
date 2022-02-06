@@ -16,6 +16,14 @@ class SharedDataStore {
     await nearbyService.stopBrowsingForPeers();
   }
 
+  void setProperty(String propertyName, dynamic value) {
+    data[propertyName] = Tuple2(DateTime.now(), value);
+  }
+
+  dynamic getProperty(String propertyName) {
+    return data[propertyName]?.item2;
+  }
+
   Future<void> start() async {
     if (running) return;
     running = true;
