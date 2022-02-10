@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
@@ -7,6 +8,7 @@ import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/holiday_calculator.dart';
 import 'package:stundenplan/calendar_data.dart';
 import 'package:stundenplan/profile_manager.dart';
+import 'package:stundenplan/shared_data_store.dart';
 import 'package:stundenplan/theme.dart';
 import 'package:stundenplan/week_subsitutions.dart';
 
@@ -16,6 +18,7 @@ class SharedState {
   Theme theme = darkTheme;
   int? height = Constants.defaultHeight;
   Content content;
+  SharedDataStore? sharedDataStore;
   WeekSubstitutions weekSubstitutions = WeekSubstitutions({});
   ProfileManager profileManager = ProfileManager();
   List<int> holidayWeekdays = getHolidayWeekDays();
@@ -60,7 +63,7 @@ class SharedState {
       height = Constants.defaultHeight;
       return true;
     }
-    doUseSharedDataStore = preferences.getBool("doUseSharedDataStore") == null ? false : preferences.getBool("doUseSharedDataStore")!;
+    loadSharedDataStore();
     loadThemeAndProfileManagerFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")!));
     loadWeekSubstitutions();
     return false;
@@ -83,6 +86,18 @@ class SharedState {
     log("[SAVED] lastUpdated: ${content.lastUpdated}", name: "cache");
     final encodedContent = jsonEncode(content.toJsonData());
     preferences.setString("cachedContent", encodedContent);
+  }
+
+  void loadSharedDataStore() {
+    doUseSharedDataStore = preferences.getBool("doUseSharedDataStore") == null ? false : preferences.getBool("doUseSharedDataStore")!;
+    if ((Platform.isAndroid || Platform.isIOS) && doUseSharedDataStore) {
+      sharedDataStore = SharedDataStore(preferences);
+      final sharedDataStoreDataString = preferences.getString("sharedDataStoreData");
+      if (sharedDataStoreDataString != null) {
+        sharedDataStore?.loadFromJson(jsonDecode(sharedDataStoreDataString));
+      }
+      sharedDataStore?.start();
+    }
   }
 
   void loadWeekSubstitutions() {

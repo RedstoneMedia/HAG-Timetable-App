@@ -7,12 +7,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
+import 'package:stundenplan/parsing/parse_subsitution_plan.dart';
 import 'package:stundenplan/parsing/subsitution_image_parse.dart';
 import 'package:stundenplan/widgets/buttons.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
+import 'package:tuple/tuple.dart';
 
 import '../shared_state.dart';
+
+// TODO: Remove this debug page and move the functionality to import a substitution image to the main page somewhere
 
 // ignore: must_be_immutable
 class ImportSubstitutionPage extends StatefulWidget {
@@ -83,7 +87,8 @@ class _ImportSubstitutionPageState extends State<ImportSubstitutionPage> {
   Future<void> importSubstitutionPlan() async {
     imageWidget = null;
     // Get image from camera
-    final XFile? imageXFile = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? imageXFile = await picker.pickImage(
+        source: ImageSource.gallery);
     if (imageXFile == null) return;
     final imageFile = File(imageXFile.path);
     // Check if image passes the classifier
@@ -97,23 +102,61 @@ class _ImportSubstitutionPageState extends State<ImportSubstitutionPage> {
     final img.Image image = img.decodeImage(await imageFile.readAsBytes())!;
     final monitorContentImage = await warpWithMonitorCorners(image);
     if (monitorContentImage == null) {
-      setState(() {infoText = "Monitor Ecken konnten nicht gefunden werden";});
+      setState(() {
+        infoText = "Monitor Ecken konnten nicht gefunden werden";
+      });
       return;
     }
     final tableImages = separateTables(monitorContentImage);
     if (tableImages == null) {
-      setState(() {infoText = "Tabellen konnten nicht speariert werden";});
+      setState(() {
+        infoText = "Tabellen konnten nicht speariert werden";
+      });
       return;
     }
     // Import data from table
-    final coursesSubstitutions = await getCoursesSubstitutionsFromTable(tableImages.item1, textDetector);
-    if (coursesSubstitutions == null) {
-      setState(() => infoText = "Tabellen daten konnten nicht extrahiert werden");
-      return;
+    bool didParseSomething = false;
+    for (final tableImage in tableImages.toList()) {
+      final coursesSubstitutionsResult = await getCoursesSubstitutionsFromTable(tableImage as img.Image, textDetector);
+      if (coursesSubstitutionsResult == null) {
+        continue;
+      }
+      log(coursesSubstitutionsResult.toString(), name: "subst-import");
+      didParseSomething = true;
+      // Check if substitutions of parsed image are contained in the current week
+      final coursesSubstitutions = coursesSubstitutionsResult.item2;
+      final substitutionApplyDate = coursesSubstitutionsResult.item1;
+      final tableWeekDay = substitutionApplyDate.weekday;
+      final tableWeekStartDate = substitutionApplyDate.subtract(Duration(days: tableWeekDay-1));
+      if (DateTime.now().difference(tableWeekStartDate).inDays > 7) {
+        continue;
+      }
+      // Add new substitutions to weekSubstitutions
+      for (final className in coursesSubstitutions.keys) {
+        if (widget.sharedState.profileManager.schoolClassFullName != className) continue; // Skip all classes that are not the users class
+        final dayClassSubstitutions = coursesSubstitutions[className]!;
+        final currentDaySubstitutions = widget.sharedState.weekSubstitutions.weekSubstitutions?.putIfAbsent(
+            tableWeekDay.toString(),
+            () => Tuple2([], substitutionApplyDate.toString())
+        ).item1.toSet();
+        currentDaySubstitutions!.addAll(dayClassSubstitutions);
+        widget.sharedState.weekSubstitutions.weekSubstitutions![tableWeekDay.toString()] = Tuple2(currentDaySubstitutions.toList(), substitutionApplyDate.toString());
+      }
+      // Write data from table weekSubstitutions day to content
+      writeSubstitutionPlan(
+          widget.sharedState.weekSubstitutions.weekSubstitutions![tableWeekDay.toString()]!.item1,
+          tableWeekDay,
+          widget.sharedState.content,
+          widget.sharedState.profileManager.subjects
+      );
+      setState(() {
+        displayImage(tableImage);
+        infoText = coursesSubstitutions.toString();
+      });
     }
-    log(coursesSubstitutions.toString(), name: "subst-import");
-    setState(() => infoText = coursesSubstitutions.toString());
-    imageWidget = Image.file(imageFile);
+    if (!didParseSomething) {
+      setState(() => infoText = "Tabellen daten konnten nicht extrahiert werden");
+    }
   }
 
   @override

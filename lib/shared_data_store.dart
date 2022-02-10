@@ -3,12 +3,31 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter_nearby_connections/flutter_nearby_connections.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tuple/tuple.dart';
 
 class SharedDataStore {
   NearbyService nearbyService = NearbyService();
   Map<String, Tuple2<DateTime, dynamic>> data = {};
   bool running = false;
+  SharedPreferences preferences;
+
+  SharedDataStore(this.preferences);
+
+  void loadFromJson(dynamic json) {
+    for (final property in (json as Map<String, dynamic>).entries) {
+      final valueList = property.value as List;
+      data[property.key] = Tuple2(DateTime.parse(valueList[0] as String), valueList[1]);
+    }
+  }
+
+  Map<String, List<dynamic>> getJsonData() {
+    final Map<String, List<dynamic>> jsonData = {};
+    for (final property in data.entries) {
+      jsonData[property.key] = [property.value.item1.toIso8601String(), property.value.item2];
+    }
+    return jsonData;
+  }
 
   Future<void> stop() async {
     if (!running) return;
@@ -18,6 +37,7 @@ class SharedDataStore {
 
   void setProperty(String propertyName, dynamic value) {
     data[propertyName] = Tuple2(DateTime.now(), value);
+    preferences.setString("sharedDataStoreData", jsonEncode(getJsonData()));
   }
 
   dynamic getProperty(String propertyName) {

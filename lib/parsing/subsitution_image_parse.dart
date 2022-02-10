@@ -122,7 +122,7 @@ List<Tuple2<int, int>> flipPointsHorizontally(Iterable<Tuple2<int, int>> points,
   return newPoints;
 }
 
-Future<img.Image?> warpToCorners(
+Future<Tuple2<img.Image, List<Tuple2<int, int>>>?> warpToCorners(
     Tuple2<int, int> start,
     img.Image grayscaleImage,
     img.Image image, {
@@ -179,7 +179,7 @@ Future<img.Image?> warpToCorners(
       sourcePoints: [topLeft.item1 * shrinkFactor, topLeft.item2 * shrinkFactor, topRight.item1 * shrinkFactor, topRight.item2 * shrinkFactor, bottomLeft.item1 * shrinkFactor, bottomLeft.item2 * shrinkFactor, bottomRight.item1 * shrinkFactor, bottomRight.item2 * shrinkFactor],
       destinationPoints: [0, 0, width, 0, 0, height, width, height],
       outputSize: [width.toDouble(), height.toDouble()]) as Uint8List;
-  return img.decodeImage(warpedImageBytes.toList());
+  return Tuple2(img.decodeImage(warpedImageBytes.toList())!, [topLeft, topRight, bottomLeft, bottomRight]);
 }
 
 Future<img.Image?> warpWithMonitorCorners(img.Image image) async {
@@ -192,7 +192,7 @@ Future<img.Image?> warpWithMonitorCorners(img.Image image) async {
   final grayscaleImage = img.grayscale(resizedImage.clone());
   final List<Tuple2<int, Tuple2<int, int>>> brightest = findBrightestPixels(grayscaleImage);
   // Trace contours starting at brightest pixel (should be somewhere in the monitor background, since the monitor background color is white) then going down
-  return warpToCorners(brightest[0].item2, grayscaleImage, image, shrinkFactor: shrinkFactor);
+  return (await warpToCorners(brightest[0].item2, grayscaleImage, image, shrinkFactor: shrinkFactor))?.item1;
 }
 
 Tuple2<img.Image, img.Image>? separateTables(img.Image image) {
@@ -225,20 +225,8 @@ Tuple2<img.Image, img.Image>? separateTables(img.Image image) {
   return Tuple2(leftTable, rightTable);
 }
 
-Future<SplayTreeMap<Tuple2<int, int>, String>?> getCellsText(img.Image image, TextDetectorV2 textDetector) async {
-  var grayscaleImage = img.grayscale(image.clone());
-  // Warp to corners of table. Starting at bottom then going up to find contours
-  final tableWarpedImage = await warpToCorners(
-      Tuple2((image.width / 2).round(), image.height-1),
-      grayscaleImage,
-      image,
-      minPointsLength: 10000,
-      searchYDirection: -1,
-      contourWindowSize: 3,
-      contourMinChange: 19
-  );
-  if (tableWarpedImage == null) return null;
-  grayscaleImage = img.grayscale(tableWarpedImage.clone());
+Future<SplayTreeMap<Tuple2<int, int>, String>?> getCellsText(img.Image tableWarpedImage, TextDetectorV2 textDetector) async {
+  final grayscaleImage = img.grayscale(tableWarpedImage.clone());
   final whiteBalance = grayscaleImage.getWhiteBalance();
 
   final rowSeparators = [];
@@ -327,8 +315,35 @@ Future<SplayTreeMap<Tuple2<int, int>, String>?> getCellsText(img.Image image, Te
   return cellsText;
 }
 
-Future<Map<String, Map<String, String>>?> getCoursesSubstitutionsFromTable(img.Image image, TextDetectorV2 textDetector) async {
-  final cellsText = await getCellsText(image, textDetector);
+Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubstitutionsFromTable(img.Image image, TextDetectorV2 textDetector) async {
+  // Warp to corners of table. Starting at bottom then going up to find contours
+  final grayscaleImage = img.grayscale(image.clone());
+  final warpToCornersResult = await warpToCorners(
+      Tuple2((image.width / 2).round(), image.height-1),
+      grayscaleImage,
+      image,
+      minPointsLength: 10000,
+      searchYDirection: -1,
+      contourWindowSize: 3,
+      contourMinChange: 19
+  );
+  if (warpToCornersResult == null) return null;
+  // Get image cropped to be above the table and get the text of it
+  final tableYTop = ((warpToCornersResult.item2[0].item2 + warpToCornersResult.item2[1].item2) / 2).ceil();
+  final aboveTableImage = img.copyCrop(image, 0, 0, image.width, tableYTop);
+  final aboveTableText = (await detectText(aboveTableImage, textDetector)).text;
+  // Extract datetime and page information
+  final regexp = RegExp(r"^\s*(?<day>\d{1,2}).(?<month>\d{1,2}).(?<year>\d{4}) [a-zA-Z]{3,}\s+(\(Seite (?<page>\d)/(?<totalPages>\d)\)){0,1}", multiLine: true);
+  final matches = regexp.allMatches(aboveTableText);
+  if (matches.isEmpty) return null;
+  final substitutionApplyDate = DateTime(
+    int.parse(matches.single.namedGroup("year")!),
+    int.parse(matches.single.namedGroup("month")!),
+    int.parse(matches.single.namedGroup("day")!),
+  );
+  final tableWarpedImage = warpToCornersResult.item1;
+  // Get contents of each cell from the table image
+  final cellsText = await getCellsText(tableWarpedImage, textDetector);
   if (cellsText == null) return null;
   // Find header indices
   final Map<String, int?> headerColumnIndices = {
@@ -379,16 +394,24 @@ Future<Map<String, Map<String, String>>?> getCoursesSubstitutionsFromTable(img.I
     lastColumn = cellPos.item2;
   }
   // Convert substitution list to substitutions per course
-  final coursesSubstitutions = <String, Map<String, String>>{};
+  final coursesSubstitutions = <String, List<Map<String, String>>>{};
   for (final substitution in substitutions) {
     if (!substitution.containsKey("Klassen")) continue; // TODO: Try to restore course name, if present substitution data matches data from the timetable
     final className = substitution["Klassen"]!;
     substitution.remove("Klassen");
-    coursesSubstitutions[className] = substitution;
-    // If a substitution has no substitute or change, but still exsists it can be assumed that the "X" in the drop out coulumn was not detected even when it should
+    if (substitution["Stunde"]!.isEmpty) continue;
+    coursesSubstitutions.putIfAbsent(className, () => []);
+    coursesSubstitutions[className]?.add(substitution);
+    // If a substitution has no substitute or change, but still exists it can be assumed that the "X" in the drop out column was not detected even when it should
     if (substitution["Fach"]!.isEmpty && substitution["Vertretung"]!.isEmpty && substitution["Raum"]!.isEmpty && headerColumnIndices["Entf."] != null) {
       substitution["Entfall"] = "X";
     }
+    // Replace empty fields with the non breaking space character. Because the website does exactly this (for some reason) and things should be at least kept constant.
+    for (final substitutionDataEntry in substitution.entries) {
+      if (substitutionDataEntry.value.isEmpty) {
+        substitution[substitutionDataEntry.key] = "\u{00A0}";
+      }
+    }
   }
-  return coursesSubstitutions;
+  return Tuple2(substitutionApplyDate, coursesSubstitutions);
 }

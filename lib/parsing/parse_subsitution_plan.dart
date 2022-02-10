@@ -61,7 +61,7 @@ void writeSubstitutionPlan(List<Map<String, dynamic>> plan, int weekDay,
     cell.room = customStrip(plan[i]["Raum"] as String);
     cell.originalRoom = customStrip(plan[i]["statt Raum"] as String);
     cell.text = plan[i]["Text"] as String;
-    cell.isDropped = customStrip(plan[i]["Entfall"] as String) == "x";
+    cell.isDropped = customStrip(plan[i]["Entfall"] as String).toLowerCase() == "x";
 
     // Sometimes a substitution is set, but there is no data set which means that it is dropped.
     if (cell.originalSubject == "\u{00A0}" && cell.subject == "\u{00A0}" && cell.room == "\u{00A0}" && cell.teacher == "\u{00A0}") {
