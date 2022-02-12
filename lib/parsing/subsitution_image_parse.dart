@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:opencv/opencv.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:stundenplan/content.dart';
 import 'package:tuple/tuple.dart';
 import 'package:image/image.dart' as img;
 import 'package:google_ml_kit/google_ml_kit.dart';
@@ -309,13 +310,13 @@ Future<SplayTreeMap<Tuple2<int, int>, String>?> getCellsText(img.Image tableWarp
       }
       log("Cell $row-$column contains: $text", name: "subst-import");
       final rowColumnPosition = Tuple2(rowSeparators.length-1 - row, column);
-      cellsText[rowColumnPosition] = text.isEmpty ? "" : text;
+      cellsText[rowColumnPosition] = text.isEmpty ? "" : text.replaceAll("|", "");
     }
   }
   return cellsText;
 }
 
-Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubstitutionsFromTable(img.Image image, TextDetectorV2 textDetector) async {
+Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubstitutionsFromTable(img.Image image, TextDetectorV2 textDetector, Content content, String fullClassName) async {
   // Warp to corners of table. Starting at bottom then going up to find contours
   final grayscaleImage = img.grayscale(image.clone());
   final warpToCornersResult = await warpToCorners(
@@ -396,7 +397,8 @@ Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubs
   // Convert substitution list to substitutions per course
   final coursesSubstitutions = <String, List<Map<String, String>>>{};
   for (final substitution in substitutions) {
-    if (!substitution.containsKey("Klassen")) continue; // TODO: Try to restore course name, if present substitution data matches data from the timetable
+    correctSubstitution(substitution, content, fullClassName);
+    if (!substitution.containsKey("Klassen")) continue;
     final className = substitution["Klassen"]!;
     substitution.remove("Klassen");
     if (substitution["Stunde"]!.isEmpty) continue;
@@ -414,4 +416,75 @@ Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubs
     }
   }
   return Tuple2(substitutionApplyDate, coursesSubstitutions);
+}
+
+void correctSubstitution(Map<String, String> substitution, Content content, String fullClassName) {
+  // Look for properties in the substitution that are definitely right because they already exists in the current time table
+  final allSubjectsTeachersAndRooms = <Tuple3<String, String, String>>{};
+  final okProperties = <String>{};
+  for (int y = 0; y < content.cells.length; y++) {
+    final column = content.cells[y];
+    for (int y = 0; y < column.length; y++) {
+      final item = column[y];
+      final subjectsTeachersAndRooms = <Tuple3<String, String, String>>{};
+      subjectsTeachersAndRooms.add(Tuple3(item.subject, item.teacher, item.room));
+      if (item.footnotes != null) {
+        subjectsTeachersAndRooms.addAll(item.footnotes!.map((f) => Tuple3(f.subject, f.teacher, f.room)));
+      }
+      for (final subjectsTeachersAndRoom in subjectsTeachersAndRooms) {
+        if (subjectsTeachersAndRoom.item1 == substitution["Fach"]) okProperties.add("Fach");
+        if (subjectsTeachersAndRoom.item1 == substitution["statt Fach"]) okProperties.add("statt Fach");
+        if (subjectsTeachersAndRoom.item2 == substitution["Vertretung"]) okProperties.add("Vertretung");
+        if (subjectsTeachersAndRoom.item2 == substitution["statt Lehrer"]) okProperties.add("statt Lehrer");
+        if (subjectsTeachersAndRoom.item3 == substitution["Raum"]) okProperties.add("Raum");
+        if (subjectsTeachersAndRoom.item3 == substitution["statt Raum"]) okProperties.add("statt Raum");
+      }
+      allSubjectsTeachersAndRooms.addAll(subjectsTeachersAndRooms);
+    }
+  }
+  final beforeHashCode = substitution.hashCode;
+  // Try to fix properties which could be incorrect
+  for (final property in substitution.entries) {
+    final ignoreProperties = ["Stunde", "Text", "Entfall", "Klassen"];
+    ignoreProperties.addAll(okProperties);
+    if (ignoreProperties.contains(property.key)) continue;
+    final int matchType;
+    if (["Fach", "statt Fach"].contains(property.key)) matchType = 0;
+    else if (["Vertretung", "statt Lehrer"].contains(property.key)) matchType = 1;
+    else if (["Raum", "statt Raum"].contains(property.key)) matchType = 2;
+    else continue;
+    final propertyValue = property.value.toLowerCase();
+    // Try replacing each character of the property until it matches one in the current timetable
+    // TODO: Replace more then one char per index (max 3, since O(n!) is really bad)
+    // TODO: Extra Room property correction (Rooms always match ^[A-Z]\d.\d{2}$)
+    final replacements = [Tuple2("o", "0"), Tuple2("0", "o"), Tuple2("i", "1"), Tuple2("1", "i"), Tuple2("l", "1"), Tuple2("1", "l")];
+    for (final allSubjectsTeachersAndRoom in allSubjectsTeachersAndRooms) {
+      final matchValue = allSubjectsTeachersAndRoom.toList()[matchType]! as String;
+      for (var replaceCharIndex = 0; replaceCharIndex < propertyValue.length; replaceCharIndex++) {
+        for (final replacement in replacements) {
+          final from = replacement.item1;
+          final to = replacement.item2;
+          var testValue = "";
+          for (var charIndex = 0; charIndex < propertyValue.length; charIndex++) {
+            if (propertyValue[charIndex] == from && charIndex == replaceCharIndex) {
+              testValue += to;
+            } else {
+              testValue += propertyValue[charIndex];
+            }
+          }
+          if (matchValue.toLowerCase() == testValue) {
+            substitution[property.key] = matchValue;
+            okProperties.add(property.key);
+          }
+        }
+      }
+    }
+  }
+  // If the class is not set, but the subject, room and teacher are contained in the current users timetable, it can be assumed that the class is the same as the current users class
+  if (!substitution.containsKey("Klassen") && okProperties.contains("statt Fach") && okProperties.contains("statt Lehrer") && okProperties.contains("statt Raum")) {
+    substitution["Klassen"] = fullClassName;
+  }
+  if (beforeHashCode != substitution.hashCode) {
+    log("Fixed: $okProperties $substitution", name: "subst-correct");
+  }
 }

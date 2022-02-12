@@ -117,7 +117,12 @@ class _ImportSubstitutionPageState extends State<ImportSubstitutionPage> {
     // Import data from table
     bool didParseSomething = false;
     for (final tableImage in tableImages.toList()) {
-      final coursesSubstitutionsResult = await getCoursesSubstitutionsFromTable(tableImage as img.Image, textDetector);
+      final coursesSubstitutionsResult = await getCoursesSubstitutionsFromTable(
+          tableImage as img.Image,
+          textDetector,
+          widget.sharedState.content,
+          widget.sharedState.profileManager.schoolClassFullName
+      );
       if (coursesSubstitutionsResult == null) {
         continue;
       }
