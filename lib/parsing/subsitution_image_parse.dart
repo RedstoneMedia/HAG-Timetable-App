@@ -69,22 +69,28 @@ int getMaxNeighborDifference(int color, Tuple2<int, int> position, img.Image ima
   return maxDifference;
 }
 
-// Find the positions and value of the brightest pixels
-List<Tuple2<int, Tuple2<int, int>>> findBrightestPixels(img.Image image) {
-  final List<Tuple2<int, Tuple2<int, int>>> brightest = [];
-  for (int x = 0; x < image.width; x++) {
-    for (int y = 0; y < image.height; y++) {
-      final value = image.getPixel(x, y);
-      final currentBrightestValue = brightest.isNotEmpty ? brightest[0].item1 : 0;
-      if (value > currentBrightestValue) {
-        brightest.clear();
-        brightest.add(Tuple2(value, Tuple2(x, y)));
-      } else if (value == currentBrightestValue) {
-        brightest.add(Tuple2(value, Tuple2(x, y)));
+Tuple2<int, Tuple2<int, int>> findLargestWhiteStripPosition(img.Image image) {
+  final whiteBalance = image.getWhiteBalance();
+  var maxWhiteCount = 0;
+  var maxWhiteCountY = 0;
+  var maxWhiteCountXPositions = <Tuple2<int, int>>[];
+  for (int y = image.height-1; y > 0; y--) {
+    var whiteCount = 0;
+    for (int x = 0; x < image.width; x++) {
+      final value = img.getRed(image.getPixel(x, y));
+      if (value > whiteBalance) {
+        whiteCount += 1;
+        maxWhiteCountXPositions.add(Tuple2(x, value));
       }
     }
+    if (whiteCount > maxWhiteCount) {
+      maxWhiteCount = whiteCount;
+      maxWhiteCountY = y;
+      maxWhiteCountXPositions = [];
+    }
   }
-  return brightest;
+  final whiteMiddle = maxWhiteCountXPositions[(maxWhiteCountXPositions.length / 2).round()];
+  return Tuple2(whiteMiddle.item2, Tuple2(whiteMiddle.item1, maxWhiteCountY));
 }
 
 void drawSquareOnTop(Tuple2<int, int> pos, int color, img.Image image, int size) {
@@ -132,7 +138,8 @@ Future<Tuple2<img.Image, List<Tuple2<int, int>>>?> warpToCorners(
       int searchYDirection = 1,
       int contourWindowSize = 5,
       int contourMinChange = 45,
-      int cleanupMinNeighborCount = 5
+      int cleanupMinNeighborCount = 5,
+      void Function(img.Image)? displayImage
     }
     ) async {
   Set<Tuple2<int, int>> pointsSet = {};
@@ -191,9 +198,9 @@ Future<img.Image?> warpWithMonitorCorners(img.Image image) async {
       interpolation: img.Interpolation.average
   );
   final grayscaleImage = img.grayscale(resizedImage.clone());
-  final List<Tuple2<int, Tuple2<int, int>>> brightest = findBrightestPixels(grayscaleImage);
-  // Trace contours starting at brightest pixel (should be somewhere in the monitor background, since the monitor background color is white) then going down
-  return (await warpToCorners(brightest[0].item2, grayscaleImage, image, shrinkFactor: shrinkFactor))?.item1;
+  final Tuple2<int, int> startPosition = findLargestWhiteStripPosition(grayscaleImage).item2;
+  // Trace contours starting at largest white strip position (should be somewhere in the monitor background, since the monitor background color is white) then going down
+  return (await warpToCorners(startPosition, grayscaleImage, image, shrinkFactor: shrinkFactor))?.item1;
 }
 
 Tuple2<img.Image, img.Image>? separateTables(img.Image image) {
@@ -316,7 +323,7 @@ Future<SplayTreeMap<Tuple2<int, int>, String>?> getCellsText(img.Image tableWarp
   return cellsText;
 }
 
-Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubstitutionsFromTable(img.Image image, TextDetectorV2 textDetector, Content content, String fullClassName) async {
+Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubstitutionsFromTable(img.Image image, TextDetectorV2 textDetector, Content content, String fullClassName, void Function(img.Image) displayImage) async {
   // Warp to corners of table. Starting at bottom then going up to find contours
   final grayscaleImage = img.grayscale(image.clone());
   final warpToCornersResult = await warpToCorners(
@@ -326,15 +333,17 @@ Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubs
       minPointsLength: 10000,
       searchYDirection: -1,
       contourWindowSize: 3,
-      contourMinChange: 19
+      contourMinChange: 19,
+      displayImage: displayImage
   );
   if (warpToCornersResult == null) return null;
+  displayImage(warpToCornersResult.item1);
   // Get image cropped to be above the table and get the text of it
   final tableYTop = ((warpToCornersResult.item2[0].item2 + warpToCornersResult.item2[1].item2) / 2).ceil();
   final aboveTableImage = img.copyCrop(image, 0, 0, image.width, tableYTop);
-  final aboveTableText = (await detectText(aboveTableImage, textDetector)).text;
+  final aboveTableText = (await detectText(aboveTableImage, textDetector)).text.replaceAll("|", "/");
   // Extract datetime and page information
-  final regexp = RegExp(r"^\s*(?<day>\d{1,2}).(?<month>\d{1,2}).(?<year>\d{4}) [a-zA-Z]{3,}\s+(\(Seite (?<page>\d)/(?<totalPages>\d)\)){0,1}", multiLine: true);
+  final regexp = RegExp(r"^\s*(?<day>\d{1,2}).(?<month>\d{1,2}).(?<year>\d{4}) [a-zA-Z]{3,}\s*(\(Seite (?<page>\d)/(?<totalPages>\d)\)){0,1}", multiLine: true);
   final matches = regexp.allMatches(aboveTableText);
   if (matches.isEmpty) return null;
   final substitutionApplyDate = DateTime(
