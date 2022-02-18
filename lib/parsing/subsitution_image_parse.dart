@@ -3,9 +3,15 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:opencv/opencv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:stundenplan/content.dart';
+import 'package:stundenplan/parsing/parse_subsitution_plan.dart';
+import 'package:stundenplan/shared_state.dart';
+import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 import 'package:tuple/tuple.dart';
 import 'package:image/image.dart' as img;
 import 'package:google_ml_kit/google_ml_kit.dart';
@@ -340,7 +346,11 @@ Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubs
   displayImage(warpToCornersResult.item1);
   // Get image cropped to be above the table and get the text of it
   final tableYTop = ((warpToCornersResult.item2[0].item2 + warpToCornersResult.item2[1].item2) / 2).ceil();
-  final aboveTableImage = img.copyCrop(image, 0, 0, image.width, tableYTop);
+  img.Image aboveTableImage = img.copyCrop(image, 0, 0, image.width, tableYTop);
+  if (aboveTableImage.height < 32) {
+    final resizeFactor = (32 / aboveTableImage.height).ceil();
+    aboveTableImage = img.copyResize(aboveTableImage, width: aboveTableImage.width*resizeFactor, height: aboveTableImage.height*resizeFactor);
+  }
   final aboveTableText = (await detectText(aboveTableImage, textDetector)).text.replaceAll("|", "/");
   // Extract datetime and page information
   final regexp = RegExp(r"^\s*(?<day>\d{1,2}).(?<month>\d{1,2}).(?<year>\d{4}) [a-zA-Z]{3,}\s*(\(Seite (?<page>\d)/(?<totalPages>\d)\)){0,1}", multiLine: true);
@@ -496,4 +506,130 @@ void correctSubstitution(Map<String, String> substitution, Content content, Stri
   if (beforeHashCode != substitution.hashCode) {
     log("Fixed: $okProperties $substitution", name: "subst-correct");
   }
+}
+
+enum SubstitutionImageImportResult {
+  allOk,
+  badImage,
+  noMonitorCorners,
+  badTableSeparation,
+  badTable,
+  badTables,
+  toOld
+}
+
+class SubstitutionImageImporter {
+  final SharedState sharedState;
+  late Interpreter classificationModel;
+  final textDetector = GoogleMlKit.vision.textDetectorV2();
+  final ImagePicker picker = ImagePicker();
+
+  SubstitutionImageImporter(this.sharedState) {
+    Interpreter.fromAsset('models/subst_classification_model.tflite').then((interpreter) => classificationModel = interpreter);
+  }
+
+  Future<bool> isGoodImage(File imageFile) async {
+    // Load and scale image
+    final image = img.decodeImage(await imageFile.readAsBytes())!;
+    final imageProcessor = ImageProcessorBuilder()
+        .add(ResizeOp(224, 224, ResizeMethod.NEAREST_NEIGHBOUR))
+        .add(NormalizeOp(127.5, 127.5))
+        .build();
+    TensorImage tensorImage = TensorImage(classificationModel.getInputTensor(0).type);
+    tensorImage.loadImage(image);
+    tensorImage = imageProcessor.process(tensorImage);
+    // Run model on processed image
+    final outputBuffer = TensorBuffer.createFixedSize(classificationModel.getOutputTensor(0).shape, classificationModel.getInputTensor(0).type);
+    classificationModel.run(tensorImage.buffer, outputBuffer.getBuffer());
+    // Get probabilities from output
+    final probabilityProcessor = TensorProcessorBuilder().add(NormalizeOp(0, 1)).build();
+    final labels = ["Good", "Bad"];
+    final Map<String, double> labeledProbabilities = TensorLabel.fromList(
+        labels, probabilityProcessor.process(outputBuffer)
+    ).getMapWithFloatValue();
+    log("Is good image output: $labeledProbabilities", name: "subst-import");
+    // Evaluate result (Good or Bad)
+    if (labeledProbabilities["Good"]! >= 0.62) return true;
+    return false;
+  }
+
+  Future<SubstitutionImageImportResult> importSubstitutionPlan(void Function(img.Image) displayImage) async {
+    // Get image from camera
+    final XFile? imageXFile = await picker.pickImage(source: ImageSource.gallery);
+    if (imageXFile == null) return SubstitutionImageImportResult.badImage;
+    final imageFile = File(imageXFile.path);
+    // Check if image passes the classifier
+    if (!await isGoodImage(imageFile)) {
+      return SubstitutionImageImportResult.badImage;
+    }
+    // Extract monitor region and find tables in it
+    final img.Image image = img.decodeImage(await imageFile.readAsBytes())!;
+    final monitorContentImage = await warpWithMonitorCorners(image);
+    if (monitorContentImage == null) {
+      // Error: Could not find monitor corners
+      return SubstitutionImageImportResult.noMonitorCorners;
+    }
+    final tableImages = separateTables(monitorContentImage);
+    if (tableImages == null) {
+      // Error: Could not separate tables
+      return SubstitutionImageImportResult.badTableSeparation;
+    }
+    // Import data from table
+    int okTablesCount = 0;
+    for (final tableImage in tableImages.toList()) {
+      //displayImage(tableImage as img.Image);
+      final coursesSubstitutionsResult = await getCoursesSubstitutionsFromTable(
+          tableImage as img.Image,
+          textDetector,
+          sharedState.content,
+          sharedState.profileManager.schoolClassFullName,
+          displayImage
+      );
+      if (coursesSubstitutionsResult == null) {
+        continue;
+      }
+      log(coursesSubstitutionsResult.toString(), name: "subst-import");
+      // Check if substitutions of parsed image are contained in the current week
+      final coursesSubstitutions = coursesSubstitutionsResult.item2;
+      final substitutionApplyDate = coursesSubstitutionsResult.item1;
+      final tableWeekDay = substitutionApplyDate.weekday;
+      final tableWeekStartDate = substitutionApplyDate.subtract(Duration(days: tableWeekDay-1));
+      final currentWeekStartDate = DateTime.now().subtract(Duration(days: DateTime.now().weekday-1));
+      if (currentWeekStartDate.difference(tableWeekStartDate).inDays >= 7) {
+        return SubstitutionImageImportResult.toOld;
+      }
+      // Add new substitutions to weekSubstitutions
+      for (final className in coursesSubstitutions.keys) {
+        if (sharedState.profileManager.schoolClassFullName != className) continue; // Skip all classes that are not the users class
+        final dayClassSubstitutions = coursesSubstitutions[className]!;
+        final currentDaySubstitutions = sharedState.weekSubstitutions.weekSubstitutions?.putIfAbsent(
+            tableWeekDay.toString(),
+                () => Tuple2([], substitutionApplyDate.toString())
+        ).item1.toSet();
+        currentDaySubstitutions!.addAll(dayClassSubstitutions);
+        sharedState.weekSubstitutions.weekSubstitutions![tableWeekDay.toString()] = Tuple2(currentDaySubstitutions.toList(), substitutionApplyDate.toString());
+      }
+      // Write data from table weekSubstitutions day to content
+      if (!sharedState.weekSubstitutions.weekSubstitutions!.containsKey(tableWeekDay.toString())) continue;
+      writeSubstitutionPlan(
+          sharedState.weekSubstitutions.weekSubstitutions![tableWeekDay.toString()]!.item1,
+          tableWeekDay,
+          sharedState.content,
+          sharedState.profileManager.subjects
+      );
+      okTablesCount++;
+    }
+    if (okTablesCount > 0) sharedState.saveCache();
+    if (okTablesCount == 0) {
+      return SubstitutionImageImportResult.badTables;
+    } else if (okTablesCount == 1) {
+      return SubstitutionImageImportResult.badTable;
+    }
+    return SubstitutionImageImportResult.allOk;
+  }
+}
+
+Image getImageWidgetFromImage(img.Image image) {
+  final encodedImage = Uint8List.fromList(img.encodeJpg(image, quality: 30));
+  return Image.memory(encodedImage, filterQuality: FilterQuality.none);
 }

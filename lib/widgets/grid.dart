@@ -1,10 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
 import 'package:stundenplan/calendar_data.dart';
 import 'package:stundenplan/shared_state.dart';
+import 'package:stundenplan/widgets/bottom_overlay.dart';
 import 'package:stundenplan/widgets/calender_info_diaglog.dart';
 import 'info_dialog.dart';
 
@@ -234,14 +234,28 @@ class ClassGridObject extends StatelessWidget {
 }
 
 class PlaceholderGridObject extends StatelessWidget {
+  final SharedState sharedState;
+
+  const PlaceholderGridObject(this.sharedState);
+
+  Future<void> importSubstitutionPlan(BuildContext context) async {
+    BottomOverlay<SubstitutionScanningOverlayState>(sharedState: sharedState, state: SubstitutionScanningOverlayState(), context: context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Text(
-        "99:99",
-        style: GoogleFonts.poppins(color: Colors.transparent),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 11.0),
+      child: IconButton(
+          onPressed: () async {
+            await importSubstitutionPlan(context);
+          },
+          iconSize: 15,
+          splashRadius: 20,
+          constraints: const BoxConstraints(maxHeight: 30),
+          color: sharedState.theme.textColor,
+          icon: const Icon(Icons.document_scanner_outlined)
+      )
     );
   }
 }

@@ -23,7 +23,7 @@ class TimeTable extends StatelessWidget {
               for (int x = 0; x < Constants.width; x++)
                 if (x == 0)
                   if (y == 0)
-                    PlaceholderGridObject()
+                    PlaceholderGridObject(sharedState)
                   else
                     TimeGridObject(y, sharedState)
                 else if (y == 0)

@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/main.dart';
 import 'package:stundenplan/pages/calendar_settings_page.dart';
-import 'package:stundenplan/pages/import_subsitutions_page.dart';
 import 'package:stundenplan/pages/intro/class_selection.dart';
 import 'package:stundenplan/pages/iserv_login_settings_page.dart';
 import 'package:stundenplan/shared_state.dart';
@@ -666,16 +665,6 @@ class _SetupPageState extends State<SetupPage> {
                               fontWeight: FontWeight.normal),
                         ),
                       ),
-                    ),
-                    StandardButton(
-                      text: "Open substitution import page",
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => ImportSubstitutionPage(widget.sharedState)));
-                      },
-                      sharedState: sharedState,
-                      color: sharedState.theme.subjectDropOutColor,
-                      fontSize: 9.0,
-                      size: 0.8,
                     )
                   ],
                 ) else
