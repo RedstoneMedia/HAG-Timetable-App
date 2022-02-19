@@ -1,8 +1,10 @@
 import 'dart:collection';
 import 'dart:developer';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:opencv/opencv.dart';
@@ -437,6 +439,28 @@ Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubs
   return Tuple2(substitutionApplyDate, coursesSubstitutions);
 }
 
+int scorePropertyCorrectOption(String value, String matchValue) {
+  if (value.length != matchValue.length) return 0;
+  int score = 0;
+  final replacements = [Tuple2("O", "0"), Tuple2("0", "O"), Tuple2("I", "1"), Tuple2("1", "I"), Tuple2("l", "1"), Tuple2("1", "l")];
+  for (int i = 0; i < value.length; i++) {
+    final char = value[i];
+    final matchChar = matchValue[i];
+    if (char == matchChar) {score += 4; continue;}
+    if (char.toLowerCase() == matchChar.toLowerCase()) {score += 3; continue;}
+    if (replacements.where((r) => char == r.item1 && r.item2 == matchChar).isNotEmpty) {
+      score += 2;
+      continue;
+    }
+    if (replacements.where((r) => char.toLowerCase() == r.item1.toLowerCase() && r.item2.toLowerCase() == matchChar.toLowerCase()).isNotEmpty) {
+      score += 1;
+      continue;
+    }
+    return -1;
+  }
+  return score;
+}
+
 void correctSubstitution(Map<String, String> substitution, Content content, String fullClassName) {
   // Look for properties in the substitution that are definitely right because they already exists in the current time table
   final allSubjectsTeachersAndRooms = <Tuple3<String, String, String>>{};
@@ -472,31 +496,20 @@ void correctSubstitution(Map<String, String> substitution, Content content, Stri
     else if (["Vertretung", "statt Lehrer"].contains(property.key)) matchType = 1;
     else if (["Raum", "statt Raum"].contains(property.key)) matchType = 2;
     else continue;
-    final propertyValue = property.value.toLowerCase();
-    // Try replacing each character of the property until it matches one in the current timetable
-    // TODO: Replace more then one char per index (max 3, since O(n!) is really bad)
+    final propertyValue = property.value;
+    // Score values in the current timetable which match the propertyValue the closest
     // TODO: Extra Room property correction (Rooms always match ^[A-Z]\d.\d{2}$)
-    final replacements = [Tuple2("o", "0"), Tuple2("0", "o"), Tuple2("i", "1"), Tuple2("1", "i"), Tuple2("l", "1"), Tuple2("1", "l")];
+    final scoredOptions = <Tuple2<int, String>>[];
     for (final allSubjectsTeachersAndRoom in allSubjectsTeachersAndRooms) {
       final matchValue = allSubjectsTeachersAndRoom.toList()[matchType]! as String;
-      for (var replaceCharIndex = 0; replaceCharIndex < propertyValue.length; replaceCharIndex++) {
-        for (final replacement in replacements) {
-          final from = replacement.item1;
-          final to = replacement.item2;
-          var testValue = "";
-          for (var charIndex = 0; charIndex < propertyValue.length; charIndex++) {
-            if (propertyValue[charIndex] == from && charIndex == replaceCharIndex) {
-              testValue += to;
-            } else {
-              testValue += propertyValue[charIndex];
-            }
-          }
-          if (matchValue.toLowerCase() == testValue) {
-            substitution[property.key] = matchValue;
-            okProperties.add(property.key);
-          }
-        }
-      }
+      scoredOptions.add(Tuple2(scorePropertyCorrectOption(propertyValue, matchValue), matchValue));
+    }
+    // Set closest match to the propertyValue
+    scoredOptions.sort((a, b) => b.item1.compareTo(a.item1));
+    final bestMatch = scoredOptions.first;
+    if (bestMatch.item1 > (math.max(propertyValue.length-2, 1))*4 + 1) {
+      substitution[property.key] = bestMatch.item2;
+      okProperties.add(property.key);
     }
   }
   // If the class is not set, but the subject, room and teacher are contained in the current users timetable, it can be assumed that the class is the same as the current users class
@@ -555,7 +568,7 @@ class SubstitutionImageImporter {
 
   Future<SubstitutionImageImportResult> importSubstitutionPlan(void Function(img.Image) displayImage) async {
     // Get image from camera
-    final XFile? imageXFile = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? imageXFile = await picker.pickImage(source: kDebugMode ? ImageSource.gallery : ImageSource.camera);
     if (imageXFile == null) return SubstitutionImageImportResult.badImage;
     final imageFile = File(imageXFile.path);
     // Check if image passes the classifier
