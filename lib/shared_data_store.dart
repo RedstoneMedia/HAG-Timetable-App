@@ -2,30 +2,88 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter_nearby_connections/flutter_nearby_connections.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tuple/tuple.dart';
+
+
+class SharedValue {
+  DateTime timestamp;
+  dynamic data;
+  Map<String, dynamic> raw;
+  SharedValue(this.timestamp, this.raw, this.data);
+
+  static Future<SharedValue> fromRaw(Map<String, dynamic> raw, KeyPair keyPair) async {
+    final rawData = await _getDataFromRaw(raw);
+    final signedRaw = await _signMessage(jsonEncode(raw), keyPair);
+    return SharedValue(DateTime.parse(rawData["timestamp"] as String), signedRaw, rawData["data"]);
+  }
+
+  static Future<Map<String, dynamic>> _getDataFromRaw(Map<String, dynamic> raw) async {
+    // Verify message
+    final signatureRaw = raw["signature"]! as Map<String, String>;
+    final signatureBytes = base64Decode(signatureRaw["bytes"]!);
+    final signaturePublicKey = SimplePublicKey(base64Decode(signatureRaw["publicKey"]!), type: KeyPairType.ed25519);
+    final signature = Signature(signatureBytes, publicKey: signaturePublicKey);
+    final message = raw["message"] as String;
+    final algorithm = Ed25519();
+    if (!await algorithm.verify(message.codeUnits, signature: signature)) {
+      throw Exception("$signature does not match message");
+    }
+    // Traverse deeper, if required
+    final messageJson = jsonDecode(message) as Map<String, dynamic>;
+    if (messageJson.containsKey("message")) {
+      return _getDataFromRaw(jsonDecode(messageJson["message"] as String) as Map<String, dynamic>);
+    }
+    return messageJson;
+  }
+
+  static Future<Map<String, dynamic>> _signMessage(String message, KeyPair keyPair) async {
+    final algorithm = Ed25519();
+    final signature = await algorithm.sign(message.codeUnits, keyPair: keyPair);
+    final signatureRaw = {"bytes" : base64Encode(signature.bytes), "publicKey" : base64Encode((signature.publicKey as SimplePublicKey).bytes)};
+    return {"signature": signatureRaw, "message" : message};
+  }
+
+  static Future<SharedValue> newSharedValue(DateTime timestamp, dynamic data, KeyPair keyPair) async {
+    final messageData = jsonEncode({"timestamp" : timestamp.toIso8601String(), "data" : data});
+    return SharedValue(timestamp, await _signMessage(messageData, keyPair), data);
+  }
+
+  static SharedValue fromJson(Map<String, dynamic> json) {
+    return SharedValue(DateTime.parse(json["timestamp"] as String), json["raw"] as Map<String, dynamic>, json["data"]);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {"timestamp" : timestamp.toIso8601String(), "raw" : raw, "data" : data};
+  }
+
+  @override
+  String toString() {
+    return "SharedValue($timestamp, $data raw: $raw)";
+  }
+}
 
 class SharedDataStore {
   final NearbyService nearbyService = NearbyService();
-  final Map<String, Tuple2<DateTime, dynamic>> data = {};
+  final Map<String, SharedValue> data = {};
   bool running = false;
   SharedPreferences preferences;
   final List<String> connectedDeviceIds = [];
+  KeyPair? keyPair;
 
   SharedDataStore(this.preferences);
 
   void loadFromJson(dynamic json) {
     for (final property in (json as Map<String, dynamic>).entries) {
-      final valueList = property.value as List;
-      data[property.key] = Tuple2(DateTime.parse(valueList[0] as String), valueList[1]);
+      data[property.key] = SharedValue.fromJson(property.value as Map<String, dynamic>);
     }
   }
 
-  Map<String, List<dynamic>> getJsonData() {
-    final Map<String, List<dynamic>> jsonData = {};
+  Map<String, dynamic> getJsonData() {
+    final Map<String, dynamic> jsonData = {};
     for (final property in data.entries) {
-      jsonData[property.key] = [property.value.item1.toIso8601String(), property.value.item2];
+      jsonData[property.key] = property.value.toJson();
     }
     return jsonData;
   }
@@ -36,13 +94,13 @@ class SharedDataStore {
     await nearbyService.stopBrowsingForPeers();
   }
 
-  void setProperty(String propertyName, dynamic value) {
-    data[propertyName] = Tuple2(DateTime.now(), value);
-    preferences.setString("sharedDataStoreData", jsonEncode(getJsonData()));
+  Future<void> setProperty(String propertyName, dynamic value) async {
+    data[propertyName] = await SharedValue.newSharedValue(DateTime.now(), value, keyPair!);
+    await preferences.setString("sharedDataStoreData", jsonEncode(getJsonData()));
   }
 
   dynamic getProperty(String propertyName) {
-    return data[propertyName]?.item2;
+    return data[propertyName]?.data;
   }
 
   Future<void> syncLoop() async {
@@ -50,7 +108,7 @@ class SharedDataStore {
         // Periodically broadcast all properties and their timestamp, so peers can request a value if they don't have that value, or have a older version
         final syncData = <String, String>{};
         for (final entry in data.entries) {
-          syncData[entry.key] = entry.value.item1.toIso8601String();
+          syncData[entry.key] = entry.value.timestamp.toIso8601String();
         }
         await broadcastMessage(jsonEncode({"type": "sync", "data": syncData}));
         await Future.delayed(const Duration(milliseconds: 500));
@@ -71,6 +129,7 @@ class SharedDataStore {
   Future<void> start() async {
     if (running) return;
     running = true;
+    keyPair ??= await Ed25519().newKeyPair(); // TODO: Don't create a new key pair every time. Instead only create a new one, if there isn't one in the secure storage already.
     await nearbyService.init(
         serviceType: "HAG-SDS",
         strategy: Strategy.P2P_CLUSTER,
@@ -111,7 +170,7 @@ class SharedDataStore {
           for (final entry in syncData.entries) {
             if (!data.containsKey(entry.key)) {
               newKeys.add(entry.key);
-            } else if (DateTime.parse(entry.value).isAfter(data[entry.key]!.item1)) {
+            } else if (DateTime.parse(entry.value).isAfter(data[entry.key]!.timestamp)) {
               newKeys.add(entry.key);
             }
           }
@@ -120,21 +179,27 @@ class SharedDataStore {
           }
           break;
         case "get":
-          final requestedKeys = messageData["keys"] as List<String>; // TODO: Only send requested keys and not everything
-          await nearbyService.sendMessage(fromDeviceId, jsonEncode({"type" : "data", "data": getJsonData()}));
+          final requestedKeys = messageData["keys"] as List<String>;
+          final responseData = <String, dynamic>{};
+          for (final requestedKey in requestedKeys) {
+            if (data.containsKey(requestedKey)) {
+              final value = data[requestedKey]!;
+              responseData[requestedKey] = jsonEncode(value.raw);
+            }
+          }
+          await nearbyService.sendMessage(fromDeviceId, jsonEncode({"type" : "data", "data" : responseData}));
           break;
         case "data":
           final peerData = messageData["data"] as Map<String, dynamic>;
-          // TODO: Maybe do some validation of the timestamp (and that the data has not been tampered with (HMAC maybe)) (at least for relayed data), since a malicious peer could spread bad data easily
+          // TODO: Maybe do some validation of the timestamp
           for (final property in peerData.entries) {
-            final valueList = property.value as List;
-            final timestamp = DateTime.parse(valueList[0] as String);
+            final peerSharedValue = await SharedValue.fromRaw(property.value as Map<String, dynamic>, keyPair!);
             if (!data.containsKey(property.key)) {
-              data[property.key] = Tuple2(timestamp, valueList[1]);
+              data[property.key] = peerSharedValue;
               continue;
             }
-            if (timestamp.isAfter(data[property.key]!.item1)) {
-              data[property.key] = Tuple2(timestamp, valueList[1]);
+            if (peerSharedValue.timestamp.isAfter(data[property.key]!.timestamp)) {
+              data[property.key] = peerSharedValue;
             }
           }
           break;
