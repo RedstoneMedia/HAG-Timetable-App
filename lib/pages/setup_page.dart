@@ -7,6 +7,7 @@ import 'package:stundenplan/main.dart';
 import 'package:stundenplan/pages/calendar_settings_page.dart';
 import 'package:stundenplan/pages/intro/class_selection.dart';
 import 'package:stundenplan/pages/iserv_login_settings_page.dart';
+import 'package:stundenplan/pages/shared_data_store_debug_page.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/theme.dart' as my_theme;
 import 'package:stundenplan/widgets/buttons.dart';
@@ -665,7 +666,10 @@ class _SetupPageState extends State<SetupPage> {
                               fontWeight: FontWeight.normal),
                         ),
                       ),
-                    )
+                    ),
+                    StandardButton(text: "Show shared data store debug page", onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => SharedDataStoreDebugPage(widget.sharedState)));
+                    }, sharedState: sharedState, color: sharedState.theme.subjectSubstitutionColor.withOpacity(0.8), size: 0.3, fontSize: 10)
                   ],
                 ) else
                   Container(),
