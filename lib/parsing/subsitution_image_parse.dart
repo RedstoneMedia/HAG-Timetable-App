@@ -78,7 +78,7 @@ int getMaxNeighborDifference(int color, Tuple2<int, int> position, img.Image ima
 }
 
 Tuple2<int, Tuple2<int, int>> findLargestWhiteStripPosition(img.Image image) {
-  final whiteBalance = image.getWhiteBalance();
+  final whiteBalance = image.getWhiteBalance(asDouble: true) as double;
   var maxWhiteCount = 0;
   var maxWhiteCountY = 0;
   var maxWhiteCountXPositions = <Tuple2<int, int>>[];
@@ -216,7 +216,7 @@ Tuple2<img.Image, img.Image>? separateTables(img.Image image) {
   final grayscaleImage = img.grayscale(image.clone());
   int maxValueSum = 0;
   int separateXCord = 0;
-  final whiteBalance = grayscaleImage.getWhiteBalance();
+  final whiteBalance = grayscaleImage.getWhiteBalance(asDouble: true) as double;
   for (int x = (image.width / 2.8).round(); x < (image.width / 1.2).round(); x++) {
     int valueSum = 0;
     for (int y = 50; y < grayscaleImage.height; y++) {
@@ -243,7 +243,7 @@ Tuple2<img.Image, img.Image>? separateTables(img.Image image) {
 
 Future<SplayTreeMap<Tuple2<int, int>, String>?> getCellsText(img.Image tableWarpedImage, TextDetectorV2 textDetector) async {
   final grayscaleImage = img.grayscale(tableWarpedImage.clone());
-  final whiteBalance = grayscaleImage.getWhiteBalance();
+  final whiteBalance = grayscaleImage.getWhiteBalance(asDouble: true) as double;
 
   final rowSeparators = [];
   // Go from bottom to top searching for horizontal black strips
