@@ -34,6 +34,7 @@ void main() {
           SharedState(
             prefs,
             Content(0, 0),
+            null
           ),
         ),
       ),
@@ -148,6 +149,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    sharedState.buildContext = context;
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(

@@ -147,6 +147,7 @@ Future<Tuple2<img.Image, List<Tuple2<int, int>>>?> warpToCorners(
       int contourWindowSize = 5,
       int contourMinChange = 45,
       int cleanupMinNeighborCount = 5,
+      int maxSidesDistance = 3,
       void Function(img.Image)? displayImage
     }
     ) async {
@@ -164,6 +165,12 @@ Future<Tuple2<img.Image, List<Tuple2<int, int>>>?> warpToCorners(
   // Clean up contour by discarding contour points with low neighbors
   final toRemovePoints = <Tuple2<int, int>>[];
   for (final p in pointsSet) {
+    // Remove any points at the sides that are below/above the startY depending on the searchYDirection. This somewhat avoids tracing the contours of the monitor, if the tables contour intersects with the monitors contour.
+    if (((p.item1 - image.width).abs() <= maxSidesDistance || p.item1 <= maxSidesDistance) &&
+        (p.item2 * searchYDirection - startY * searchYDirection).isNegative) {
+      toRemovePoints.add(p);
+      continue;
+    }
     int neighborCount = 0;
     for (final neighbor in getNeighbors(p, image, 3)) {
       if (pointsSet.contains(neighbor)) neighborCount += 1;
@@ -189,6 +196,18 @@ Future<Tuple2<img.Image, List<Tuple2<int, int>>>?> warpToCorners(
     return null;
   }
   log("[Warp to Corners] Found corners: $topLeft $topRight $bottomLeft $bottomRight $width x $height", name: "subst-import");
+
+  if (displayImage != null) {
+    final drawImage = image.clone();
+    for (final point in points) {
+      drawImage.setPixel(point.item1 * shrinkFactor, point.item2 * shrinkFactor, 255);
+    }
+    for (final corner in [topLeft, topRight, bottomLeft, bottomRight]) {
+      drawSquareOnTop(Tuple2(corner.item1 * shrinkFactor, corner.item2 * shrinkFactor), img.setBlue(0, 255), drawImage, 20);
+    }
+    displayImage(drawImage);
+  }
+
   // Warp image to fit corner points
   final warpedImageBytes = await ImgProc.warpPerspectiveTransform(
       Uint8List.fromList(img.encodeJpg(image, quality: 90)),
@@ -198,7 +217,7 @@ Future<Tuple2<img.Image, List<Tuple2<int, int>>>?> warpToCorners(
   return Tuple2(img.decodeImage(warpedImageBytes.toList())!, [topLeft, topRight, bottomLeft, bottomRight]);
 }
 
-Future<img.Image?> warpWithMonitorCorners(img.Image image) async {
+Future<img.Image?> warpWithMonitorCorners(img.Image image, void Function(img.Image)? displayImage) async {
   // Resized image to a more manageable size
   const shrinkFactor = 2;
   final resizedImage = img.copyResize(
@@ -207,8 +226,13 @@ Future<img.Image?> warpWithMonitorCorners(img.Image image) async {
   );
   final grayscaleImage = img.grayscale(resizedImage.clone());
   final Tuple2<int, int> startPosition = findLargestWhiteStripPosition(grayscaleImage).item2;
+  if (displayImage != null) {
+    final drawImage = resizedImage.clone();
+    drawSquareOnTop(startPosition, 255, drawImage, 30);
+    displayImage(drawImage);
+  }
   // Trace contours starting at largest white strip position (should be somewhere in the monitor background, since the monitor background color is white) then going down
-  return (await warpToCorners(startPosition, grayscaleImage, image, shrinkFactor: shrinkFactor))?.item1;
+  return (await warpToCorners(startPosition, grayscaleImage, image, shrinkFactor: shrinkFactor, displayImage: displayImage))?.item1;
 }
 
 Tuple2<img.Image, img.Image>? separateTables(img.Image image) {
@@ -341,11 +365,10 @@ Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubs
       minPointsLength: 10000,
       searchYDirection: -1,
       contourWindowSize: 3,
-      contourMinChange: 19,
-      displayImage: displayImage
+      contourMinChange: 19
   );
   if (warpToCornersResult == null) return null;
-  displayImage(warpToCornersResult.item1);
+  //displayImage(warpToCornersResult.item1);
   // Get image cropped to be above the table and get the text of it
   final tableYTop = ((warpToCornersResult.item2[0].item2 + warpToCornersResult.item2[1].item2) / 2).ceil();
   img.Image aboveTableImage = img.copyCrop(image, 0, 0, image.width, tableYTop);
@@ -577,8 +600,9 @@ class SubstitutionImageImporter {
     }
     // Extract monitor region and find tables in it
     final img.Image image = img.decodeImage(await imageFile.readAsBytes())!;
-    final monitorContentImage = await warpWithMonitorCorners(image);
+    final monitorContentImage = await warpWithMonitorCorners(image, null);
     if (monitorContentImage == null) {
+      await Future.delayed(const Duration(milliseconds: 2000));
       // Error: Could not find monitor corners
       return SubstitutionImageImportResult.noMonitorCorners;
     }

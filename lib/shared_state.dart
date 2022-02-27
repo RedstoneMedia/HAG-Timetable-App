@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
@@ -14,7 +15,7 @@ import 'package:stundenplan/week_subsitutions.dart';
 
 class SharedState {
   SharedPreferences preferences;
-
+  BuildContext? buildContext;
   Theme theme = darkTheme;
   int? height = Constants.defaultHeight;
   Content content;
@@ -25,7 +26,7 @@ class SharedState {
   CalendarData calendarData = CalendarData();
   bool doUseSharedDataStore = false;
 
-  SharedState(this.preferences, this.content);
+  SharedState(this.preferences, this.content, this.buildContext);
 
   void saveState() {
     final saveFileData = <String, dynamic>{};
@@ -91,7 +92,7 @@ class SharedState {
   void loadSharedDataStore() {
     doUseSharedDataStore = preferences.getBool("doUseSharedDataStore") == null ? false : preferences.getBool("doUseSharedDataStore")!;
     if ((Platform.isAndroid || Platform.isIOS) && doUseSharedDataStore) {
-      sharedDataStore = SharedDataStore(preferences);
+      sharedDataStore = SharedDataStore(this);
       final sharedDataStoreDataString = preferences.getString("sharedDataStoreData");
       if (sharedDataStoreDataString != null) {
         sharedDataStore?.loadFromJson(jsonDecode(sharedDataStoreDataString));

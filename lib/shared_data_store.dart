@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_nearby_connections/flutter_nearby_connections.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stundenplan/shared_state.dart';
+import 'package:stundenplan/widgets/bottom_overlay.dart';
 
 
 class SharedValue {
@@ -68,11 +70,11 @@ class SharedDataStore {
   final NearbyService nearbyService = NearbyService();
   final Map<String, SharedValue> data = {};
   bool running = false;
-  SharedPreferences preferences;
+  SharedState sharedState;
   final List<String> connectedDeviceIds = [];
   KeyPair? keyPair;
 
-  SharedDataStore(this.preferences);
+  SharedDataStore(this.sharedState);
 
   void loadFromJson(dynamic json) {
     for (final property in (json as Map<String, dynamic>).entries) {
@@ -88,6 +90,10 @@ class SharedDataStore {
     return jsonData;
   }
 
+  Future<void> saveChanges() async {
+    await sharedState.preferences.setString("sharedDataStoreData", jsonEncode(getJsonData()));
+  }
+
   Future<void> stop() async {
     if (!running) return;
     await nearbyService.stopAdvertisingPeer();
@@ -96,7 +102,7 @@ class SharedDataStore {
 
   Future<void> setProperty(String propertyName, dynamic value) async {
     data[propertyName] = await SharedValue.newSharedValue(DateTime.now(), value, keyPair!);
-    await preferences.setString("sharedDataStoreData", jsonEncode(getJsonData()));
+    await saveChanges();
   }
 
   dynamic getProperty(String propertyName) {
@@ -104,15 +110,15 @@ class SharedDataStore {
   }
 
   Future<void> syncLoop() async {
-      while (running) {
-        // Periodically broadcast all properties and their timestamp, so peers can request a value if they don't have that value, or have a older version
-        final syncData = <String, String>{};
-        for (final entry in data.entries) {
-          syncData[entry.key] = entry.value.timestamp.toIso8601String();
-        }
-        await broadcastMessage(jsonEncode({"type": "sync", "data": syncData}));
-        await Future.delayed(const Duration(milliseconds: 500));
+    while (running) {
+      // Periodically broadcast all properties and their timestamp, so peers can request a value if they don't have that value, or have a older version
+      final syncData = <String, String>{};
+      for (final entry in data.entries) {
+        syncData[entry.key] = entry.value.timestamp.toIso8601String();
       }
+      await broadcastMessage(jsonEncode({"type": "sync", "data": syncData}));
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
   }
 
   Future<void> broadcastMessage(String message) async {
@@ -153,7 +159,10 @@ class SharedDataStore {
         } else if (device.state == SessionState.connected && !connectedDeviceIds.contains(device.deviceId)) {
           connectedDeviceIds.add(device.deviceId);
         }
-        log("deviceId: ${device.deviceId} | deviceName: ${device.deviceName} | state: ${device.state}", name: "Shared-Data-Store");
+        if (kDebugMode) {
+          displayTextOverlay("[${device.deviceId}-${device.deviceName}] ${device.state}", const Duration(seconds: 3), sharedState, sharedState.buildContext!);
+          log("deviceId: ${device.deviceId} | deviceName: ${device.deviceName} | state: ${device.state}", name: "Shared-Data-Store");
+        }
       }
     });
 
@@ -163,6 +172,10 @@ class SharedDataStore {
       final fromDeviceId = jsonData["deviceId"] as String;
       final messageData = jsonData["message"] as Map<String, dynamic>;
       final messageType = messageData["type"] as String;
+      if (kDebugMode) {
+        log("Got $messageType Message from $fromDeviceId: $messageData", name: "Shared-Data-Store");
+        displayTextOverlay("Got $messageType Message from $fromDeviceId: $messageData", const Duration(seconds: 3), sharedState, sharedState.buildContext!);
+      }
       switch (messageType) {
         case "sync":
           final syncData = messageData["data"] as Map<String, String>;
@@ -195,18 +208,30 @@ class SharedDataStore {
           for (final property in peerData.entries) {
             final peerSharedValue = await SharedValue.fromRaw(property.value as Map<String, dynamic>, keyPair!);
             if (!data.containsKey(property.key)) {
+              if (kDebugMode) {
+                log("Accepted new value ${property.key} from $fromDeviceId", name: "Shared-Data-Store");
+                displayTextOverlay("Accepted new value ${property.key} from $fromDeviceId", const Duration(seconds: 3), sharedState, sharedState.buildContext!);
+              }
               data[property.key] = peerSharedValue;
               continue;
             }
             if (peerSharedValue.timestamp.isAfter(data[property.key]!.timestamp)) {
               data[property.key] = peerSharedValue;
+              if (kDebugMode) {
+                log("Accepted newer value ${property.key} from $fromDeviceId", name: "Shared-Data-Store");
+                displayTextOverlay("Accepted newer value ${property.key} from $fromDeviceId", const Duration(seconds: 3), sharedState, sharedState.buildContext!);
+              }
             }
           }
+          await saveChanges();
           break;
       }
     });
     unawaited(syncLoop());
     log("Started", name: "Shared-Data-Store");
+    if (kDebugMode) {
+      displayTextOverlay("Shared-Data-Store: Started", const Duration(seconds: 3), sharedState, sharedState.buildContext!);
+    }
   }
 
 }

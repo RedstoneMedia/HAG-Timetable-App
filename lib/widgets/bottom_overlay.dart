@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/parsing/subsitution_image_parse.dart';
 import 'package:stundenplan/shared_state.dart';
 
-
 class BottomOverlay<T extends BottomOverlayState> extends StatefulWidget {
   final SharedState sharedState;
   late final OverlayEntry overlayEntry;
@@ -74,6 +73,12 @@ class BottomOverlayWrapper extends StatelessWidget {
       ),
     );
   }
+}
+
+void displayTextOverlay(String text, Duration duration, SharedState sharedState, BuildContext context,) {
+  final overlayEntry = OverlayEntry(builder: (context) => BottomOverlayWrapper(text: text, sharedState: sharedState, child: Container()));
+  Overlay.of(context)?.insert(overlayEntry);
+  Future.delayed(duration).then((_) => overlayEntry.remove());
 }
 
 class SubstitutionScanningOverlayState extends BottomOverlayState {
