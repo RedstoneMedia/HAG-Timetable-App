@@ -2,12 +2,14 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
 import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/holiday_calculator.dart';
 import 'package:stundenplan/calendar_data.dart';
+import 'package:stundenplan/loading_functions.dart';
 import 'package:stundenplan/profile_manager.dart';
 import 'package:stundenplan/shared_data_store.dart';
 import 'package:stundenplan/theme.dart';
@@ -89,15 +91,23 @@ class SharedState {
     preferences.setString("cachedContent", encodedContent);
   }
 
-  void loadSharedDataStore() {
+  Future<void> loadSharedDataStore() async {
     doUseSharedDataStore = preferences.getBool("doUseSharedDataStore") == null ? false : preferences.getBool("doUseSharedDataStore")!;
     if ((Platform.isAndroid || Platform.isIOS) && doUseSharedDataStore) {
-      sharedDataStore = SharedDataStore(this);
-      final sharedDataStoreDataString = preferences.getString("sharedDataStoreData");
-      if (sharedDataStoreDataString != null) {
-        sharedDataStore?.loadFromJson(jsonDecode(sharedDataStoreDataString));
+      if (
+        await checkForPermissionsAnShowDialog(
+            [Permission.bluetoothAdvertise, Permission.bluetoothConnect, Permission.bluetoothScan, Permission.location],
+            "Bluetooth",
+            "Die geteilte Datenbank muss in der lage sein Bluetoth zu verwenden, um Daten an andere zu Teilen",
+            buildContext!)
+      ) {
+        sharedDataStore = SharedDataStore(this);
+        final sharedDataStoreDataString = preferences.getString("sharedDataStoreData");
+        if (sharedDataStoreDataString != null) {
+          sharedDataStore?.loadFromJson(jsonDecode(sharedDataStoreDataString));
+        }
+        await sharedDataStore?.start();
       }
-      sharedDataStore?.start();
     }
   }
 

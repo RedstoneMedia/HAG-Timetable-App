@@ -28,31 +28,46 @@ Future<void> openSetupPageAndCheckForFile(SharedState sharedState, BuildContext 
   });
 }
 
-Future<bool> checkForFilePermissionsAndShowDialog(BuildContext context) async {
-  // This function uses root-level file access, which is only available on android
+Future<bool> checkForPermissionsAnShowDialog(List<Permission> permissions, String dialogTitle, String dialogText, BuildContext context) async {
+  // Most permission are only available on android
   if (!Platform.isAndroid) return false;
-  // Check if we have the storage Permission
-  if (await Permission.storage.isDenied) {
-      // We don't have Permission -> Show a small dialog to explain why we need it
-      await showDialog(
-          context: context,
-          builder: (context) {
-        return AlertDialog(
-          title: const Text("Einstellungen Speichern"),
-          content: const Text(
-              "Diese App benötigt zugriff auf den Speicher deines Gerätes um Fächer und Themes verlässlich zu speichern."),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Ok'),
-            ),
-          ],
-        );
-      });
-    // Request Permission -> If Permission denied -> return;
-    if (await Permission.storage.request().isDenied) return false;
+  // Check if we have the Permissions
+  bool allAccepted = true;
+  for (final permission in permissions) {
+    allAccepted = allAccepted && await permission.isGranted;
+  }
+  if (allAccepted) return true;
+  // We don't have Permission -> Show a small dialog to explain why we need it
+  await showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text(dialogTitle),
+        content: Text(dialogText),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Ok'),
+          ),
+        ],
+      );
+    });
+  // Request Permission -> If Permission denied -> return;
+  for (final permission in permissions) {
+    if (await permission.isDenied) {
+      if (await permission.request().isDenied) return false;
+    }
   }
   return true;
+}
+
+Future<bool> checkForFilePermissionsAndShowDialog(BuildContext context) async {
+  return checkForPermissionsAnShowDialog(
+      [Permission.storage],
+      "Einstellungen Speichern",
+      "Diese App benötigt zugriff auf den Speicher deines Gerätes um Fächer und Themes verlässlich zu speichern.",
+      context
+  );
 }
 
 Future<void> loadProfileManagerAndThemeFromFile(SharedState sharedState) async {
