@@ -38,8 +38,7 @@ dependencies:
   image: ^3.1.1
   opencv: ^1.0.4
   cryptography: ^2.0.5
-  custom_nearby_connections:
-    path: custom_nearby_connections
+  flutter_nearby_connections: ^1.1.1
 
 flutter_icons:
   android: "launcher_icon"

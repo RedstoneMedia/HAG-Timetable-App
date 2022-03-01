@@ -96,7 +96,7 @@ class SharedState {
     if ((Platform.isAndroid || Platform.isIOS) && doUseSharedDataStore) {
       if (
         await checkForPermissionsAnShowDialog(
-            [Permission.bluetoothAdvertise, Permission.bluetoothConnect, Permission.bluetoothScan, Permission.location],
+            [Permission.bluetoothAdvertise, Permission.bluetoothConnect, Permission.bluetoothScan, Permission.locationWhenInUse],
             "Bluetooth",
             "Die geteilte Datenbank muss in der lage sein Bluetooth zu verwenden, um Daten an andere zu Teilen",
             buildContext!)
