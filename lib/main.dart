@@ -91,6 +91,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> asyncInit() async {
+    sharedState.buildContext = context;
     // Check if the App is opened for the first time
     if (sharedState.loadStateAndCheckIfFirstTime()) {
       // App is opened for the firs time -> load settings from file
@@ -149,7 +150,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    sharedState.buildContext = context;
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(

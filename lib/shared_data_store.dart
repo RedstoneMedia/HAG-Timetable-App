@@ -4,10 +4,10 @@ import 'dart:developer';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_nearby_connections/flutter_nearby_connections.dart';
+//import 'package:flutter_nearby_connections/flutter_nearby_connections.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/widgets/bottom_overlay.dart';
-
+import 'package:custom_nearby_connections/custom_nearby_connections.dart';
 
 class SharedValue {
   DateTime timestamp;
@@ -67,7 +67,7 @@ class SharedValue {
 }
 
 class SharedDataStore {
-  final NearbyService nearbyService = NearbyService();
+  //final NearbyService nearbyService = NearbyService();
   final Map<String, SharedValue> data = {};
   bool running = false;
   SharedState sharedState;
@@ -96,8 +96,9 @@ class SharedDataStore {
 
   Future<void> stop() async {
     if (!running) return;
-    await nearbyService.stopAdvertisingPeer();
-    await nearbyService.stopBrowsingForPeers();
+    //await nearbyService.stopAdvertisingPeer();
+    //await nearbyService.stopBrowsingForPeers();
+    await CustomNearbyConnections.stop();
   }
 
   Future<void> setProperty(String propertyName, dynamic value) async {
@@ -124,7 +125,7 @@ class SharedDataStore {
   Future<void> broadcastMessage(String message) async {
     final futures = <Future<dynamic>>[];
     for (final peerId in connectedDeviceIds) {
-      final result = nearbyService.sendMessage(peerId, message);
+      final result = null; //nearbyService.sendMessage(peerId, message);
       if (result.runtimeType == Future && result != null) {
         futures.add(result as Future);
       }
@@ -136,6 +137,8 @@ class SharedDataStore {
     if (running) return;
     running = true;
     keyPair ??= await Ed25519().newKeyPair(); // TODO: Don't create a new key pair every time. Instead only create a new one, if there isn't one in the secure storage already.
+    await CustomNearbyConnections.start();
+    /*
     await nearbyService.init(
         serviceType: "HAG-SDS",
         strategy: Strategy.P2P_CLUSTER,
@@ -227,6 +230,7 @@ class SharedDataStore {
           break;
       }
     });
+     */
     unawaited(syncLoop());
     log("Started", name: "Shared-Data-Store");
     if (kDebugMode) {

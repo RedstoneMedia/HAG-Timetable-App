@@ -98,7 +98,7 @@ class SharedState {
         await checkForPermissionsAnShowDialog(
             [Permission.bluetoothAdvertise, Permission.bluetoothConnect, Permission.bluetoothScan, Permission.location],
             "Bluetooth",
-            "Die geteilte Datenbank muss in der lage sein Bluetoth zu verwenden, um Daten an andere zu Teilen",
+            "Die geteilte Datenbank muss in der lage sein Bluetooth zu verwenden, um Daten an andere zu Teilen",
             buildContext!)
       ) {
         sharedDataStore = SharedDataStore(this);

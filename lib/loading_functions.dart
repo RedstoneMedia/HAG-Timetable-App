@@ -51,7 +51,8 @@ Future<bool> checkForPermissionsAnShowDialog(List<Permission> permissions, Strin
           ),
         ],
       );
-    });
+    }
+  );
   // Request Permission -> If Permission denied -> return;
   for (final permission in permissions) {
     if (await permission.isDenied) {

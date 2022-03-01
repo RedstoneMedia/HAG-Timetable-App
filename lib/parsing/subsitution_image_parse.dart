@@ -368,7 +368,7 @@ Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubs
       contourMinChange: 19
   );
   if (warpToCornersResult == null) return null;
-  //displayImage(warpToCornersResult.item1);
+  displayImage(warpToCornersResult.item1);
   // Get image cropped to be above the table and get the text of it
   final tableYTop = ((warpToCornersResult.item2[0].item2 + warpToCornersResult.item2[1].item2) / 2).ceil();
   img.Image aboveTableImage = img.copyCrop(image, 0, 0, image.width, tableYTop);
