@@ -115,20 +115,15 @@ class SharedDataStore {
       for (final entry in data.entries) {
         syncData[entry.key] = entry.value.timestamp.toIso8601String();
       }
-      await broadcastMessage(jsonEncode({"type": "sync", "data": syncData}));
+      broadcastMessage(jsonEncode({"type": "sync", "data": syncData}));
       await Future.delayed(const Duration(milliseconds: 500));
     }
   }
 
-  Future<void> broadcastMessage(String message) async {
-    final futures = <Future<dynamic>>[];
+  void broadcastMessage(String message) {
     for (final peerId in connectedDeviceIds) {
-      final result = nearbyService.sendMessage(peerId, message);
-      if (result.runtimeType == Future && result != null) {
-        futures.add(result as Future);
-      }
+      nearbyService.sendMessage(peerId, message);
     }
-    await Future.wait(futures);
   }
 
   Future<void> start() async {
@@ -145,9 +140,13 @@ class SharedDataStore {
           await nearbyService.stopAdvertisingPeer();
           await nearbyService.stopBrowsingForPeers();
           await Future.delayed(const Duration(microseconds: 200));
+          // Don't await here, because it obviously makes sense that awaiting a start method does not in fact wait until the advertising is started, but infact never returns, because someone forgot to call result.success
           nearbyService.startAdvertisingPeer();
           nearbyService.startBrowsingForPeers();
           log("Started advertising and browsing", name: "Shared-Data-Store");
+          if (kDebugMode) {
+            displayTextOverlay("Shared-Data-Store: Started advertising and browsing", const Duration(seconds: 3), sharedState, sharedState.buildContext!);
+          }
         }
     );
 
@@ -201,7 +200,7 @@ class SharedDataStore {
               responseData[requestedKey] = jsonEncode(value.raw);
             }
           }
-          await nearbyService.sendMessage(fromDeviceId, jsonEncode({"type" : "data", "data" : responseData}));
+          nearbyService.sendMessage(fromDeviceId, jsonEncode({"type" : "data", "data" : responseData}));
           break;
         case "data":
           final peerData = messageData["data"] as Map<String, dynamic>;
@@ -228,12 +227,7 @@ class SharedDataStore {
           break;
       }
     });
-
     unawaited(syncLoop());
-    log("Started", name: "Shared-Data-Store");
-    if (kDebugMode) {
-      displayTextOverlay("Shared-Data-Store: Started", const Duration(seconds: 3), sharedState, sharedState.buildContext!);
-    }
   }
 
 }
