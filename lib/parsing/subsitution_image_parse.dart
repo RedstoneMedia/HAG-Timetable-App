@@ -79,6 +79,23 @@ int getMaxNeighborDifference(int color, Tuple2<int, int> position, img.Image ima
 
 Tuple2<int, Tuple2<int, int>> findLargestWhiteStripPosition(img.Image image) {
   final whiteBalance = image.getWhiteBalance(asDouble: true) as double;
+  // Find major white tone and use that to differentiate between a white on a screen and the background (The white tones in the monitor take up the majority of the image)
+  final whiteTones = <int, int>{};
+  for (var i = 0; i < image.length; ++i) {
+    final value = img.getRed(image.data[i]);
+    if (value > whiteBalance) {
+      whiteTones.putIfAbsent(value, () => whiteTones[value] = 0);
+      whiteTones[value] = whiteTones[value]! + 1;
+    }
+  }
+  final whiteTonesList = whiteTones.entries.toList();
+  whiteTonesList.sort((a, b) {
+    final scoreA = a.key/255 + a.value/image.length * 100;
+    final scoreB = b.key/255 + b.value/image.length * 100;
+    return scoreB.compareTo(scoreA);
+  });
+  final majorityWhite = whiteTonesList.first.key - 10;
+  // Find Y position with the highest white count and the white positions of each row
   var maxWhiteCount = 0;
   var maxWhiteCountY = 0;
   var maxWhiteCountXPositions = <Tuple2<int, int>>[];
@@ -86,7 +103,7 @@ Tuple2<int, Tuple2<int, int>> findLargestWhiteStripPosition(img.Image image) {
     var whiteCount = 0;
     for (int x = 0; x < image.width; x++) {
       final value = img.getRed(image.getPixel(x, y));
-      if (value > whiteBalance) {
+      if (value >= majorityWhite) {
         whiteCount += 1;
         maxWhiteCountXPositions.add(Tuple2(x, value));
       }
@@ -405,12 +422,15 @@ Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubs
   };
   for (final cellPos in cellsText.keys) {
     if (cellPos.item1 > 0) break;
-    final cellText = cellsText[cellPos]!
+    String cellText = cellsText[cellPos]!
       .replaceAll(" ", "")
       .replaceAll("\n", "")
       .toLowerCase();
+    if (!RegExp(r"^[a-z\(]").hasMatch(cellText) && cellText.length > 1) {
+      cellText = cellText.substring(1, cellText.length);
+    }
     try {
-      final headerName = headerColumnIndices.keys.where((n) => n.toLowerCase() == cellText).single;
+      final headerName = headerColumnIndices.keys.where((n) => n.toLowerCase().startsWith(cellText)).single;
       headerColumnIndices[headerName] = cellPos.item2;
     } on StateError {}
   }
@@ -442,7 +462,13 @@ Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubs
   final coursesSubstitutions = <String, List<Map<String, String>>>{};
   for (final substitution in substitutions) {
     correctSubstitution(substitution, content, fullClassName);
-    if (!substitution.containsKey("Klassen")) continue;
+    // This cannot be checked for all substitutions at once, since some information might be reconstructed by correctSubstitution
+    bool skip = false;
+    for (final headerValue in headerInformationMapping.values) {
+      if (["Entfall", "Text"].contains(headerValue)) continue;
+      if (!substitution.containsKey(headerValue)) {skip = true; break;}
+    }
+    if (skip) continue;
     final className = substitution["Klassen"]!;
     substitution.remove("Klassen");
     if (substitution["Stunde"]!.isEmpty) continue;
@@ -452,6 +478,7 @@ Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubs
     if (substitution["Fach"]!.isEmpty && substitution["Vertretung"]!.isEmpty && substitution["Raum"]!.isEmpty && headerColumnIndices["Entf."] != null) {
       substitution["Entfall"] = "X";
     }
+    if (!substitution.containsKey("Entfall")) substitution["Entfall"] = "";
     // Replace empty fields with the non breaking space character. Because the website does exactly this (for some reason) and things should be at least kept constant.
     for (final substitutionDataEntry in substitution.entries) {
       if (substitutionDataEntry.value.isEmpty) {
@@ -465,7 +492,7 @@ Future<Tuple2<DateTime, Map<String, List<Map<String, String>>>>?> getCoursesSubs
 int scorePropertyCorrectOption(String value, String matchValue) {
   if (value.length != matchValue.length) return 0;
   int score = 0;
-  final replacements = [Tuple2("O", "0"), Tuple2("0", "O"), Tuple2("I", "1"), Tuple2("1", "I"), Tuple2("l", "1"), Tuple2("1", "l")];
+  final replacements = [Tuple2("O", "0"), Tuple2("0", "O"), Tuple2("I", "1"), Tuple2("1", "I"), Tuple2("i", "1"), Tuple2("l", "1"), Tuple2("1", "l")];
   for (int i = 0; i < value.length; i++) {
     final char = value[i];
     final matchChar = matchValue[i];
