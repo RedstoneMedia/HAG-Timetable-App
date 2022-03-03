@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_nearby_connections/flutter_nearby_connections.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/widgets/bottom_overlay.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 class SharedValue {
   DateTime timestamp;
@@ -67,11 +69,13 @@ class SharedValue {
 
 class SharedDataStore {
   final NearbyService nearbyService = NearbyService();
+  final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
   final Map<String, SharedValue> data = {};
   bool running = false;
   SharedState sharedState;
   final List<String> connectedDeviceIds = [];
   KeyPair? keyPair;
+  late String? deviceName;
 
   SharedDataStore(this.sharedState);
 
@@ -129,11 +133,19 @@ class SharedDataStore {
   Future<void> start() async {
     if (running) return;
     running = true;
+    if (Platform.isAndroid) {
+      final androidInfo = await deviceInfo.androidInfo;
+      deviceName = androidInfo.display! + androidInfo.fingerprint!;
+    } else if (Platform.isIOS) {
+      final iosInfo = await deviceInfo.iosInfo;
+      deviceName = iosInfo.name! + iosInfo.identifierForVendor!;
+    }
     keyPair ??= await Ed25519().newKeyPair(); // TODO: Don't create a new key pair every time. Instead only create a new one, if there isn't one in the secure storage already.
 
     await nearbyService.init(
         serviceType: "HAG-SDS",
         strategy: Strategy.P2P_CLUSTER,
+        deviceName: deviceName,
         callback: (bool isRunning) async {
           if (!isRunning) return null;
           // Restart browsing and advertising
@@ -153,7 +165,7 @@ class SharedDataStore {
     nearbyService.stateChangedSubscription(callback: (devicesList) {
       for (final device in devicesList) {
         if (device.state == SessionState.notConnected && !connectedDeviceIds.contains(device.deviceId)) {
-          nearbyService.invitePeer(deviceID: device.deviceId, deviceName: device.deviceName);
+          nearbyService.invitePeer(deviceID: device.deviceId, deviceName: deviceName);
         } else if (device.state == SessionState.notConnected && connectedDeviceIds.contains(device.deviceId)) {
           connectedDeviceIds.remove(device.deviceId);
         } else if (device.state == SessionState.connected && !connectedDeviceIds.contains(device.deviceId)) {
