@@ -178,11 +178,10 @@ class SharedDataStore {
       }
     });
 
-    nearbyService.dataReceivedSubscription(callback: (receivedData) async {
-      final jsonData = jsonDecode(receivedData as String) as Map<String, dynamic>;
-      log(jsonData.toString(), name: "Shared-Data-Store"); //
-      final fromDeviceId = jsonData["deviceId"] as String;
-      final messageData = jsonData["message"] as Map<String, dynamic>;
+    nearbyService.dataReceivedSubscription(callback: (receivedDataRaw) async {
+      final receivedData = receivedDataRaw as Map<String, String>;
+      final fromDeviceId = receivedData["deviceId"]!;
+      final messageData = jsonDecode(receivedData["message"]!) as Map<String, dynamic>;
       final messageType = messageData["type"] as String;
       if (kDebugMode) {
         log("Got $messageType Message from $fromDeviceId: $messageData", name: "Shared-Data-Store");
