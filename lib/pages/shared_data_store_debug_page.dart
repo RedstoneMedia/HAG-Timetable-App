@@ -6,6 +6,8 @@ import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/widgets/buttons.dart';
 import 'package:stundenplan/widgets/labeled_text_input.dart';
 
+import '../helper_functions.dart';
+
 class SharedDataStoreDebugPage extends StatefulWidget {
   final SharedState sharedState;
 
@@ -64,12 +66,12 @@ class _SharedDataStoreDebugPageState extends State<SharedDataStoreDebugPage> {
                           fontWeight: FontWeight.w500,
                           fontSize: 9
                       )),
-                      Text("Data: ${e.value.data}", textAlign: TextAlign.left, style: GoogleFonts.poppins(
+                      Text("Data: ${truncateString(e.value.data.toString(), 100)}", textAlign: TextAlign.left, style: GoogleFonts.poppins(
                           color: widget.sharedState.theme.textColor,
                           fontWeight: FontWeight.w500,
                           fontSize: 9
                       )),
-                      Text("Raw: ${e.value.raw}", textAlign: TextAlign.left, style: GoogleFonts.poppins(
+                      Text("Raw: ${truncateString(e.value.raw.toString(), 500)}", textAlign: TextAlign.left, style: GoogleFonts.poppins(
                           color: widget.sharedState.theme.textColor,
                           fontWeight: FontWeight.w300,
                           fontSize: 4

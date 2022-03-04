@@ -70,4 +70,6 @@ class Constants {
   ];
   static const List<String> displayFullHeightSchoolGrades = ["Q1", "Q2"];
   static const String saveDataFileLocation = "/storage/emulated/0/Android/data/stundenplan-data.save";
+
+  static const int sharedDataStoreBlockSize = 16384;
 }

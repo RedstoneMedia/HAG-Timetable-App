@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:math' as math;
@@ -683,7 +684,13 @@ class SubstitutionImageImporter {
       );
       okTablesCount++;
     }
-    if (okTablesCount > 0) sharedState.saveCache();
+    if (okTablesCount > 0) {
+      sharedState.saveCache();
+      if (sharedState.sharedDataStore != null) {
+        // TODO: Use a SharedValueList instead
+        await sharedState.sharedDataStore!.setProperty("substitution_image", base64Encode(img.encodeJpg(image, quality: 30)));
+      }
+    };
     if (okTablesCount == 0) {
       return SubstitutionImageImportResult.badTables;
     } else if (okTablesCount == 1) {

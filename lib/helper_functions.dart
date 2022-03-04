@@ -8,6 +8,12 @@ import 'package:stundenplan/shared_state.dart';
 import 'package:tuple/tuple.dart';
 import 'pages/setup_page.dart';
 
+String truncateString(String string, int maxLength) {
+  return string.length > maxLength
+      ? string.replaceRange(maxLength, string.length, "...")
+      : string;
+}
+
 Future<bool> isInternetAvailable(Connectivity connectivity) async {
   //TODO: Check on Windows
   if(Platform.isWindows) return true;
