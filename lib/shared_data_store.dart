@@ -96,12 +96,26 @@ class SharedValueList {
     return sharedValuesJson;
   }
 
-  List<Map<String, String>> getSyncData() {
+  List<Map<String, String>> getSyncMessageData() {
       final List<Map<String, String>> syncData = [];
       for (final sharedValue in sharedValues) {
-        syncData.add({"timestamp": sharedValue.timestamp.toIso8601String(), "hash_code": jsonEncode(sharedValue.raw).hashCode.toString()});
+        syncData.add({"timestamp": sharedValue.timestamp.toIso8601String(), "hash_code": jsonEncode(sharedValue.data).hashCode.toString()});
       }
       return syncData;
+  }
+
+  List<String> getRawJsonData({List<int>? indices}) {
+    final List<String> sharedValuesJson = [];
+    for (int i = 0; i < sharedValues.length; i++) {
+      if (indices != null) if (!indices.contains(i)) continue;
+      final sharedValue = sharedValues[i];
+      sharedValuesJson.add(jsonEncode(sharedValue.raw));
+    }
+    return sharedValuesJson;
+  }
+
+  bool containsSharedValueHash(String sharedValueHash) {
+    return sharedValues.where((sharedValue) => jsonEncode(sharedValue.data).hashCode.toString() == sharedValueHash).isNotEmpty;
   }
 
   @override
@@ -119,7 +133,7 @@ class SharedDataStore {
   final List<String> connectedDeviceIds = [];
   KeyPair? keyPair;
   late String? deviceName;
-  final Map<Tuple2<String, String>, Tuple2<int, List<String>>> partialReceivingBlocks = {};
+  final Map<Tuple2<String, Object>, Tuple2<int, List<String>>> partialReceivingBlocks = {};
 
   SharedDataStore(this.sharedState);
 
@@ -175,7 +189,7 @@ class SharedDataStore {
       if (entry.value is SharedValue) {
         syncData[entry.key] = (entry.value as SharedValue).timestamp.toIso8601String();
       } else if (entry.value is SharedValueList) {
-        syncData[entry.key] = (entry.value as SharedValueList).getSyncData();
+        syncData[entry.key] = (entry.value as SharedValueList).getSyncMessageData();
       }
     }
     broadcastMessage(jsonEncode({"type": "sync", "data": syncData}));
@@ -255,111 +269,161 @@ class SharedDataStore {
       }
       switch (messageType) {
         case "sync":
-          final syncData = messageData["data"] as Map<String, dynamic>;
-          final newKeys = <String>[];
-          for (final entry in syncData.entries) {
-            if (partialReceivingBlocks.keys.where((e) => e.item2 == entry.key).isNotEmpty) continue;
-            if (!data.containsKey(entry.key)) {
-              newKeys.add(entry.key);
-              continue;
-            }
-            if (data[entry.key] is SharedValue) {
-              if (DateTime.parse(entry.value as String).isAfter((data[entry.key]! as SharedValue).timestamp)) {
-                newKeys.add(entry.key);
-              }
-            } else if (data[entry.key] is SharedValueList) {
-              // TODO: Implement
-            }
-          }
-          if (newKeys.isNotEmpty) {
-            nearbyService.sendMessage(fromDeviceId, jsonEncode({"type" : "get", "keys": newKeys}));
-          }
+          await handleSyncMessage(fromDeviceId, messageData);
           break;
         case "get":
-          final requestedKeys = messageData["keys"] as List<dynamic>;
-          final responseData = <String, dynamic>{};
-          for (final requestedKey in requestedKeys) {
-            if (data.containsKey(requestedKey as String)) {
-              final value = data[requestedKey]!;
-              responseData[requestedKey] = jsonEncode(value.raw);
-            }
-          }
-          final responseString = jsonEncode({"type" : "data", "data" : responseData});
-          if (responseString.length > Constants.sharedDataStoreBlockSize) {
-            // Only sends first property, if message is to big
-            // TODO: Send data block info for all requested keys messages
-            final firstRequestProperty = responseData.entries.first;
-            final nBlocks = (jsonEncode(firstRequestProperty.value).length / Constants.sharedDataStoreBlockSize).ceil();
-            nearbyService.sendMessage(fromDeviceId, jsonEncode({"type" : "data_blocks_info", "property_key" : firstRequestProperty.key, "n_blocks" : nBlocks}));
-          } else {
-            nearbyService.sendMessage(fromDeviceId, responseString);
-          }
+          await handleGetMessage(fromDeviceId, messageData);
           break;
         case "get_block":
-          final requestedPropertyKey = messageData["property_key"]! as String;
-          final requestedBlock = messageData["block"]! as int;
-          if (!data.containsKey(requestedPropertyKey)) return;
-          String responseData = "";
-          if (data[requestedPropertyKey] is SharedValue) {
-            final rawJsonString = jsonEncode(data[requestedPropertyKey]! as SharedValue);
-            if (rawJsonString.length < Constants.sharedDataStoreBlockSize * requestedBlock) return;
-            responseData = rawJsonString.substring(Constants.sharedDataStoreBlockSize * requestedBlock, math.min(Constants.sharedDataStoreBlockSize * (requestedBlock + 1), rawJsonString.length));
-          } else if (data[requestedPropertyKey] is SharedValueList) {
-            // TODO: Implement
-            return;
-          }
-          nearbyService.sendMessage(fromDeviceId, jsonEncode({"type" : "data", "block": requestedBlock, "property_key": requestedPropertyKey, "data" : responseData}));
+          await handleGetBlockMessage(fromDeviceId, messageData);
           break;
         case "data_blocks_info":
-          final property = messageData["property_key"]! as String;
-          final nBlocks = messageData["n_blocks"]! as int;
-          partialReceivingBlocks[Tuple2(fromDeviceId, property)] = Tuple2(nBlocks, []);
+          final blocksInfo = messageData["blocks_info"] as List<Map<String, dynamic>>;
+          for (final blockInfo in blocksInfo) {
+            final property = blockInfo["property_key"]! as String;
+            if (partialReceivingBlocks.containsKey(Tuple2(fromDeviceId, property))) return; // Avoids resetting blocks, while they are being received
+            final nBlocks = blockInfo["n_blocks"]! as int;
+            final Object propertyKey = blockInfo.containsKey("list_index") ? Tuple2(property, blockInfo["list_index"]! as int) : property;
+            partialReceivingBlocks[Tuple2(fromDeviceId, propertyKey)] = Tuple2(nBlocks, []);
+          }
           break;
         case "data":
-          dynamic peerData = messageData["data"];
-          if (messageData.containsKey("block")) {
-            final block = messageData["block"]! as int;
-            final propertyKey = messageData["property_key"]! as String;
-            final partialBlockKey = Tuple2(fromDeviceId, propertyKey);
-            final partialBlocks = partialReceivingBlocks[partialBlockKey]!;
-            if (partialBlocks.item2.length != block) return;
-            partialBlocks.item2.add(peerData as String);
-            if (partialBlocks.item2.length == partialBlocks.item1) {
-              final receivedValue = partialBlocks.item2.join();
-              peerData = {propertyKey: receivedValue};
-              partialReceivingBlocks.remove(partialBlockKey);
-            } else {
-              return;
-            }
-          }
-          // TODO: Maybe do some validation of the timestamp
-          for (final property in (peerData as Map<String, dynamic>).entries) {
-            final peerSharedValue = await SharedValue.fromRaw(jsonDecode(property.value as String) as Map<String, dynamic>, keyPair!);
-            if (!data.containsKey(property.key)) {
-              if (kDebugMode) {
-                log("Accepted new value ${property.key} from $fromDeviceId", name: "Shared-Data-Store");
-                displayTextOverlay("Accepted new value ${property.key} from $fromDeviceId", const Duration(seconds: 3), sharedState, sharedState.buildContext!);
-              }
-              data[property.key] = peerSharedValue;
-              continue;
-            }
-            if (data[property.key] is Map) {
-              if (peerSharedValue.timestamp.isAfter((data[property.key]! as SharedValue).timestamp)) {
-                data[property.key] = peerSharedValue;
-                if (kDebugMode) {
-                  log("Accepted newer value ${property.key} from $fromDeviceId", name: "Shared-Data-Store");
-                  displayTextOverlay("Accepted newer value ${property.key} from $fromDeviceId", const Duration(seconds: 3), sharedState, sharedState.buildContext!);
-                }
-              }
-            } else if (data[property.key] is List) {
-              // TODO: Implement
-            }
-          }
-          await saveChanges();
+          await handleDataMessage(fromDeviceId, messageData);
           break;
       }
     });
     unawaited(backgroundLoop());
+  }
+
+  // Message handlers
+
+  Future<void> handleSyncMessage(String fromDeviceId, Map<String, dynamic> messageData) async {
+    final syncData = messageData["data"] as Map<String, dynamic>;
+    final newKeys = <String, dynamic>{};
+    for (final entry in syncData.entries) {
+      if (partialReceivingBlocks.keys.where((e) => e.item2 == entry.key).isNotEmpty) continue;
+      if (!data.containsKey(entry.key)) {
+        newKeys[entry.key] = true;
+        continue;
+      }
+      if (data[entry.key] is SharedValue) {
+        if (DateTime.parse(entry.value as String).isAfter((data[entry.key]! as SharedValue).timestamp)) {
+          newKeys[entry.key] = true;
+        }
+      } else if (data[entry.key] is SharedValueList) {
+        final sharedValueList = data[entry.key] as SharedValueList;
+        final remoteValues = entry.value as List<Map<String, dynamic>>;
+        newKeys[entry.key] = [];
+        for (int i = 0; i < remoteValues.length; i++) {
+          final remoteValueSyncData = remoteValues[i];
+          if (sharedValueList.containsSharedValueHash(remoteValueSyncData["hash_code"]! as String)) {
+            (newKeys[entry.key] as List<int>).add(i);
+          }
+        }
+      }
+    }
+    if (newKeys.isNotEmpty) {
+      nearbyService.sendMessage(fromDeviceId, jsonEncode({"type" : "get", "keys": newKeys}));
+    }
+  }
+
+  Future<void> handleGetMessage(String fromDeviceId, Map<String, dynamic> messageData) async {
+    final requestedKeys = messageData["keys"] as Map<String, dynamic>;
+    final responseData = <String, dynamic>{};
+    for (final requestedEntry in requestedKeys.entries) {
+      if (data.containsKey(requestedEntry.key)) {
+        final value = data[requestedEntry.key];
+        if (requestedEntry.value is List && value is SharedValueList) {
+          responseData[requestedEntry.key] = jsonEncode(value.getRawJsonData(indices: requestedEntry.value as List<int>));
+        } else if (requestedEntry.value == true) {
+          if (value is SharedValue) {
+            responseData[requestedEntry.key] = jsonEncode(value.raw);
+          } else if (value is SharedValueList) {
+            responseData[requestedEntry.key] = value.getRawJsonData();
+          }
+        }
+      }
+    }
+    final responseString = jsonEncode({"type" : "data", "data" : responseData});
+    // Sends properties as blocks, if message is to big
+    if (responseString.length > Constants.sharedDataStoreBlockSize) {
+      final blocksInfo = <Map<String, dynamic>>[];
+      for (final responseDataEntry in responseData.entries) {
+        if (responseDataEntry.value is String) {
+          final nBlocks = ((responseDataEntry.value as String).length / Constants.sharedDataStoreBlockSize).ceil();
+          blocksInfo.add({"property_key" : responseDataEntry.key, "n_blocks" : nBlocks});
+        } else if (responseDataEntry.value is List<String>) {
+          for (int i = 0; i < (responseDataEntry.value as List<String>).length; i++) {
+            final dataValue = responseDataEntry.value[i] as String;
+            final nBlocks = (dataValue.length / Constants.sharedDataStoreBlockSize).ceil();
+            blocksInfo.add({"property_key" : responseDataEntry.key, "list_index" : i, "n_blocks" : nBlocks});
+          }
+        }
+      }
+      nearbyService.sendMessage(fromDeviceId, jsonEncode({"type" : "data_blocks_info", "blocks_info" : blocksInfo}));
+    } else {
+      nearbyService.sendMessage(fromDeviceId, responseString);
+    }
+  }
+
+  Future<void> handleGetBlockMessage(String fromDeviceId, Map<String, dynamic> messageData) async {
+    final requestedPropertyKey = messageData["property_key"]! as String;
+    final requestedBlock = messageData["block"]! as int;
+    if (!data.containsKey(requestedPropertyKey)) return;
+    String responseData = "";
+    if (data[requestedPropertyKey] is SharedValue) {
+      final rawJsonString = jsonEncode(data[requestedPropertyKey]! as SharedValue);
+      if (rawJsonString.length < Constants.sharedDataStoreBlockSize * requestedBlock) return;
+      responseData = rawJsonString.substring(Constants.sharedDataStoreBlockSize * requestedBlock, math.min(Constants.sharedDataStoreBlockSize * (requestedBlock + 1), rawJsonString.length));
+    } else if (data[requestedPropertyKey] is SharedValueList) {
+      // TODO: Implement
+      return;
+    }
+    nearbyService.sendMessage(fromDeviceId, jsonEncode({"type" : "data", "block": requestedBlock, "property_key": requestedPropertyKey, "data" : responseData}));
+  }
+
+  Future<void> handleDataMessage(String fromDeviceId, Map<String, dynamic> messageData) async {
+    dynamic peerData = messageData["data"];
+    // Handle block data
+    if (messageData.containsKey("block")) {
+      final block = messageData["block"]! as int;
+      final propertyKey = messageData["property_key"]! as String;
+      final partialBlockKey = Tuple2(fromDeviceId, propertyKey);
+      final partialBlocks = partialReceivingBlocks[partialBlockKey]!;
+      if (partialBlocks.item2.length != block) return;
+      partialBlocks.item2.add(peerData as String);
+      if (partialBlocks.item2.length == partialBlocks.item1) {
+        final receivedValue = partialBlocks.item2.join();
+        peerData = {propertyKey: receivedValue};
+        partialReceivingBlocks.remove(partialBlockKey);
+      } else {
+        return;
+      }
+    }
+    // Accept new complete properties
+    for (final property in (peerData as Map<String, dynamic>).entries) {
+      final peerSharedValue = await SharedValue.fromRaw(jsonDecode(property.value as String) as Map<String, dynamic>, keyPair!);
+      if (!data.containsKey(property.key)) {
+        if (kDebugMode) {
+          log("Accepted new value ${property.key} from $fromDeviceId", name: "Shared-Data-Store");
+          displayTextOverlay("Accepted new value ${property.key} from $fromDeviceId", const Duration(seconds: 3), sharedState, sharedState.buildContext!);
+        }
+        data[property.key] = peerSharedValue;
+        continue;
+      }
+      if (data[property.key] is SharedValue) {
+        if (peerSharedValue.timestamp.isAfter((data[property.key]! as SharedValue).timestamp)) {
+          data[property.key] = peerSharedValue;
+          if (kDebugMode) {
+            log("Accepted newer value ${property.key} from $fromDeviceId", name: "Shared-Data-Store");
+            displayTextOverlay("Accepted newer value ${property.key} from $fromDeviceId", const Duration(seconds: 3), sharedState, sharedState.buildContext!);
+          }
+        }
+      } else if (data[property.key] is SharedValueList) {
+        // TODO: Implement
+      }
+    }
+    await saveChanges();
   }
 
 }
