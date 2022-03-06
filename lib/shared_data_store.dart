@@ -80,10 +80,10 @@ class SharedValueList {
     sharedValues.add(await SharedValue.newSharedValue(timestamp, data, keyPair));
   }
 
-  static SharedValueList fromJson(List<Map<String, dynamic>> sharedValuesJson) {
+  static SharedValueList fromJson(List<dynamic> sharedValuesJson) {
     final List<SharedValue> sharedValues = [];
     for (final sharedValueJson in sharedValuesJson) {
-      sharedValues.add(SharedValue.fromJson(sharedValueJson));
+      sharedValues.add(SharedValue.fromJson(sharedValueJson as Map<String, dynamic>));
     }
     return SharedValueList(sharedValues);
   }
@@ -142,7 +142,7 @@ class SharedDataStore {
       if (property.value is Map) {
         data[property.key] = SharedValue.fromJson(property.value as Map<String, dynamic>);
       } else if (property.value is List) {
-        data[property.key] = SharedValueList.fromJson(property.value as List<Map<String, dynamic>>);
+        data[property.key] = SharedValueList.fromJson(property.value as List<dynamic>);
       }
     }
   }
@@ -165,9 +165,25 @@ class SharedDataStore {
     await nearbyService.stopBrowsingForPeers();
   }
 
-  Future<void> setProperty(String propertyName, dynamic value) async {
-    data[propertyName] = await SharedValue.newSharedValue(DateTime.now(), value, keyPair!);
-    await saveChanges();
+  Future<void> setProperty(String propertyName, dynamic value, {DateTime? timestamp}) async {
+    timestamp ??= DateTime.now();
+    if (value is List) {
+      data[propertyName] = SharedValueList([]);
+      for (final dataValue in value) {
+        data[propertyName].addNewSharedValue(timestamp, dataValue, keyPair);
+      }
+    } else {
+      data[propertyName] = await SharedValue.newSharedValue(timestamp, value, keyPair!);
+    }
+    return saveChanges();
+  }
+
+  Future<void> addToPropertyList(String propertyName, dynamic value, {DateTime? timestamp}) async {
+    timestamp ??= DateTime.now();
+    if (!data.containsKey(propertyName)) return;
+    final sharedValueList = data[propertyName] as SharedValueList;
+    await sharedValueList.addNewSharedValue(timestamp, data, keyPair!);
+    return saveChanges();
   }
 
   dynamic getProperty(String propertyName) {

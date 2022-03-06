@@ -121,6 +121,9 @@ class SubstitutionScanningOverlayState extends BottomOverlayState {
       case SubstitutionImageImportResult.toOld:
         setState(() => text = "Vertretungsplan ist zu alt");
         break;
+      case SubstitutionImageImportResult.alreadyScanned:
+        setState(() => text = "Dieser Vertretungsplan wurde bereits eingelesen");
+        break;
     }
     setState(() {
       progressBarColor = widget.sharedState.theme.subjectSubstitutionColor;

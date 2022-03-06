@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:stundenplan/shared_data_store.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/widgets/buttons.dart';
 import 'package:stundenplan/widgets/labeled_text_input.dart';
@@ -44,41 +45,91 @@ class _SharedDataStoreDebugPageState extends State<SharedDataStoreDebugPage> {
           padding: const EdgeInsets.symmetric(vertical: 50.0, horizontal: 20.0),
           child: Column(
             children: [
-              ListView(
-                shrinkWrap: true,
-                physics: const BouncingScrollPhysics(),
-                children: widget.sharedState.sharedDataStore!.data.entries.map((e) => Container(
-                  padding: EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: widget.sharedState.theme.subjectDropOutColor.withOpacity(0.4), width: 1.0),
-                    borderRadius: BorderRadius.circular(1.0)
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(e.key, textAlign: TextAlign.left, style: GoogleFonts.poppins(
-                          color: widget.sharedState.theme.textColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10
-                      )),
-                      Text("Timestamp: ${e.value.timestamp.toString()}", textAlign: TextAlign.left,style: GoogleFonts.poppins(
-                          color: widget.sharedState.theme.textColor,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 9
-                      )),
-                      Text("Data: ${truncateString(e.value.data.toString(), 100)}", textAlign: TextAlign.left, style: GoogleFonts.poppins(
-                          color: widget.sharedState.theme.textColor,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 9
-                      )),
-                      Text("Raw: ${truncateString(e.value.raw.toString(), 500)}", textAlign: TextAlign.left, style: GoogleFonts.poppins(
-                          color: widget.sharedState.theme.textColor,
-                          fontWeight: FontWeight.w300,
-                          fontSize: 4
-                      ))
-                    ],
-                  ),
-                )).toList()
+              Expanded(
+                child: ListView(
+                  shrinkWrap: true,
+                  physics: const BouncingScrollPhysics(),
+                  children: widget.sharedState.sharedDataStore!.data.entries.map((e) => Dismissible(
+                    key: ObjectKey(e.key),
+                    onDismissed: (_) {
+                      widget.sharedState.sharedDataStore!.data.remove(e.key);
+                      widget.sharedState.sharedDataStore!.saveChanges();
+                    },
+                    background: Container(
+                      color: Colors.red,
+                    ),
+                    child: Container(
+                      padding: EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: widget.sharedState.theme.subjectDropOutColor.withOpacity(0.4), width: 1.0),
+                        borderRadius: BorderRadius.circular(1.0)
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(e.key, textAlign: TextAlign.left, style: GoogleFonts.poppins(
+                              color: widget.sharedState.theme.textColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10
+                          )),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: (e.value is SharedValue) ? [
+                              Text("Timestamp: ${e.value.timestamp.toString()}", textAlign: TextAlign.left,style: GoogleFonts.poppins(
+                                  color: widget.sharedState.theme.textColor,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 9
+                              )),
+                              Text("Data: ${truncateString(e.value.data.toString(), 100)}", textAlign: TextAlign.left, style: GoogleFonts.poppins(
+                                  color: widget.sharedState.theme.textColor,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 9
+                              )),
+                              Text("Raw: ${truncateString(e.value.raw.toString(), 500)}", textAlign: TextAlign.left, style: GoogleFonts.poppins(
+                                  color: widget.sharedState.theme.textColor,
+                                  fontWeight: FontWeight.w300,
+                                  fontSize: 4
+                              ))
+                            ] : (e.value as SharedValueList).sharedValues.asMap().map((index, sharedValue) => MapEntry(index,
+                              Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                    border: Border.all(color: widget.sharedState.theme.subjectDropOutColor.withOpacity(0.4), width: 1.0),
+                                    borderRadius: BorderRadius.circular(1.0)
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text("${e.key}[$index]", textAlign: TextAlign.left, style: GoogleFonts.poppins(
+                                      color: widget.sharedState.theme.textColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10
+                                    )),
+                                    Text("Timestamp: ${sharedValue.timestamp.toString()}", textAlign: TextAlign.left,style: GoogleFonts.poppins(
+                                        color: widget.sharedState.theme.textColor,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 9
+                                    )),
+                                    Text("Data: ${truncateString(sharedValue.data.toString(), 100)}", textAlign: TextAlign.left, style: GoogleFonts.poppins(
+                                        color: widget.sharedState.theme.textColor,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 9
+                                    )),
+                                    Text("Raw: ${truncateString(sharedValue.raw.toString(), 500)}", textAlign: TextAlign.left, style: GoogleFonts.poppins(
+                                        color: widget.sharedState.theme.textColor,
+                                        fontWeight: FontWeight.w300,
+                                        fontSize: 4
+                                    ))
+                                  ]
+                                )
+                              )
+                            )).values.toList(),
+                          )
+                        ],
+                      ),
+                    ),
+                  )).toList()
+                ),
               ),
               LabeledTextInput("New Property name", widget.sharedState, newList, 0, fontSize: 13),
               LabeledTextInput("New Value", widget.sharedState, newList, 1, fontSize: 13),

@@ -12,6 +12,7 @@ import 'package:opencv/opencv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:stundenplan/content.dart';
 import 'package:stundenplan/parsing/parse_subsitution_plan.dart';
+import 'package:stundenplan/shared_data_store.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
@@ -574,6 +575,7 @@ void correctSubstitution(Map<String, String> substitution, Content content, Stri
 
 enum SubstitutionImageImportResult {
   allOk,
+  alreadyScanned,
   badImage,
   noMonitorCorners,
   badTableSeparation,
@@ -687,10 +689,16 @@ class SubstitutionImageImporter {
     if (okTablesCount > 0) {
       sharedState.saveCache();
       if (sharedState.sharedDataStore != null) {
-        // TODO: Use a SharedValueList instead
-        await sharedState.sharedDataStore!.setProperty("substitution_image", base64Encode(img.encodeJpg(image, quality: 30)));
+        final base64ImageString = base64Encode(img.encodeJpg(image, quality: 30));
+        if (!sharedState.sharedDataStore!.data.containsKey("substitution_images")) {
+          await sharedState.sharedDataStore!.setProperty("substitution_images", [base64ImageString]);
+        } else {
+          final sharedValueList = sharedState.sharedDataStore!.data["substitution_images"] as SharedValueList;
+          if (sharedValueList.containsSharedValueHash(jsonEncode(base64ImageString).hashCode.toString())) return SubstitutionImageImportResult.alreadyScanned;
+          await sharedState.sharedDataStore!.addToPropertyList("substitution_images", base64ImageString);
+        }
       }
-    };
+    }
     if (okTablesCount == 0) {
       return SubstitutionImageImportResult.badTables;
     } else if (okTablesCount == 1) {
