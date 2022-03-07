@@ -120,7 +120,7 @@ class SharedValueList {
 
   @override
   String toString() {
-    return sharedValues.toString();
+    return "SharedValueList$sharedValues";
   }
 }
 
@@ -170,7 +170,7 @@ class SharedDataStore {
     if (value is List) {
       data[propertyName] = SharedValueList([]);
       for (final dataValue in value) {
-        data[propertyName].addNewSharedValue(timestamp, dataValue, keyPair);
+        await (data[propertyName] as SharedValueList).addNewSharedValue(timestamp, dataValue, keyPair!);
       }
     } else {
       data[propertyName] = await SharedValue.newSharedValue(timestamp, value, keyPair!);
@@ -182,7 +182,7 @@ class SharedDataStore {
     timestamp ??= DateTime.now();
     if (!data.containsKey(propertyName)) return;
     final sharedValueList = data[propertyName] as SharedValueList;
-    await sharedValueList.addNewSharedValue(timestamp, data, keyPair!);
+    await sharedValueList.addNewSharedValue(timestamp, value, keyPair!);
     return saveChanges();
   }
 
@@ -230,6 +230,11 @@ class SharedDataStore {
     }
   }
 
+  Future<void> loadKeyPair() async {
+    // TODO: Don't create a new key pair every time. Instead only create a new one, if there isn't one in the secure storage already.
+    keyPair ??= await Ed25519().newKeyPair();
+  }
+
   Future<void> start() async {
     if (running) return;
     running = true;
@@ -240,8 +245,7 @@ class SharedDataStore {
       final iosInfo = await deviceInfo.iosInfo;
       deviceName = iosInfo.name! + iosInfo.identifierForVendor!;
     }
-    keyPair ??= await Ed25519().newKeyPair(); // TODO: Don't create a new key pair every time. Instead only create a new one, if there isn't one in the secure storage already.
-
+    await loadKeyPair();
     await nearbyService.init(
         serviceType: "HAG-SDS",
         strategy: Strategy.P2P_CLUSTER,
