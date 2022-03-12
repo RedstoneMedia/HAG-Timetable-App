@@ -1,10 +1,16 @@
-import 'dart:math';
+import 'dart:convert';
+import 'dart:developer';
+import 'dart:math' as math;
 import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
 import 'package:http/http.dart';  // Contains a client for making API calls
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
+import 'package:stundenplan/integration.dart';
 import 'package:stundenplan/parsing/parsing_util.dart';
 import 'package:stundenplan/shared_state.dart';
+import 'package:stundenplan/week_subsitutions.dart';
+import 'package:tuple/tuple.dart';
+
 
 Future<void> overwriteContentWithSubsitutionPlan(
     SharedState sharedState,
@@ -13,41 +19,27 @@ Future<void> overwriteContentWithSubsitutionPlan(
     List<String> subjects,
     String schoolClassName) async
 {
-  // Get main substitutions
-  final ret = await getCourseSubstitutionPlan(schoolClassName, Constants.substitutionLinkBase, client);
-  final mainPlan = ret["substitutions"] as List<Map<String, String>>;
-  final mainSubstituteDate = ret["substituteDate"] as DateTime;
-  sharedState.weekSubstitutions.setDay(mainPlan, mainSubstituteDate);
-
-  //  Get course substitutions
-  if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
-    final courseRet = await getCourseSubstitutionPlan(
-        "${sharedState.profileManager.schoolGrade}K",
-        Constants.substitutionLinkBase,
-        client);
-    final coursePlan = courseRet["substitutions"] as List<Map<String, String>>;
-    final courseSubstituteDate = ret["substituteDate"] as DateTime;
-    sharedState.weekSubstitutions.setDay(coursePlan, courseSubstituteDate);
-  }
-
+  await Integrations.instance.update(values: ["substitutions"]);
+  final weekSubstitutions = Integrations.instance.getValue("substitutions")! as WeekSubstitutions;
   // Write substitutions to content.
-  for (final weekDayString in sharedState.weekSubstitutions.weekSubstitutions!.keys) {
+  for (final weekDayString in weekSubstitutions.weekSubstitutions!.keys) {
     final weekDay = int.parse(weekDayString);
-    final daySubstitution = sharedState.weekSubstitutions.weekSubstitutions![weekDayString]!;
+    final daySubstitution = weekSubstitutions.weekSubstitutions![weekDayString]!;
     writeSubstitutionPlan(daySubstitution.item1, weekDay, content, subjects);
   }
 }
 
-void writeSubstitutionPlan(List<Map<String, dynamic>> plan, int weekDay,
+void writeSubstitutionPlan(List<Tuple2<Map<String, dynamic>, String>> plan, int weekDay,
     Content content, List<String> subjects)
 {
   for (var i = 0; i < plan.length; i++) {
-    final hours = customStrip(plan[i]["Stunde"] as String).split("-");
+    final substitution = plan[i].item1;
+    final hours = customStrip(substitution["Stunde"] as String).split("-");
 
     // Fill cell
     final cell = Cell();
-    cell.subject = customStrip(plan[i]["Fach"] as String);
-    cell.originalSubject = customStrip(plan[i]["statt Fach"] as String);
+    cell.subject = customStrip(substitution["Fach"] as String);
+    cell.originalSubject = customStrip(substitution["statt Fach"] as String);
     if (!subjects.contains(cell.originalSubject)) {
       // Unicode 00A0 (Non breaking space, because that makes sense) indicates that
       // the subject replaces all other lessons taking place in the same time
@@ -56,12 +48,12 @@ void writeSubstitutionPlan(List<Map<String, dynamic>> plan, int weekDay,
         continue;
       }
     }
-    cell.teacher = customStrip(plan[i]["Vertretung"] as String);
-    cell.originalTeacher = customStrip(plan[i]["statt Lehrer"] as String);
-    cell.room = customStrip(plan[i]["Raum"] as String);
-    cell.originalRoom = customStrip(plan[i]["statt Raum"] as String);
-    cell.text = plan[i]["Text"] as String;
-    cell.isDropped = customStrip(plan[i]["Entfall"] as String) == "x";
+    cell.teacher = customStrip(substitution["Vertretung"] as String);
+    cell.originalTeacher = customStrip(substitution["statt Lehrer"] as String);
+    cell.room = customStrip(substitution["Raum"] as String);
+    cell.originalRoom = customStrip(substitution["statt Raum"] as String);
+    cell.text = substitution["Text"] as String;
+    cell.isDropped = customStrip(substitution["Entfall"] as String) == "x";
 
     // Sometimes a substitution is set, but there is no data set which means that it is dropped.
     if (cell.originalSubject == "\u{00A0}" && cell.subject == "\u{00A0}" && cell.room == "\u{00A0}" && cell.teacher == "\u{00A0}") {
@@ -97,81 +89,232 @@ void writeSubstitutionPlan(List<Map<String, dynamic>> plan, int weekDay,
   }
 }
 
-Future<Map<String, dynamic>> getCourseSubstitutionPlan(String course, String linkBase, Client client) async {
-  final response = await client.get(Uri.parse('${linkBase}_$course.htm'));
-  if (response.statusCode != 200) {
-    return {
-      "substitutions" : <Map<String, String>>[],
-      "substituteDate" : DateTime.now(),
-      "substituteWeekday" : 1
-    };
+class IServUnitsSubstitutionIntegration extends Integration {
+  final Client client = Client();
+  final SharedState sharedState;
+
+  IServUnitsSubstitutionIntegration(this.sharedState) : super(name: "IServ", save: true, precedence: 0, providedValues: ["substitutions"]);
+
+  @override
+  Future<void> init() async {
+    values["substitutions"] = WeekSubstitutions(null, name);
   }
 
-  final document = parse(response.body);
-  if (document.outerHtml.contains("Fatal error")) {
-    return {
-      "substitutions" : <Map<String, String>>[],
-      "substituteDate" : DateTime.now(),
-      "substituteWeekday" : 1
-    };
-  }
+  @override
+  Future<void> update() async {
+    final weekSubstitutions = values["substitutions"]! as WeekSubstitutions;
+    final schoolClassName = "${sharedState.profileManager.schoolGrade}${sharedState.profileManager.subSchoolClass}";
+    // Get main substitutions
+    final ret = await getCourseSubstitutionPlan(schoolClassName);
+    final mainPlan = ret["substitutions"] as List<Map<String, String>>;
+    final mainSubstituteDate = ret["substituteDate"] as DateTime;
+    weekSubstitutions.setDay(mainPlan, mainSubstituteDate, name);
 
-  // Get weekday for that substitute table
-  final headerText = customStrip(document
-      .getElementsByTagName("body")[0]
-      .children[0]
-      .children[0]
-      .children[2]
-      .text
-      .replaceAll("  ", "/"));
-  final regexp = RegExp(r"^\w+\/(?<day>\d+).(?<month>\d+).");
-  final match = regexp.firstMatch(headerText)!;
-
-  final substituteDate = DateTime(
-      DateTime.now().year,
-      int.parse(match.namedGroup("month")!),
-      int.parse(match.namedGroup("day")!));
-  var substituteWeekday = substituteDate.weekday;
-  if (substituteWeekday > 5) {
-    substituteWeekday = min(DateTime.now().weekday, 5);
-  }
-
-  final tables = document.getElementsByTagName("table");
-  for (var i = 0; i < tables.length; i++) {
-    if (!tables[i].attributes.containsKey("rules")) {
-      tables.removeAt(i);
+    //  Get course substitutions
+    if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
+      final courseRet = await getCourseSubstitutionPlan(
+          "${sharedState.profileManager.schoolGrade}K",
+      );
+      final coursePlan = courseRet["substitutions"] as List<Map<String, String>>;
+      final courseSubstituteDate = ret["substituteDate"] as DateTime;
+      weekSubstitutions.setDay(coursePlan, courseSubstituteDate, name);
     }
   }
 
-  final mainTable = tables[0];
-  final rows = mainTable.getElementsByTagName("tr");
-  final headerInformation = [
-    "Stunde",
-    "Fach",
-    "Vertretung",
-    "Raum",
-    "statt Fach",
-    "statt Lehrer",
-    "statt Raum",
-    "Text",
-    "Entfall"
-  ];
-  rows.removeAt(0);
-  final substitutions = <Map<String, String>>[];
-
-  for (final row in rows) {
-    final substitution = <String, String>{};
-    final columns = row.getElementsByTagName("td");
-    for (var i = 0; i < columns.length; i++) {
-      substitution[headerInformation[i]] =
-          columns[i].text.replaceAll("\n", " ");
+  @override
+  void loadValuesFromJson(Map<String, dynamic> jsonValues) {
+    for (final jsonValueEntry in jsonValues.entries) {
+      if (jsonValueEntry.key == "substitution") {
+        values[jsonValueEntry.key] = WeekSubstitutions(jsonValueEntry.value, name);
+      }
     }
-    substitutions.add(substitution);
   }
 
-  return {
-    "substitutions" : substitutions,
-    "substituteDate" : substituteDate,
-    "substituteWeekday" : substituteWeekday
-  };
+  Future<Map<String, dynamic>> getCourseSubstitutionPlan(String course) async {
+    final response = await client.get(Uri.parse('${Constants.substitutionLinkBase}_$course.htm'));
+    if (response.statusCode != 200) {
+      return {
+        "substitutions" : <Map<String, String>>[],
+        "substituteDate" : DateTime.now(),
+        "substituteWeekday" : 1
+      };
+    }
+
+    final document = parse(response.body);
+    if (document.outerHtml.contains("Fatal error")) {
+      return {
+        "substitutions" : <Map<String, String>>[],
+        "substituteDate" : DateTime.now(),
+        "substituteWeekday" : 1
+      };
+    }
+
+    // Get weekday for that substitute table
+    final headerText = customStrip(document
+        .getElementsByTagName("body")[0]
+        .children[0]
+        .children[0]
+        .children[2]
+        .text
+        .replaceAll("  ", "/"));
+    final regexp = RegExp(r"^\w+\/(?<day>\d+).(?<month>\d+).");
+    final match = regexp.firstMatch(headerText)!;
+
+    final substituteDate = DateTime(
+        DateTime.now().year,
+        int.parse(match.namedGroup("month")!),
+        int.parse(match.namedGroup("day")!));
+    var substituteWeekday = substituteDate.weekday;
+    if (substituteWeekday > 5) {
+      substituteWeekday = math.min(DateTime.now().weekday, 5);
+    }
+
+    final tables = document.getElementsByTagName("table");
+    for (var i = 0; i < tables.length; i++) {
+      if (!tables[i].attributes.containsKey("rules")) {
+        tables.removeAt(i);
+      }
+    }
+
+    final mainTable = tables[0];
+    final rows = mainTable.getElementsByTagName("tr");
+    final headerInformation = [
+      "Stunde",
+      "Fach",
+      "Vertretung",
+      "Raum",
+      "statt Fach",
+      "statt Lehrer",
+      "statt Raum",
+      "Text",
+      "Entfall"
+    ];
+    rows.removeAt(0);
+    final substitutions = <Map<String, String>>[];
+
+    for (final row in rows) {
+      final substitution = <String, String>{};
+      final columns = row.getElementsByTagName("td");
+      for (var i = 0; i < columns.length; i++) {
+        substitution[headerInformation[i]] =
+            columns[i].text.replaceAll("\n", " ");
+      }
+      substitutions.add(substitution);
+    }
+
+    return {
+      "substitutions" : substitutions,
+      "substituteDate" : substituteDate,
+      "substituteWeekday" : substituteWeekday
+    };
+  }
+
+}
+
+
+class SchulmangerIntegration extends Integration {
+  Client client = Client();
+  late Tuple2<String, String> loginResult;
+  late Map<String, dynamic> studentData;
+  bool active = false;
+
+  SchulmangerIntegration() : super(name: "Schulmanger", save: true, precedence: 1, providedValues: ["substitutions"]);
+
+  @override
+  Future<void> init() async {
+    const email = "";
+    const password = "";
+    active = await loginSchulmanger(email, password);
+  }
+
+  @override
+  Future<void> update() async {
+    if (!active) return;
+    var today = DateTime.now();
+    if (today.weekday > 5) today = today.add(const Duration(days: 2));
+    final weekStartDate = today.subtract(Duration(days: today.weekday-1));
+    final weekEndDate = weekStartDate.add(const Duration(days: 6));
+    log("$weekStartDate $weekEndDate");
+    final result = await sendSchulmangerApiRequest([{
+      "endpointName" : "get-actual-lessons",
+      "moduleName" : "schedules",
+      "parameters" : {
+        "start" : "${weekStartDate.year}-${weekStartDate.month.toString().padLeft(2, "0")}-${weekStartDate.day.toString().padLeft(2, "0")}",
+        "end" : "${weekEndDate.year}-${weekEndDate.month.toString().padLeft(2, "0")}-${weekEndDate.day.toString().padLeft(2, "0")}",
+        "student" : studentData
+      }
+    }]);
+    log(result.toString(), name: "schulmanger-integration");
+  }
+
+  @override
+  void loadValuesFromJson(Map<String, dynamic> jsonValues) {
+    for (final jsonValueEntry in jsonValues.entries) {
+      if (jsonValueEntry.key == "substitution") {
+        values[jsonValueEntry.key] = WeekSubstitutions(jsonValueEntry.value, name);
+      }
+    }
+  }
+
+  Future<bool> loginSchulmanger(String email, String password) async {
+    // Get bundle version in order to be able to make api requests
+    Response response = await client.get(Uri.parse("https://login.schulmanager-online.de/#/login"));
+    if (response.statusCode != 200) return false;
+    final result = parse(response.body);
+    final scripts = result.getElementsByTagName("script");
+    String? bundleVersion;
+    for (final script in scripts) {
+      if (script.attributes["type"] == "module") {
+        final srcSplit = script.attributes["src"]!.split(".");
+        bundleVersion = srcSplit[srcSplit.length-2];
+        break;
+      }
+    }
+    if (bundleVersion == null) return false;
+    // Send login request to get jwt token
+    final loginRequestBody = {"emailOrUsername": email, "password": password, "hash":null, "mobileApp": false, "institutionId":null};
+    response = await client.post(
+      Uri.parse("${Constants.schulmangerApiBaseUrl}/login"),
+      body: jsonEncode(loginRequestBody),
+      headers: {"Content-Type": "application/json;charset=utf-8"},
+    );
+    if (response.statusCode != 200) return false;
+    final responseJson = jsonDecode(response.body);
+    final jwt = responseJson["jwt"]! as String;
+    final user = responseJson["user"]! as Map<String, dynamic>;
+
+    Map<String, dynamic> studentUser;
+    if (user.containsKey("classId")) {
+      studentUser = user;
+    } else {
+      final parents = user["associatedParents"] as List<dynamic>;
+      final parent = parents.first as Map<String, dynamic>;
+      studentUser = parent["student"] as Map<String, dynamic>;
+    }
+    studentData = {
+      "classId": studentUser["classId"],
+      "firstname": studentUser["firstname"],
+      "lastname": studentUser["lastname"],
+      "id": studentUser["id"],
+      "sex": studentUser["sex"]
+    };
+    loginResult = Tuple2(jwt, bundleVersion);
+    return true;
+  }
+
+  Future<List<dynamic>?> sendSchulmangerApiRequest(List<Map<String, dynamic>> requests) async {
+    final response = await client.post(Uri.parse("${Constants.schulmangerApiBaseUrl}/calls"),
+      body: jsonEncode({"bundleVersion" : loginResult.item2, "requests" : requests}),
+      headers: {"Content-Type": "application/json;charset=utf-8", "Authorization": "Bearer ${loginResult.item1}"},
+    );
+    if (response.statusCode != 200) return null;
+    final responseResults = jsonDecode(response.body)["results"]! as List<dynamic>;
+    final returnData = <dynamic>[];
+    for (final result in responseResults) {
+      if (result["status"] != 200) return null;
+      returnData.add(result["data"]!);
+    }
+    return returnData;
+  }
+
 }

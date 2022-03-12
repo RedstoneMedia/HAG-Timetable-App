@@ -3,7 +3,7 @@ abstract class IntegratedValue {
   final bool save;
   IntegratedValue({required this.save});
   /// Modifies the current value with another value of higher precedence, any new entry's or mismatches will be overwritten by the new values data
-  void merge(IntegratedValue integratedValue);
+  void merge(IntegratedValue integratedValue, String integrationName);
 
   dynamic toJson() => null;
 }
@@ -95,7 +95,7 @@ class Integrations {
         throw Exception("Encountered value mismatch, with equal precedence $currentPrecedence for value $valueName");
       }
       if (integration.precedence > currentPrecedence) {
-        currentValue.merge(integrationValue);
+        currentValue.merge(integrationValue, integration.name);
         currentPrecedence = integration.precedence;
       }
     }
@@ -110,12 +110,11 @@ abstract class Integration {
   final int precedence;
   final Map<String, IntegratedValue?> values = {};
 
-  /// Create a new Integration and automatically register it
+  /// Create a new Integration
   Integration({required this.name, required this.save, required this.precedence, required List<String> providedValues}) {
     for (final providedValue in providedValues) {
       values[providedValue] = null;
     }
-    Integrations.instance.registerIntegration(this);
   }
 
   /// Gets called before the first update

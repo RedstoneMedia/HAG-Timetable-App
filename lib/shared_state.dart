@@ -6,9 +6,11 @@ import 'package:stundenplan/content.dart';
 import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/holiday_calculator.dart';
 import 'package:stundenplan/calendar_data.dart';
+import 'package:stundenplan/parsing/parse_subsitution_plan.dart';
 import 'package:stundenplan/profile_manager.dart';
 import 'package:stundenplan/theme.dart';
-import 'package:stundenplan/week_subsitutions.dart';
+
+import 'integration.dart';
 
 class SharedState {
   SharedPreferences preferences;
@@ -16,7 +18,6 @@ class SharedState {
   Theme theme = darkTheme;
   int? height = Constants.defaultHeight;
   Content content;
-  WeekSubstitutions weekSubstitutions = WeekSubstitutions({});
   ProfileManager profileManager = ProfileManager();
   List<int> holidayWeekdays = getHolidayWeekDays();
   CalendarData calendarData = CalendarData();
@@ -56,9 +57,11 @@ class SharedState {
       height = Constants.defaultHeight;
       return true;
     }
+    // Register integrations
+    Integrations.instance.registerIntegration(IServUnitsSubstitutionIntegration(this));
+    Integrations.instance.registerIntegration(SchulmangerIntegration());
 
     loadThemeAndProfileManagerFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")!));
-    loadWeekSubstitutions();
     return false;
   }
 
@@ -70,10 +73,10 @@ class SharedState {
   // Content
 
   void saveCache() {
-    // Save week substitutions
-    preferences.setString("weekSubstitutions", jsonEncode(weekSubstitutions.toJson()));
     // Save calendar data
     preferences.setString("calendarData", jsonEncode(calendarData.toJson()));
+    // Save integrations
+    preferences.setString("integrationsValues", jsonEncode(Integrations.instance.saveIntegrationValuesToJson()));
     // Save content
     content.updateLastUpdated();
     log("[SAVED] lastUpdated: ${content.lastUpdated}", name: "cache");
@@ -81,19 +84,15 @@ class SharedState {
     preferences.setString("cachedContent", encodedContent);
   }
 
-  void loadWeekSubstitutions() {
-    // Load week substitutions
-    final String weekSubstitutionsJsonString = preferences.get("weekSubstitutions").toString();
-    if (weekSubstitutionsJsonString != "") {
-      weekSubstitutions = WeekSubstitutions(jsonDecode(weekSubstitutionsJsonString));
-    }
-  }
-
   void loadCache() {
     // Load calendar data
     final String calendarDataJsonString = preferences.get("calendarData").toString();
     if (calendarDataJsonString != "") {
       calendarData = CalendarData.fromJson(jsonDecode(calendarDataJsonString) as List<dynamic>);
+    }
+    // Load integrations
+    if (preferences.containsKey("integrationsValues")) {
+      Integrations.instance.loadIntegrationValuesFromJson(jsonDecode(preferences.getString("integrationsValues")!) as Map<String, dynamic>);
     }
     // Load content
     final String contentJsonString = preferences.get("cachedContent").toString();
