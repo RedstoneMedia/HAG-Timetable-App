@@ -234,7 +234,7 @@ class SchulmangerIntegration extends Integration {
   Future<void> update() async {
     if (!active) return;
     final weekSubstitutions = values["substitutions"]! as WeekSubstitutions;
-    var today = DateTime.now().subtract(Duration(days: 5));
+    var today = DateTime.now();
     if (today.weekday > 5) today = today.add(const Duration(days: 2));
     final weekStartDate = today.subtract(Duration(days: today.weekday-1));
     final weekEndDate = weekStartDate.add(const Duration(days: 6));
