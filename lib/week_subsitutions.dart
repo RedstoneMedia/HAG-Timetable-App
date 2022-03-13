@@ -62,7 +62,8 @@ class WeekSubstitutions extends IntegratedValue {
 
   @override
   void merge(IntegratedValue integratedValue, String integrationName) {
-    // TODO: implement merge
+    // TODO: implement better merge (this here isn't even a merge)
+    weekSubstitutions = (integratedValue as WeekSubstitutions).weekSubstitutions;
   }
 
 }

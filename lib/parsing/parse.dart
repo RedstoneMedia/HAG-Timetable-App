@@ -56,6 +56,7 @@ Future<void> parsePlans(SharedState sharedState) async {
     log("Combining both tables", name: "parsing");
     content.combine(courseTimeTableContent);
   }
+  sharedState.content = content;
   log("Parsing substitution plan", name: "parsing");
   await overwriteContentWithSubsitutionPlan(sharedState, client, content, allSubjects, schoolClassName)
       .timeout(Constants.clientTimeout);

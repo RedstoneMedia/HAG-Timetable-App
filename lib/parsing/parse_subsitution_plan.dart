@@ -124,7 +124,7 @@ class IServUnitsSubstitutionIntegration extends Integration {
   @override
   void loadValuesFromJson(Map<String, dynamic> jsonValues) {
     for (final jsonValueEntry in jsonValues.entries) {
-      if (jsonValueEntry.key == "substitution") {
+      if (jsonValueEntry.key == "substitutions") {
         values[jsonValueEntry.key] = WeekSubstitutions(jsonValueEntry.value, name);
       }
     }
@@ -214,28 +214,31 @@ class IServUnitsSubstitutionIntegration extends Integration {
 
 class SchulmangerIntegration extends Integration {
   Client client = Client();
+  SharedState sharedState;
   late Tuple2<String, String> loginResult;
   late Map<String, dynamic> studentData;
   bool active = false;
 
-  SchulmangerIntegration() : super(name: "Schulmanger", save: true, precedence: 1, providedValues: ["substitutions"]);
+  SchulmangerIntegration(this.sharedState) : super(name: "Schulmanger", save: true, precedence: 1, providedValues: ["substitutions"]);
 
   @override
   Future<void> init() async {
+    // TODO: Store passwords
     const email = "";
     const password = "";
     active = await loginSchulmanger(email, password);
+    if (active) values["substitutions"] = WeekSubstitutions(null, name);
   }
 
   @override
   Future<void> update() async {
     if (!active) return;
-    var today = DateTime.now();
+    final weekSubstitutions = values["substitutions"]! as WeekSubstitutions;
+    var today = DateTime.now().subtract(Duration(days: 5));
     if (today.weekday > 5) today = today.add(const Duration(days: 2));
     final weekStartDate = today.subtract(Duration(days: today.weekday-1));
     final weekEndDate = weekStartDate.add(const Duration(days: 6));
-    log("$weekStartDate $weekEndDate");
-    final result = await sendSchulmangerApiRequest([{
+    final lessons = (await sendSchulmangerApiRequest([{
       "endpointName" : "get-actual-lessons",
       "moduleName" : "schedules",
       "parameters" : {
@@ -243,14 +246,75 @@ class SchulmangerIntegration extends Integration {
         "end" : "${weekEndDate.year}-${weekEndDate.month.toString().padLeft(2, "0")}-${weekEndDate.day.toString().padLeft(2, "0")}",
         "student" : studentData
       }
-    }]);
-    log(result.toString(), name: "schulmanger-integration");
+    }]))![0];
+    // Parse json into day substitutions list
+    final substitutions = <DateTime, List<Map<String, dynamic>>>{};
+    for (final l in lessons as List<dynamic>) {
+      final lesson = l as Map<String, dynamic>;
+      final date = DateTime.parse(lesson["date"]! as String);
+      final weekDay = date.weekday;
+      final classHour = int.parse((lesson["classHour"]! as Map<String, dynamic>)["number"]! as String)-1;
+      final actualLesson = lesson["actualLesson"] as Map<String, dynamic>?;
+      final currentCell = sharedState.content.getCell(classHour, weekDay);
+      // Handle dropout
+      if (actualLesson == null) {
+        final originalLessons = lesson["originalLessons"] as List<dynamic>;
+        if (originalLessons.length > 1) continue; // TODO: Don't do this
+        final originalLesson = originalLessons[0] as Map<String, dynamic>;
+        final originalLessonSubject = originalLesson["subjectLabel"]! as String;
+        if (!sharedState.profileManager.subjects.contains(originalLessonSubject)) continue;
+        final comment = lesson["comment"] as String?;
+        final substitutionData = <String, dynamic>{
+          "Stunde" : classHour.toString(),
+          "Fach" : "---",
+          "Vertretung" : "---",
+          "Raum" : "---",
+          "statt Fach" : currentCell.subject,
+          "statt Lehrer" : currentCell.teacher,
+          "statt Raum" : currentCell.room,
+          "Text" : comment ?? "\u{00A0}",
+          "Entfall" : "x"
+        };
+        final daySubstitutions = substitutions.putIfAbsent(date, () => []);
+        daySubstitutions.add(substitutionData);
+        log(lesson.toString(), name: "drop");
+        continue;
+      }
+      final subject = actualLesson["subjectLabel"]! as String;
+      if (!sharedState.profileManager.subjects.contains(subject)) continue;
+      final room = (actualLesson["room"]! as Map<String, dynamic>)["name"]! as String;
+      final teachers = actualLesson["teachers"]! as List<dynamic>;
+      final teacher = (teachers[0] as Map<String, dynamic>)["abbreviation"] as String;
+      final text = actualLesson["comment"] as String?;
+
+      // Skip if nothing changed (aka not a substitution just redundant information)
+      if (currentCell.subject == subject && currentCell.teacher == teacher && currentCell.room == room && text == null) continue;
+      final substitutionData = <String, dynamic>{
+        "Stunde" : classHour.toString(),
+        "Fach" : subject,
+        "Vertretung" : teacher,
+        "Raum" : room,
+        "statt Fach" : currentCell.subject,
+        "statt Lehrer" : currentCell.teacher,
+        "statt Raum" : currentCell.room,
+        "Text" : text ?? "\u{00A0}",
+        "Entfall" : ""
+      };
+      final daySubstitutions = substitutions.putIfAbsent(date, () => []);
+      daySubstitutions.add(substitutionData);
+    }
+    // Set weekSubstitutions
+    for (final entry in substitutions.entries) {
+      final daySubstitutions = entry.value;
+      daySubstitutions.sort((a, b) => (int.parse(a["Stunde"]! as String)).compareTo(int.parse(b["Stunde"]! as String)));
+      weekSubstitutions.setDay(daySubstitutions, entry.key, name);
+    }
   }
 
   @override
   void loadValuesFromJson(Map<String, dynamic> jsonValues) {
     for (final jsonValueEntry in jsonValues.entries) {
-      if (jsonValueEntry.key == "substitution") {
+      if (jsonValueEntry.key == "substitutions") {
         values[jsonValueEntry.key] = WeekSubstitutions(jsonValueEntry.value, name);
       }
     }

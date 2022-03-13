@@ -59,7 +59,7 @@ class SharedState {
     }
     // Register integrations
     Integrations.instance.registerIntegration(IServUnitsSubstitutionIntegration(this));
-    Integrations.instance.registerIntegration(SchulmangerIntegration());
+    Integrations.instance.registerIntegration(SchulmangerIntegration(this));
 
     loadThemeAndProfileManagerFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")!));
     return false;
