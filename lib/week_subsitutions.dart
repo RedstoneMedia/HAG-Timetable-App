@@ -84,7 +84,7 @@ class WeekSubstitutions extends IntegratedValue {
           var daySubstitutionsList = currentDaySubstitutions.item1;
           final oldSubstitution = daySubstitutionsList[oldSubstitutionIndex].item1;
           final oldClassHours = (oldSubstitution["Stunde"]! as String).split("-");
-          if (oldClassHours != newClassHours) {
+          if (newSubstitution.item1["Stunde"] as String != oldSubstitution["Stunde"]! as String) {
             final newClassHourStart = int.parse(newClassHours[0]);
             final newClassHourEnd = int.parse(newClassHours[1]);
             // Split hour ranges in current substitution (5-6, 8-9, etc.) into smaller substitution (5-6 -> 5,6; 8-9 -> 8,9). This is done, so that the index in the day substitution list matches the classHour offset by 1 and can then easily be replaced by the new substitution
