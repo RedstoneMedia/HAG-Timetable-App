@@ -11,6 +11,8 @@ import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/week_subsitutions.dart';
 import 'package:tuple/tuple.dart';
 
+import 'iserv_authentication.dart';
+
 
 Future<void> overwriteContentWithSubsitutionPlan(
     SharedState sharedState,
@@ -215,7 +217,8 @@ class IServUnitsSubstitutionIntegration extends Integration {
 class SchulmangerIntegration extends Integration {
   Client client = Client();
   SharedState sharedState;
-  late Tuple2<String, String> loginResult;
+  late String bundleVersion;
+  late String authJwt;
   late Map<String, dynamic> studentData;
   bool active = false;
 
@@ -223,10 +226,10 @@ class SchulmangerIntegration extends Integration {
 
   @override
   Future<void> init() async {
-    // TODO: Store passwords
-    const email = "";
-    const password = "";
-    active = await loginSchulmanger(email, password);
+    final _bundleVersion = await getBundleVersion();
+    if (_bundleVersion == null) return;
+    bundleVersion = _bundleVersion;
+    active = await loginOauth();
     if (active) values["substitutions"] = WeekSubstitutions(null, name);
   }
 
@@ -253,9 +256,9 @@ class SchulmangerIntegration extends Integration {
       final lesson = l as Map<String, dynamic>;
       final date = DateTime.parse(lesson["date"]! as String);
       final weekDay = date.weekday;
-      final classHour = int.parse((lesson["classHour"]! as Map<String, dynamic>)["number"]! as String)-1;
+      final classHour = int.parse((lesson["classHour"]! as Map<String, dynamic>)["number"]! as String);
       final actualLesson = lesson["actualLesson"] as Map<String, dynamic>?;
-      final currentCell = sharedState.content.getCell(classHour, weekDay);
+      final currentCell = sharedState.content.getCell(classHour-1, weekDay);
       // Handle dropout
       if (actualLesson == null) {
         final originalLessons = lesson["originalLessons"] as List<dynamic>;
@@ -277,7 +280,6 @@ class SchulmangerIntegration extends Integration {
         };
         final daySubstitutions = substitutions.putIfAbsent(date, () => []);
         daySubstitutions.add(substitutionData);
-        log(lesson.toString(), name: "drop");
         continue;
       }
       final subject = actualLesson["subjectLabel"]! as String;
@@ -320,10 +322,10 @@ class SchulmangerIntegration extends Integration {
     }
   }
 
-  Future<bool> loginSchulmanger(String email, String password) async {
+  Future<String?> getBundleVersion() async {
     // Get bundle version in order to be able to make api requests
     Response response = await client.get(Uri.parse("https://login.schulmanager-online.de/#/login"));
-    if (response.statusCode != 200) return false;
+    if (response.statusCode != 200) return null;
     final result = parse(response.body);
     final scripts = result.getElementsByTagName("script");
     String? bundleVersion;
@@ -334,24 +336,15 @@ class SchulmangerIntegration extends Integration {
         break;
       }
     }
-    if (bundleVersion == null) return false;
-    // Send login request to get jwt token
-    final loginRequestBody = {"emailOrUsername": email, "password": password, "hash":null, "mobileApp": false, "institutionId":null};
-    response = await client.post(
-      Uri.parse("${Constants.schulmangerApiBaseUrl}/login"),
-      body: jsonEncode(loginRequestBody),
-      headers: {"Content-Type": "application/json;charset=utf-8"},
-    );
-    if (response.statusCode != 200) return false;
-    final responseJson = jsonDecode(response.body);
-    final jwt = responseJson["jwt"]! as String;
-    final user = responseJson["user"]! as Map<String, dynamic>;
+    return bundleVersion;
+  }
 
+  void setStudentDataFromUserInfo(Map<String, dynamic> userInfo) {
     Map<String, dynamic> studentUser;
-    if (user.containsKey("classId")) {
-      studentUser = user;
+    if (userInfo["associatedStudent"] != null) {
+      studentUser = userInfo["associatedStudent"] as Map<String, dynamic>;
     } else {
-      final parents = user["associatedParents"] as List<dynamic>;
+      final parents = userInfo["associatedParents"] as List<dynamic>;
       final parent = parents.first as Map<String, dynamic>;
       studentUser = parent["student"] as Map<String, dynamic>;
     }
@@ -362,16 +355,90 @@ class SchulmangerIntegration extends Integration {
       "id": studentUser["id"],
       "sex": studentUser["sex"]
     };
-    loginResult = Tuple2(jwt, bundleVersion);
+  }
+
+  // Not currently used but could be used, by parents who don't have an IServ account
+  Future<bool> loginSchulmanger(String email, String password) async {
+    // Send login request to get jwt token
+    final loginRequestBody = {"emailOrUsername": email, "password": password, "hash":null, "mobileApp": false, "institutionId":null};
+    final response = await client.post(
+      Uri.parse("${Constants.schulmangerApiBaseUrl}/login"),
+      body: jsonEncode(loginRequestBody),
+      headers: {"Content-Type": "application/json;charset=utf-8"},
+    );
+    if (response.statusCode != 200) return false;
+    final responseJson = jsonDecode(response.body);
+    final jwt = responseJson["jwt"]! as String;
+    final userInfo = responseJson["user"]! as Map<String, dynamic>;
+    setStudentDataFromUserInfo(userInfo);
+    authJwt = jwt;
+    return true;
+  }
+
+  Future<bool> loginOauth() async {
+    // Make initial oidc request to schulmanager
+    final oidcRequest = Request("Get", Uri.parse("${Constants.schulmangerOicdBaseUrl}/${Constants.schulmanagerSchoolId}"))..followRedirects = false;
+    final oidcResponse = await client.send(oidcRequest);
+    if (oidcResponse.statusCode != 302) {
+      log("Initializing Oauth failed: ${oidcResponse.statusCode}", name: "schulmanager-integration");
+      return false;
+    }
+    final oidcCookieString = getCookieStringFromSetCookieHeader(oidcResponse.headers["set-cookie"]!, ["session", "session.sig"]);
+    final iservRedirectUri = Uri.parse(oidcResponse.headers['location']!);
+    // Login to iserv and grab the cookies
+    final iServCookies = await iServLogin(client);
+    if (iServCookies == null) return false;
+    // Authorize schulmangager with iserv cookies
+    final iservAuthRequest = Request("Get", iservRedirectUri)..followRedirects = false;
+    for (final h in getAuthHeaderFromCookies(iServCookies).entries) {
+      iservAuthRequest.headers[h.key] = h.value;
+    }
+    final iservAuthResponse = await client.send(iservAuthRequest);
+    if (iservAuthResponse.statusCode != 302) {
+      log("Oauth failed on iserv login: ${iservAuthResponse.statusCode}", name: "schulmanager-integration");
+      return false;
+    }
+    // Make callback request to get schulmanager session cookies
+    final callbackRedirectUri = Uri.parse(iservAuthResponse.headers['location']!);
+    final callbackRequest = Request("Get", callbackRedirectUri)..followRedirects = false;
+    callbackRequest.headers["Cookie"] = oidcCookieString;
+    final callbackResponse = await client.send(callbackRequest);
+    if (callbackResponse.statusCode != 302) {
+      log("Oauth failed on schulmanager callback: ${callbackResponse.statusCode}", name: "schulmanager-integration");
+      return false;
+    }
+    final callBackSessionCookieString = getCookieStringFromSetCookieHeader(callbackResponse.headers["set-cookie"]!, ["session", "session.sig"]);
+    // Get jwt
+    final jwtResponse = await client.get(Uri.parse("${Constants.schulmangerOicdBaseUrl}/get-jwt"), headers: {"Cookie" : callBackSessionCookieString});
+    if (jwtResponse.statusCode != 204) {
+      log("Oauth failed on getting jwt: ${jwtResponse.statusCode} ${jwtResponse.body}", name: "schulmanager-integration");
+      return false;
+    }
+    final jwt = jwtResponse.headers["x-new-bearer-token"]!;
+    // Get user info
+    final userInfoResponse = await client.post(Uri.parse("${Constants.schulmangerApiBaseUrl}/login-status"), headers: {
+      "Authorization" : "Bearer $jwt"
+    });
+    if (userInfoResponse.statusCode != 200) {
+      log("Oauth failed on getting user info: ${jwtResponse.statusCode} ${jwtResponse.body}", name: "schulmanager-integration");
+      return false;
+    }
+    final userInfo = (jsonDecode(userInfoResponse.body) as Map<String, dynamic>)["user"] as Map<String, dynamic>;
+    authJwt = jwt;
+    setStudentDataFromUserInfo(userInfo);
+    log("Oauth was successful", name: "schulmanager-integration");
     return true;
   }
 
   Future<List<dynamic>?> sendSchulmangerApiRequest(List<Map<String, dynamic>> requests) async {
     final response = await client.post(Uri.parse("${Constants.schulmangerApiBaseUrl}/calls"),
-      body: jsonEncode({"bundleVersion" : loginResult.item2, "requests" : requests}),
-      headers: {"Content-Type": "application/json;charset=utf-8", "Authorization": "Bearer ${loginResult.item1}"},
+      body: jsonEncode({"bundleVersion" : bundleVersion, "requests" : requests}),
+      headers: {"Content-Type": "application/json;charset=utf-8", "Authorization": "Bearer $authJwt"},
     );
-    if (response.statusCode != 200) return null;
+    if (response.statusCode != 200) {
+      log("Api call error: ${response.statusCode} ${response.body}", name: "schulmanager-integration");
+      return null;
+    }
     final responseResults = jsonDecode(response.body)["results"]! as List<dynamic>;
     final returnData = <dynamic>[];
     for (final result in responseResults) {

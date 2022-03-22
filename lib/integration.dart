@@ -10,23 +10,23 @@ abstract class IntegratedValue {
 
 class Integrations {
   static Integrations? _instance;
-  static Integrations get instance => _instance ??= Integrations();
-  final Map<String, Set<Integration>> integrations = {};
+  static Integrations get instance => _instance ??= Integrations._();
+  final Map<String, Map<String, Integration>> integrations = {};
   final Map<String, bool> initializedIntegrations = {};
   final Map<String, IntegratedValue> cachedValues = {};
 
-  Integrations();
+  Integrations._();
 
   void registerIntegration(Integration integration) {
     for (final providedValue in integration.values.keys) {
-      final valueIntegrations = integrations.putIfAbsent(providedValue, () => <Integration>{});
-      valueIntegrations.add(integration);
+      final valueIntegrations = integrations.putIfAbsent(providedValue, () => <String, Integration>{});
+      valueIntegrations[integration.name] = integration;
     }
-    initializedIntegrations.putIfAbsent(integration.name, () => false);
+    initializedIntegrations[integration.name] = false;
   }
 
   void unregisterIntegration(String integrationName) {
-    integrations.forEach((key, value) => value.removeWhere((integration) => integration.name == integrationName));
+    integrations.forEach((key, value) => value.remove(integrationName));
   }
 
   Future<void> update({List<String> values = const []}) async {
@@ -34,7 +34,7 @@ class Integrations {
     final futures = <Future>[];
     final consideredIntegrations = integrations.entries.where((entry) => values.isEmpty || values.contains(entry.key));
     for (final valueIntegrations in consideredIntegrations) {
-      for (final integration in valueIntegrations.value) {
+      for (final integration in valueIntegrations.value.values) {
         // Initialize integration on first update
         if (!initializedIntegrations[integration.name]!) {
           await integration.init();
@@ -54,7 +54,7 @@ class Integrations {
   Map<String, Map<String, dynamic>> saveIntegrationValuesToJson() {
     final integrationJsonValues = <String,  Map<String, dynamic>>{};
     for (final valueIntegrations in integrations.values) {
-      for (final integration in valueIntegrations) {
+      for (final integration in valueIntegrations.values) {
         if (!integration.save) continue;
         integrationJsonValues[integration.name] = integration.saveValuesToJson();
       }
@@ -65,15 +65,15 @@ class Integrations {
   void loadIntegrationValuesFromJson(Map<String, dynamic> integrationJsonValues) {
     for (final valuesIntegrationEntry in integrationJsonValues.entries) {
       final integrationName = valuesIntegrationEntry.key;
-      final integration = integrations.values.firstWhere((valueIntegrations) => valueIntegrations.any((integration) => integration.name == integrationName))
-          .firstWhere((integration) => integration.name == integrationName);
+      final integration = integrations.values.firstWhere((valueIntegrations) => valueIntegrations.containsKey(integrationName))[integrationName];
+      if (integration == null) continue;
       integration.loadValuesFromJson(valuesIntegrationEntry.value as Map<String, dynamic>);
     }
     _cacheIntegrations(integrations.entries);
   }
 
   /// Integrate values and cache result
-  void _cacheIntegrations(Iterable<MapEntry<String, Set<Integration>>> valueIntegrations) {
+  void _cacheIntegrations(Iterable<MapEntry<String, Map<String, Integration>>> valueIntegrations) {
     for (final e in valueIntegrations) {
       final value = _integrateValue(e.key);
       if (value != null) {
@@ -86,7 +86,7 @@ class Integrations {
     final valueIntegrations = integrations[valueName]!;
     IntegratedValue? currentValue;
     int? currentPrecedence;
-    for (final integration in valueIntegrations) {
+    for (final integration in valueIntegrations.values) {
       final integrationValue = integration.values[valueName];
       if (integrationValue == null) continue;
       currentValue ??= integrationValue;
