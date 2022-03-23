@@ -439,6 +439,10 @@ class SchulmangerIntegration extends Integration {
       log("Api call error: ${response.statusCode} ${response.body}", name: "schulmanager-integration");
       return null;
     }
+    // Update jwt to extend session lifetime
+    if (response.headers.containsKey("x-new-bearer-token")) {
+      authJwt = response.headers["x-new-bearer-token"]!;
+    }
     final responseResults = jsonDecode(response.body)["results"]! as List<dynamic>;
     final returnData = <dynamic>[];
     for (final result in responseResults) {
