@@ -131,6 +131,7 @@ void executeIcsRecurrenceRule(String rRuleString, CalendarDataPoint origDataPoin
 
 CalendarData parseToCalendarData(String iCalendarString, CalendarType type, CalendarData calendarData) {
   final parsedData = ICalendar.fromString(iCalendarString).data;
+  // TODO: Fix the speed of this on large calendars (slows down the UI)
   for (final data in parsedData) {
     if (data["type"] == "VEVENT") {
       final IcsDateTime dateStart = data["dtstart"] as IcsDateTime;
@@ -151,7 +152,6 @@ CalendarData parseToCalendarData(String iCalendarString, CalendarType type, Cale
 
       final summary = data["summary"] as String;
       final dataPoint = CalendarDataPoint(type, summary, dateStartDateTime, dateEndDateTime);
-
       final String? rRule = data["rrule"] as String?;
       if (rRule != null) {
         executeIcsRecurrenceRule(rRule, dataPoint, calendarData);
