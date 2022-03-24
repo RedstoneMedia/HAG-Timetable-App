@@ -243,7 +243,7 @@ class _SetupPageState extends State<SetupPage> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
-                    "Profile",
+                    "Profil",
                     style: GoogleFonts.poppins(
                         color: sharedState.theme.textColor,
                         fontWeight: FontWeight.bold,
