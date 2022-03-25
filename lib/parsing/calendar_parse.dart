@@ -21,12 +21,11 @@ Future<CalendarData> loadCalendarData(SharedState sharedState) async {
     await getPluginCalendarData(calenderUrlEntry.value, calenderType, client, calendarData);
   }
   await getCaldavCalendarData("${Constants.calDavBaseUrl}/+public/calendar", CalendarType.public, client, calendarData);
-  // TODO: This calendar does not always exist, we should find out if it does and only then try to get it
   await getCaldavCalendarData("${Constants.calDavBaseUrl}/klasse.${sharedState.profileManager.schoolClassFullName.toLowerCase()}/calendar", CalendarType.public, client, calendarData);
-  await getCaldavCalendarData("${Constants.calDavBaseUrl}/schueler/calendar", CalendarType.students, client, calendarData);
   {
     final iServCredentials = await getIServCredentials();
     if (iServCredentials != null) {
+      await getCaldavCalendarData("${Constants.calDavBaseUrl}/schueler/calendar", CalendarType.students, client, calendarData);
       await getCaldavCalendarData("${Constants.calDavBaseUrl}/${iServCredentials.item1}/home", CalendarType.personal, client, calendarData);
     }
   }
