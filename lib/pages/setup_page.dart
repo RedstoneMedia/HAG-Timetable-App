@@ -23,8 +23,8 @@ class SetupPage extends StatefulWidget {
 }
 
 class _SetupPageState extends State<SetupPage> {
-  String schoolGrade = "11";
-  String profileName = "11e";
+  String? schoolGrade;
+  String? profileName;
   String? subSchoolClass;
   String themeName = "dark";
 
@@ -37,6 +37,7 @@ class _SetupPageState extends State<SetupPage> {
   late SharedState sharedState;
   bool? subSchoolClassEnabled;
   bool subSchoolClassIsCorrect = true;
+  bool schoolClassIsCorrect = true;
   Color? lastPickedColor;
 
   @override
@@ -54,10 +55,10 @@ class _SetupPageState extends State<SetupPage> {
   }
 
   void setSharedStateFromLocalStateVars() {
-    if (!validateSubClassInput()) return;
+    if (!validateClassInput()) return;
     sharedState.profileManager.subjects = [];
     sharedState.profileManager.subjects.addAll(courses);
-    sharedState.profileManager.schoolGrade = schoolGrade;
+    sharedState.profileManager.schoolGrade = schoolGrade!;
 
     if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
       sharedState.profileManager.subSchoolClass = "";
@@ -70,7 +71,7 @@ class _SetupPageState extends State<SetupPage> {
   }
 
   void saveDataAndGotToMain() {
-    if (!validateSubClassInput()) return;
+    if (!validateClassInput()) return;
 
     setSharedStateFromLocalStateVars();
     sharedState.saveState();
@@ -87,17 +88,25 @@ class _SetupPageState extends State<SetupPage> {
     );
   }
 
-  bool validateSubClassInput() {
+  bool validateClassInput() {
+    setState(() {
+      schoolClassIsCorrect = true;
+      subSchoolClassIsCorrect = true;
+    });
+
+    if (schoolGrade == null) {
+      setState(() {
+        schoolClassIsCorrect = false;
+      });
+      return false;
+    }
     if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
       return true;
     }
     final text = subClassTextEdetingController.text;
-    final regExp = RegExp(r"^[a-zA-Z]{0,3}\d{0,2}$");
+    final regExp = RegExp(r"^[a-zA-Z]{1,3}\d{0,2}$");
     final hasMatch = regExp.hasMatch(text);
     if (hasMatch) {
-      setState(() {
-        subSchoolClassIsCorrect = true;
-      });
       return true;
     } else {
       setState(() {
@@ -107,9 +116,10 @@ class _SetupPageState extends State<SetupPage> {
     }
   }
 
-  void setSchoolGrade(String schoolGrade) {
+  void setSchoolGrade(String? schoolGrade) {
     setState(() {
       this.schoolGrade = schoolGrade;
+      if (this.schoolGrade != null) schoolClassIsCorrect = true;
       if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
         subClassTextEdetingController.text = "";
         subSchoolClassEnabled = false;
@@ -129,8 +139,10 @@ class _SetupPageState extends State<SetupPage> {
       this.profileName = sharedState.profileManager.currentProfileName;
       subClassTextEdetingController.text =
           sharedState.profileManager.currentProfile.subSchoolClass;
-      schoolGrade = sharedState.profileManager.currentProfile.schoolGrade;
+      setSchoolGrade(sharedState.profileManager.currentProfile.schoolGrade);
       courses = sharedState.profileManager.currentProfile.subjects;
+      schoolClassIsCorrect = true;
+      subSchoolClassIsCorrect = true;
     });
   }
 
@@ -145,10 +157,10 @@ class _SetupPageState extends State<SetupPage> {
             toDeleteProfileName); // Remove current profile from profile name list
         profileName = profileKeys.last; // Set current profile to last profile
         // Update local state variables
-        sharedState.profileManager.currentProfileName = profileName;
+        sharedState.profileManager.currentProfileName = profileName!;
         subClassTextEdetingController.text =
             sharedState.profileManager.currentProfile.subSchoolClass;
-        schoolGrade = sharedState.profileManager.currentProfile.schoolGrade;
+        setSchoolGrade(sharedState.profileManager.currentProfile.schoolGrade);
         courses = sharedState.profileManager.currentProfile.subjects;
         sharedState.profileManager.profiles
             .remove(toDeleteProfileName); // Remove profile
@@ -157,11 +169,11 @@ class _SetupPageState extends State<SetupPage> {
   }
 
   void addProfile() {
+    if (!validateClassInput()) return;
     profileName = sharedState.profileManager
-        .findNewProfileName("New Profile"); // Get new profile placeholder name.
-    sharedState.profileManager.addProfileWithName(
-        profileName); // Add that new Profile to placeholder name.
-    setProfile(profileName); // Switch to that profile
+        .findNewProfileName("Neues Profil"); // Get new profile placeholder name.
+    sharedState.profileManager.addProfileWithName(profileName!); // Add that new Profile to placeholder name.
+    setProfile(profileName!); // Switch to that profile
   }
 
   // TODO : Refactor this madness
@@ -289,6 +301,11 @@ class _SetupPageState extends State<SetupPage> {
                         decoration: BoxDecoration(
                           color: sharedState.theme.textColor.withAlpha(200),
                           borderRadius: BorderRadius.circular(15),
+                          border: Border.all(
+                              color: schoolClassIsCorrect
+                                  ? Colors.transparent
+                                  : Colors.red,
+                              width: schoolClassIsCorrect ? 0 : 2.0)
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 15.0),
@@ -382,6 +399,14 @@ class _SetupPageState extends State<SetupPage> {
                   sharedState,
                   courses,
                 ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 5.0, vertical: 4.0),
+                  child: Divider(
+                    thickness: 2.0,
+                    color: sharedState.theme.textColor.withAlpha(200),
+                  ),
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -466,7 +491,7 @@ class _SetupPageState extends State<SetupPage> {
                 ),
                 if (themeName == "Eigenes")
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0, top: 15.0, left: 80, right: 80),
+                    padding: const EdgeInsets.only(bottom: 12.0, top: 15.0, left: 90, right: 90),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -476,6 +501,8 @@ class _SetupPageState extends State<SetupPage> {
                           text: "Hintergrund",
                           theme: widget.sharedState.theme,
                           borderColor: widget.sharedState.theme.textColor.withAlpha(150),
+                          padding: 6.0,
+                          fontSize: 16.0,
                           onPicked: (color) {
                             setState(() {
                               widget.sharedState.theme
@@ -488,6 +515,8 @@ class _SetupPageState extends State<SetupPage> {
                           textColor: widget.sharedState.theme.backgroundColor,
                           text: "Text",
                           theme: widget.sharedState.theme,
+                          padding: 6.0,
+                          fontSize: 16.0,
                           onPicked: (color) {
                             setState(() {
                               widget.sharedState.theme
@@ -500,6 +529,8 @@ class _SetupPageState extends State<SetupPage> {
                           textColor: widget.sharedState.theme.textColor,
                           text: "Fach",
                           theme: widget.sharedState.theme,
+                          padding: 6.0,
+                          fontSize: 16.0,
                           onPicked: (color) {
                             setState(() {
                               widget.sharedState.theme
@@ -512,6 +543,8 @@ class _SetupPageState extends State<SetupPage> {
                           textColor: widget.sharedState.theme.textColor,
                           text: "Fach ausfall",
                           theme: widget.sharedState.theme,
+                          padding: 6.0,
+                          fontSize: 16.0,
                           onPicked: (color) {
                             setState(() {
                               widget.sharedState.theme
@@ -524,6 +557,8 @@ class _SetupPageState extends State<SetupPage> {
                           textColor: widget.sharedState.theme.textColor,
                           text: "Fach vertretung",
                           theme: widget.sharedState.theme,
+                          padding: 6.0,
+                          fontSize: 16.0,
                           onPicked: (color) {
                             setState(() {
                               widget.sharedState.theme

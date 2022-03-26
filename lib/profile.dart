@@ -1,6 +1,6 @@
 class Profile {
-  String schoolGrade = "11";
-  String subSchoolClass = "e";
+  String? schoolGrade;
+  String subSchoolClass = "";
   List<String> subjects = [];
   Map<String, String> calendarUrls = {};
 

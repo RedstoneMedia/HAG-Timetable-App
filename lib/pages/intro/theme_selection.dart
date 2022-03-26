@@ -112,7 +112,7 @@ class _ClassSelectionPageState extends State<ThemeSelectionPage> {
                                   ),
                                   ColorPickerButton(
                                     bgColor: theme.subjectDropOutColor,
-                                    textColor: theme.backgroundColor,
+                                    textColor: theme.textColor,
                                     text: "Fach ausfall",
                                     theme: widget.sharedState.theme,
                                     onPicked: (color) {

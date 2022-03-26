@@ -50,7 +50,7 @@ class ProfileManager {
     for (final profileName in List.from(profiles.keys)) {
       final profile = profiles[profileName]!;
       profiles.remove(profileName);
-      final newProfileName = findNewProfileName(profile.toString());
+      final newProfileName = findNewProfileName(profile.schoolGrade == null ? profileName as String : profile.toString());
       if (profileName == currentProfileName) {
         currentProfileName = newProfileName;
       }
@@ -65,7 +65,7 @@ class ProfileManager {
   // Current Profile attributes
 
   String get schoolGrade {
-    return currentProfile.schoolGrade;
+    return currentProfile.schoolGrade!;
   }
 
   set schoolGrade(String schoolGrade) {
@@ -81,7 +81,7 @@ class ProfileManager {
   }
 
   String get schoolClassFullName {
-    return currentProfile.schoolGrade + currentProfile.subSchoolClass;
+    return currentProfile.schoolGrade! + currentProfile.subSchoolClass;
   }
 
   List<String> get subjects {

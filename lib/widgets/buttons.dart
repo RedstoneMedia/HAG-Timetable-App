@@ -150,12 +150,16 @@ class ColorPickerButton extends StatefulWidget {
       required this.textColor,
       required this.onPicked,
       required this.theme,
-      this.borderColor});
+      this.borderColor,
+      this.padding = 12.0,
+      this.fontSize = 20.0});
 
   final String text;
   Color bgColor;
   Color textColor;
   Color? borderColor;
+  double padding;
+  double fontSize;
   final void Function(Color) onPicked;
   final my_theme.Theme theme;
 
@@ -223,13 +227,13 @@ class _ColorPickerButtonState extends State<ColorPickerButton> {
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12.0),
+              padding: EdgeInsets.symmetric(vertical: widget.padding),
               child: Text(
                 widget.text,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   color: widget.textColor.withAlpha(255) == widget.bgColor.withAlpha(255) ? my_theme.Theme.invertColor(widget.textColor) : widget.textColor,
-                  fontSize: 20.0,
+                  fontSize: widget.fontSize,
                 ),
               ),
             ),
