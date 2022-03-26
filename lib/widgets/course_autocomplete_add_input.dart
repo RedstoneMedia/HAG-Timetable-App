@@ -25,7 +25,7 @@ class _CourseAutoCompleteAddInput extends State<CourseAutoCompleteAddInput> {
 
   Future<void> setOptions() async {
     final client = Client();
-    final fullSchoolGradeName = widget.sharedState.profileManager.schoolGrade + widget.sharedState.profileManager.subSchoolClass;
+    final fullSchoolGradeName = widget.sharedState.profileManager.schoolClassFullName;
     final tablesMain = await getTimeTableTables(fullSchoolGradeName, Constants.timeTableLinkBase, client);
     options = (await getAvailableSubjectNames(tablesMain)).toList();
     if (!Constants.displayFullHeightSchoolGrades.contains(widget.sharedState.profileManager.schoolGrade)) {

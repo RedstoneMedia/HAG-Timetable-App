@@ -15,7 +15,7 @@ class ClassSelectionPage extends StatefulWidget {
 }
 
 class _ClassSelectionPageState extends State<ClassSelectionPage> {
-  String schoolGrade = "11";
+  String? schoolGrade;
   bool subSchoolClassEnabled = true;
   bool subSchoolClassIsCorrect = true;
   TextEditingController subClassTextEditingController = TextEditingController();

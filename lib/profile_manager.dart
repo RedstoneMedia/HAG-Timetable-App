@@ -64,12 +64,12 @@ class ProfileManager {
 
   // Current Profile attributes
 
-  String get schoolGrade {
-    return currentProfile.schoolGrade!;
+  String? get schoolGrade {
+    return currentProfile.schoolGrade;
   }
 
-  set schoolGrade(String schoolGrade) {
-    currentProfile.schoolGrade = schoolGrade;
+  set schoolGrade(String? schoolGrade) {
+    currentProfile.schoolGrade = schoolGrade!;
   }
 
   String get subSchoolClass {

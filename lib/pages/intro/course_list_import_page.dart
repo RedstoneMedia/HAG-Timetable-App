@@ -42,7 +42,7 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
 
   Future<void> getAvailableCourses() async {
     final client = Client();
-    final fullSchoolGradeName = widget.sharedState.profileManager.schoolGrade + widget.sharedState.profileManager.subSchoolClass;
+    final fullSchoolGradeName = widget.sharedState.profileManager.schoolClassFullName;
     final tablesMain = await getTimeTableTables(fullSchoolGradeName, Constants.timeTableLinkBase, client);
     availableCourses = getAvailableSubjectNames(tablesMain).toList();
     if (!Constants.displayFullHeightSchoolGrades.contains(widget.sharedState.profileManager.schoolGrade)) {
