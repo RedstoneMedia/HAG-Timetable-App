@@ -260,7 +260,7 @@ class SchulmangerIntegration extends Integration {
       final actualLesson = lesson["actualLesson"] as Map<String, dynamic>?;
       final currentCell = sharedState.content.getCell(classHour-1, weekDay);
       // Handle dropout
-      if (actualLesson == null) {
+      if (actualLesson == null && lesson.containsKey("originalLessons")) {
         final originalLessons = lesson["originalLessons"] as List<dynamic>;
         if (originalLessons.length > 1) continue; // TODO: Don't do this
         final originalLesson = originalLessons[0] as Map<String, dynamic>;
@@ -280,6 +280,9 @@ class SchulmangerIntegration extends Integration {
         };
         final daySubstitutions = substitutions.putIfAbsent(date, () => []);
         daySubstitutions.add(substitutionData);
+        continue;
+      } else if (actualLesson == null) {
+        // TODO: Maybe handle this case (this case is rarely present)
         continue;
       }
       final subject = actualLesson["subjectLabel"]! as String;

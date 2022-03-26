@@ -66,8 +66,10 @@ class _ClassSelectionPageState extends State<ThemeSelectionPage> {
                               title: Text(
                                 "Farbe ändern",
                                 style: GoogleFonts.poppins(
+                                    color: theme.textColor,
                                     fontWeight: FontWeight.bold),
                               ),
+                              backgroundColor: theme.backgroundColor.withAlpha(255),
                               content: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -76,6 +78,7 @@ class _ClassSelectionPageState extends State<ThemeSelectionPage> {
                                     textColor: theme.textColor,
                                     text: "Hintergrund",
                                     theme: widget.sharedState.theme,
+                                    borderColor: widget.sharedState.theme.textColor,
                                     onPicked: (color) {
                                       setState(() {
                                         widget.sharedState.theme
@@ -109,7 +112,7 @@ class _ClassSelectionPageState extends State<ThemeSelectionPage> {
                                   ),
                                   ColorPickerButton(
                                     bgColor: theme.subjectDropOutColor,
-                                    textColor: theme.textColor,
+                                    textColor: theme.backgroundColor,
                                     text: "Fach ausfall",
                                     theme: widget.sharedState.theme,
                                     onPicked: (color) {
@@ -141,7 +144,7 @@ class _ClassSelectionPageState extends State<ThemeSelectionPage> {
                                   child: Text(
                                     "Fertig",
                                     style: GoogleFonts.poppins(
-                                        color: Colors.black,
+                                        color: theme.textColor,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 20.0),
                                   ),

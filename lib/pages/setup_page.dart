@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/main.dart';
@@ -163,69 +162,6 @@ class _SetupPageState extends State<SetupPage> {
     sharedState.profileManager.addProfileWithName(
         profileName); // Add that new Profile to placeholder name.
     setProfile(profileName); // Switch to that profile
-  }
-
-  ElevatedButton getPickColorButton(
-      String name, Color inputColor, void Function(Color) onPicked) {
-    return ElevatedButton(
-      style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all<Color>(inputColor),
-        shape: MaterialStateProperty.all<OutlinedBorder>(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-        ),
-      ),
-      onPressed: () {
-        displayColoPickerAlertWindow(name, inputColor).then((_) {
-          lastPickedColor ??= inputColor;
-          onPicked(lastPickedColor!);
-        });
-      },
-      child: Text(name,
-          style: GoogleFonts.poppins(
-              color: my_theme.Theme.invertColor(inputColor),
-              fontSize: 16.0,
-              fontWeight: FontWeight.bold)),
-    );
-  }
-
-  Future<void> displayColoPickerAlertWindow(String name, Color color) async {
-    lastPickedColor = null;
-    await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("$name Farbe auswählen",
-                style: GoogleFonts.poppins(
-                    color: Colors.black87,
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold)),
-            content: SingleChildScrollView(
-                child: ColorPicker(
-                    enableAlpha: false,
-                    pickerColor: color,
-                    onColorChanged: (Color newColor) {
-                      lastPickedColor = newColor;
-                    },
-                    pickerAreaBorderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(2.0),
-                      topRight: Radius.circular(2.0),
-                    ))),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text("Fertig",
-                    style: GoogleFonts.poppins(
-                        color: Colors.black87,
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.bold)),
-              )
-            ],
-          );
-        });
   }
 
   // TODO : Refactor this madness
@@ -530,36 +466,74 @@ class _SetupPageState extends State<SetupPage> {
                 ),
                 if (themeName == "Eigenes")
                   Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0, top: 15.0),
-                      child: Column(
-                        children: [
-                          getPickColorButton(
-                              "Hintergrund",
-                              sharedState.theme.backgroundColor,
-                              (Color color) => setState(() =>
-                                  sharedState.theme.backgroundColor = color)),
-                          getPickColorButton(
-                              "Text",
-                              sharedState.theme.textColor,
-                              (Color color) => setState(
-                                  () => sharedState.theme.textColor = color)),
-                          getPickColorButton(
-                              "Fach",
-                              sharedState.theme.subjectColor,
-                              (Color color) => setState(() =>
-                                  sharedState.theme.subjectColor = color)),
-                          getPickColorButton(
-                              "Fach ausfall",
-                              sharedState.theme.subjectDropOutColor,
-                              (Color color) => setState(() => sharedState
-                                  .theme.subjectDropOutColor = color)),
-                          getPickColorButton(
-                              "Fach vertretung",
-                              sharedState.theme.subjectSubstitutionColor,
-                              (Color color) => setState(() => sharedState
-                                  .theme.subjectSubstitutionColor = color))
-                        ],
-                      ))
+                    padding: const EdgeInsets.only(bottom: 12.0, top: 15.0, left: 80, right: 80),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ColorPickerButton(
+                          bgColor: widget.sharedState.theme.backgroundColor,
+                          textColor: widget.sharedState.theme.textColor,
+                          text: "Hintergrund",
+                          theme: widget.sharedState.theme,
+                          borderColor: widget.sharedState.theme.textColor.withAlpha(150),
+                          onPicked: (color) {
+                            setState(() {
+                              widget.sharedState.theme
+                                  .backgroundColor = color;
+                            });
+                          },
+                        ),
+                        ColorPickerButton(
+                          bgColor: widget.sharedState.theme.textColor,
+                          textColor: widget.sharedState.theme.backgroundColor,
+                          text: "Text",
+                          theme: widget.sharedState.theme,
+                          onPicked: (color) {
+                            setState(() {
+                              widget.sharedState.theme
+                                  .textColor = color;
+                            });
+                          },
+                        ),
+                        ColorPickerButton(
+                          bgColor: widget.sharedState.theme.subjectColor,
+                          textColor: widget.sharedState.theme.textColor,
+                          text: "Fach",
+                          theme: widget.sharedState.theme,
+                          onPicked: (color) {
+                            setState(() {
+                              widget.sharedState.theme
+                                  .subjectColor = color;
+                            });
+                          },
+                        ),
+                        ColorPickerButton(
+                          bgColor: widget.sharedState.theme.subjectDropOutColor,
+                          textColor: widget.sharedState.theme.textColor,
+                          text: "Fach ausfall",
+                          theme: widget.sharedState.theme,
+                          onPicked: (color) {
+                            setState(() {
+                              widget.sharedState.theme
+                                  .subjectDropOutColor = color;
+                            });
+                          },
+                        ),
+                        ColorPickerButton(
+                          bgColor: widget.sharedState.theme.subjectSubstitutionColor,
+                          textColor: widget.sharedState.theme.textColor,
+                          text: "Fach vertretung",
+                          theme: widget.sharedState.theme,
+                          onPicked: (color) {
+                            setState(() {
+                              widget.sharedState.theme
+                                  .subjectSubstitutionColor = color;
+                            });
+                          },
+                        )
+                      ]
+                    )
+                  )
                 else
                   Container(),
                 Padding(
