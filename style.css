@@ -1,7 +1,7 @@
 :root {
-    --main-bg-color : #2c3e50;
-    --content-bg-color :#bdc3c7;
-    --text-color : #34495e;
+    --main-bg-color : #010511;
+    --content-bg-color :#fff;
+    --text-color : #212d39;
 }
 body {
     font-family: 'Roboto', sans-serif;
