@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/main.dart';
 import 'package:stundenplan/pages/calendar_settings_page.dart';
 import 'package:stundenplan/pages/intro/class_selection.dart';
@@ -11,6 +10,7 @@ import 'package:stundenplan/widgets/buttons.dart';
 import 'package:stundenplan/widgets/course_autocomplete_add_input.dart';
 import 'package:stundenplan/widgets/course_select_list.dart';
 import 'package:flutter/foundation.dart';
+import 'package:stundenplan/widgets/settings_widgets.dart';
 
 // ignore: must_be_immutable
 class SetupPage extends StatefulWidget {
@@ -23,16 +23,14 @@ class SetupPage extends StatefulWidget {
 }
 
 class _SetupPageState extends State<SetupPage> {
-  String? schoolGrade;
   String? profileName;
-  String? subSchoolClass;
   String themeName = "dark";
+  late bool Function() validateClassSelection;
+  late bool Function() saveClassSelection;
+  late void Function(String?, String) setClassSelectionClass;
 
-  List<String> grades = Constants.schoolGrades;
   List<String> themeNames = my_theme.Theme.getThemeNames();
   List<String> courses = [];
-
-  TextEditingController subClassTextEdetingController = TextEditingController();
 
   late SharedState sharedState;
   bool? subSchoolClassEnabled;
@@ -46,32 +44,17 @@ class _SetupPageState extends State<SetupPage> {
     sharedState = widget.sharedState;
     themeName = sharedState.theme.themeName;
     profileName = sharedState.profileManager.currentProfileName;
-    schoolGrade = sharedState.profileManager.schoolGrade.toString();
-    subClassTextEdetingController.text =
-        sharedState.profileManager.subSchoolClass;
     courses = sharedState.profileManager.subjects;
-    subSchoolClassEnabled =
-        !Constants.displayFullHeightSchoolGrades.contains(schoolGrade);
   }
 
   void setSharedStateFromLocalStateVars() {
-    if (!validateClassInput()) return;
+    if (!saveClassSelection()) return;
     sharedState.profileManager.subjects = [];
     sharedState.profileManager.subjects.addAll(courses);
-    sharedState.profileManager.schoolGrade = schoolGrade!;
-
-    if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
-      sharedState.profileManager.subSchoolClass = "";
-      sharedState.height = Constants.fullHeight;
-    } else {
-      sharedState.profileManager.subSchoolClass =
-          subClassTextEdetingController.text;
-      sharedState.height = Constants.defaultHeight;
-    }
   }
 
   void saveDataAndGotToMain() {
-    if (!validateClassInput()) return;
+    if (!validateClassSelection()) return;
 
     setSharedStateFromLocalStateVars();
     sharedState.saveState();
@@ -88,61 +71,17 @@ class _SetupPageState extends State<SetupPage> {
     );
   }
 
-  bool validateClassInput() {
-    setState(() {
-      schoolClassIsCorrect = true;
-      subSchoolClassIsCorrect = true;
-    });
-
-    if (schoolGrade == null) {
-      setState(() {
-        schoolClassIsCorrect = false;
-      });
-      return false;
-    }
-    if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
-      return true;
-    }
-    final text = subClassTextEdetingController.text;
-    final regExp = RegExp(r"^[a-zA-Z]{1,3}\d{0,2}$");
-    final hasMatch = regExp.hasMatch(text);
-    if (hasMatch) {
-      return true;
-    } else {
-      setState(() {
-        subSchoolClassIsCorrect = false;
-      });
-      return false;
-    }
-  }
-
-  void setSchoolGrade(String? schoolGrade) {
-    setState(() {
-      this.schoolGrade = schoolGrade;
-      if (this.schoolGrade != null) schoolClassIsCorrect = true;
-      if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
-        subClassTextEdetingController.text = "";
-        subSchoolClassEnabled = false;
-      } else {
-        subSchoolClassEnabled = true;
-      }
-    });
-  }
-
   void setProfile(String profileName) {
     setState(() {
+      if (!validateClassSelection()) return;
       setSharedStateFromLocalStateVars(); // Save old profile local state variables into shared state
       sharedState.profileManager.currentProfileName =
           profileName; // Change to new profile name
       sharedState.profileManager.renameAllProfiles();
+      setClassSelectionClass(sharedState.profileManager.currentProfile.schoolGrade, sharedState.profileManager.currentProfile.subSchoolClass);
       // Set local state variables
       this.profileName = sharedState.profileManager.currentProfileName;
-      subClassTextEdetingController.text =
-          sharedState.profileManager.currentProfile.subSchoolClass;
-      setSchoolGrade(sharedState.profileManager.currentProfile.schoolGrade);
       courses = sharedState.profileManager.currentProfile.subjects;
-      schoolClassIsCorrect = true;
-      subSchoolClassIsCorrect = true;
     });
   }
 
@@ -158,9 +97,7 @@ class _SetupPageState extends State<SetupPage> {
         profileName = profileKeys.last; // Set current profile to last profile
         // Update local state variables
         sharedState.profileManager.currentProfileName = profileName!;
-        subClassTextEdetingController.text =
-            sharedState.profileManager.currentProfile.subSchoolClass;
-        setSchoolGrade(sharedState.profileManager.currentProfile.schoolGrade);
+        setClassSelectionClass(sharedState.profileManager.currentProfile.schoolGrade!, sharedState.profileManager.currentProfile.subSchoolClass);
         courses = sharedState.profileManager.currentProfile.subjects;
         sharedState.profileManager.profiles
             .remove(toDeleteProfileName); // Remove profile
@@ -169,7 +106,7 @@ class _SetupPageState extends State<SetupPage> {
   }
 
   void addProfile() {
-    if (!validateClassInput()) return;
+    if (!validateClassSelection()) return;
     profileName = sharedState.profileManager
         .findNewProfileName("Neues Profil"); // Get new profile placeholder name.
     sharedState.profileManager.addProfileWithName(profileName!); // Add that new Profile to placeholder name.
@@ -292,82 +229,13 @@ class _SetupPageState extends State<SetupPage> {
                         fontSize: 26.0),
                   ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: sharedState.theme.textColor.withAlpha(200),
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(
-                              color: schoolClassIsCorrect
-                                  ? Colors.transparent
-                                  : Colors.red,
-                              width: schoolClassIsCorrect ? 0 : 2.0)
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                          child: DropdownButton<String>(
-                            value: schoolGrade,
-                            icon: const Icon(Icons.keyboard_arrow_down),
-                            elevation: 16,
-                            dropdownColor:
-                                sharedState.theme.textColor.withAlpha(255),
-                            style: TextStyle(
-                                color: sharedState.theme.invertedTextColor),
-                            underline: Container(),
-                            onChanged: (String? newValue) {
-                              setSchoolGrade(newValue!);
-                            },
-                            items: grades
-                                .map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 16.0),
-                                  child: Text(
-                                    value,
-                                    style: GoogleFonts.poppins(fontSize: 16.0),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      width: 60,
-                      decoration: BoxDecoration(
-                        color: subSchoolClassEnabled!
-                            ? sharedState.theme.textColor.withAlpha(200)
-                            : sharedState.theme.textColor.withAlpha(100),
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(
-                            color: subSchoolClassIsCorrect
-                                ? Colors.transparent
-                                : Colors.red,
-                            width: subSchoolClassIsCorrect ? 0 : 2.0),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                        child: TextField(
-                          enabled: subSchoolClassEnabled,
-                          controller: subClassTextEdetingController,
-                          style: GoogleFonts.poppins(
-                              color: sharedState.theme.invertedTextColor),
-                          decoration: InputDecoration(
-                            hintText: "a",
-                            hintStyle: GoogleFonts.poppins(
-                                color: sharedState.theme.invertedTextColor
-                                    .withAlpha(80)),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                ClassSelect(
+                  initCallback: (validate, save, set) {
+                    validateClassSelection = validate;
+                    saveClassSelection = save;
+                    setClassSelectionClass = set;
+                  },
+                  sharedState: sharedState,
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
