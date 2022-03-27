@@ -19,7 +19,11 @@ Zudem bietet die App die Option das Farbschema so einzustellen, wie man das gern
 Optional gibt es noch die Möglichkeit, den IServ Kalender der aktuellen Woche einzubinden.
 Dieser ist dann bei Tippen auf den Tag (In der Kopfzeile) erreichbar.
 
+Auch wenn ein Zugriff auf den Schulmanager besteht, bietet die App trotzdem eine besser, personalisierter und zugeschnittenere Erfahrung, als dieser.
+
 Zuletzt bietet die App auch ein Profil System an, mit dem man schnell und bequem z. B. den Stundenplan von einem Freund anschauen kann.
+
+[Mehr Informationen](https://github.com/RedstoneMedia/HAG-Timetable-App/wiki/%C3%9Cberblick)
 
 [Zur Website](https://redstonemedia.github.io/HAG-Timetable-App/)
 
