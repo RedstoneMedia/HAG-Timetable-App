@@ -1,10 +1,14 @@
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart';
+import 'package:stundenplan/parsing/iserv_authentication.dart';
 import 'package:stundenplan/widgets/buttons.dart';
 import 'package:stundenplan/widgets/labeled_text_input.dart';
+import 'package:tuple/tuple.dart';
 import '../helper_functions.dart';
 import '../shared_state.dart';
 
@@ -21,6 +25,8 @@ class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
 
   final credentialsOutputList = <String>[];
   bool areCredentialsAvailable = false;
+  bool incorrectCredentials = false;
+  bool isCheckingCredentials = false;
 
   @override
   void initState() {
@@ -29,8 +35,20 @@ class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
   }
 
   Future<void> saveIServCredentialsAndGoBack() async {
-    if (credentialsOutputList.where((element) => element.length > 3).length != 2) return;
-
+    if (credentialsOutputList.where((element) => element.length > 3).length != 2) {
+      setState(() => incorrectCredentials = true);
+      return;
+    }
+    // Check if credentials are correct, if internet is available
+    if (await isInternetAvailable(Connectivity())) {
+      setState(() => isCheckingCredentials = true);
+      final bool isCorrect = (await getIServLoginResponse(Client(), Tuple2(credentialsOutputList[0], credentialsOutputList[1]))) != null;
+      setState(() => isCheckingCredentials = false);
+      if (!isCorrect) {
+        setState(() => incorrectCredentials = true);
+        return;
+      }
+    }
     if (Platform.isAndroid || Platform.isIOS || Platform.isLinux) {
       const FlutterSecureStorage storage = FlutterSecureStorage();
       await storage.write(key: "username", value: credentialsOutputList[0]);
@@ -76,9 +94,9 @@ class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
                           textAlign: TextAlign.center
                       ),
                       const Divider(height: 15),
-                      LabeledTextInput("Nutzername", widget.sharedState, credentialsOutputList, 0),
+                      LabeledTextInput("Nutzername", widget.sharedState, credentialsOutputList, 0, incorrect: incorrectCredentials),
                       const Divider(height: 15),
-                      LabeledTextInput("Passwort", widget.sharedState, credentialsOutputList, 1, obscureText: true),
+                      LabeledTextInput("Passwort", widget.sharedState, credentialsOutputList, 1, obscureText: true, incorrect: incorrectCredentials),
                       const Divider(height: 15),
                       if (areCredentialsAvailable)
                         Column(
@@ -87,7 +105,7 @@ class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
                               text: "Daten Löschen",
                               onPressed: deleteIServCredentials,
                               sharedState: widget.sharedState,
-                              color: widget.sharedState.theme.subjectSubstitutionColor.withAlpha(220)
+                              color: widget.sharedState.theme.subjectSubstitutionColor.withAlpha(220),
                             ),
                             const Divider(height: 30)
                           ],
@@ -99,7 +117,8 @@ class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
                           sharedState: widget.sharedState,
                           size: 1.5,
                           fontSize: 25,
-                          color: widget.sharedState.theme.subjectColor
+                          color: widget.sharedState.theme.subjectColor,
+                          disabled: isCheckingCredentials,
                       ),
                     ],
                   )

@@ -9,8 +9,9 @@ class LabeledTextInput extends StatefulWidget {
   final int index;
   final double fontSize;
   final bool obscureText;
+  final bool incorrect;
 
-  const LabeledTextInput(this.labelText, this.sharedState, this.outputList, this.index, {this.fontSize = 20, this.obscureText = false});
+  const LabeledTextInput(this.labelText, this.sharedState, this.outputList, this.index, {this.fontSize = 20, this.obscureText = false, this.incorrect = false});
 
   @override
   _LabeledTextInputState createState() => _LabeledTextInputState();
@@ -49,6 +50,7 @@ class _LabeledTextInputState extends State<LabeledTextInput> {
           decoration: BoxDecoration(
             color: widget.sharedState.theme.textColor.withAlpha(200),
             borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.red, style: widget.incorrect ? BorderStyle.solid : BorderStyle.none),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0),

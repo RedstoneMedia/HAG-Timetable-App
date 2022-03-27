@@ -120,6 +120,7 @@ void executeIcsRecurrenceRule(String rRuleString, CalendarDataPoint origDataPoin
   // Add repeating calendar entries based on rRule
   final now = DateTime.now();
   final weekStartDate = now.subtract(Duration(days: now.weekday));
+  if (weekStartDate.difference(origDataPoint.startDate).inDays.isNegative) return; // Recurrent rule hasn't started yet.
   final instances = rRule.getInstances(start: weekStartDate.toUtc());
   for (final instance in instances) {
     final newStartDate = DateTime(instance.year, instance.month, instance.day, origDataPoint.startDate.hour, origDataPoint.startDate.minute, origDataPoint.startDate.second);

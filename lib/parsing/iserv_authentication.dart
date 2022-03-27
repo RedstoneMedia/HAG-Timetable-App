@@ -1,13 +1,13 @@
 import 'dart:developer';
 
 import 'package:http/http.dart';
+import 'package:tuple/tuple.dart';
 
 import '../constants.dart';
 import '../helper_functions.dart'; // Contains a client for making API calls
 
-Future<String?> iServLogin(Client client) async {
-  final iServCredentials = await getIServCredentials();
-  if (iServCredentials == null) return null;
+
+Future<Response?> getIServLoginResponse(Client client, Tuple2<String, String> iServCredentials) async {
   final bodyString = "_username=${iServCredentials.item1}&_password=${iServCredentials.item2}";
   final Map<String, String> headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -31,6 +31,14 @@ Future<String?> iServLogin(Client client) async {
     log("Cannot login. Error code ${response.statusCode}", name: "iserv.auth");
     return null;
   }
+  return response;
+}
+
+Future<String?> iServLogin(Client client) async {
+  final iServCredentials = await getIServCredentials();
+  if (iServCredentials == null) return null;
+  final response = await getIServLoginResponse(client, iServCredentials);
+  if (response == null) return null;
 
   final cookiesString = response.headers["set-cookie"];
   final cookies = cookiesString!.split(";");
