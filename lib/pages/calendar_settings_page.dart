@@ -66,63 +66,68 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
     return Material(
       color: sharedState.theme.backgroundColor,
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 50.0, horizontal: 20.0),
-          child: ListView(
-            shrinkWrap: true,
-            physics: const BouncingScrollPhysics(),
-            children: [
-              Column(
+        child: Stack(
+          children: [
+            HelpButton("Einstellungen#kalender-optionen", sharedState: sharedState),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 50.0, horizontal: 20.0),
+              child: ListView(
+                shrinkWrap: true,
+                physics: const BouncingScrollPhysics(),
                 children: [
-                  Text(
-                    "Kopiere die Kalender Links von IServ in die entsprechenden Felder.",
-                    style: GoogleFonts.poppins(
-                      color: sharedState.theme.textColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15
-                    ),
-                    textAlign: TextAlign.center
-                  ),
-                  Text(
-                      "\nKalender Modul ➜ Einstellungen ➜ Kalender verwalten ➜ Plugins ➜ <Pluginname> ➜ Freigabe",
-                      style: GoogleFonts.poppins(
+                  Column(
+                    children: [
+                      Text(
+                        "Kopiere die Kalender Links von IServ in die entsprechenden Felder.",
+                        style: GoogleFonts.poppins(
                           color: sharedState.theme.textColor,
-                          fontWeight: FontWeight.normal,
+                          fontWeight: FontWeight.bold,
                           fontSize: 15
+                        ),
+                        textAlign: TextAlign.center
                       ),
-                      textAlign: TextAlign.center
-                  ),
-                  const Divider(height: 15),
-                  for (var i = 0; i < pluginCalendarTypes.length; i++)
-                    Column(
-                      children: [
-                        LabeledTextInput("${pluginCalendarTypes[i].name()} Link", sharedState, urlList, i, fontSize: 15),
-                        const Divider(height: 15)
-                      ],
-                    )
-                  ,
-                  StandardButton(
-                    text: "Automatisch füllen",
-                    onPressed: autoFillUrls,
-                    sharedState: sharedState,
-                    color: areCredentialsAvailable ? sharedState.theme.subjectSubstitutionColor.withAlpha(180) : sharedState.theme.subjectDropOutColor.withAlpha(80),
-                    size: 0.5,
-                    fontSize: 15,
-                    disabled: !areCredentialsAvailable,
-                  ),
-                  const Divider(height: 30),
-                  StandardButton(
-                    text: "Fertig",
-                    onPressed: saveAndGoBack,
-                    sharedState: sharedState,
-                    size: 1.5,
-                    fontSize: 25,
-                    color: sharedState.theme.subjectColor
-                  ),
+                      Text(
+                          "\nKalender Modul ➜ Einstellungen ➜ Kalender verwalten ➜ Plugins ➜ <Pluginname> ➜ Freigabe",
+                          style: GoogleFonts.poppins(
+                              color: sharedState.theme.textColor,
+                              fontWeight: FontWeight.normal,
+                              fontSize: 15
+                          ),
+                          textAlign: TextAlign.center
+                      ),
+                      const Divider(height: 15),
+                      for (var i = 0; i < pluginCalendarTypes.length; i++)
+                        Column(
+                          children: [
+                            LabeledTextInput("${pluginCalendarTypes[i].name()} Link", sharedState, urlList, i, fontSize: 15),
+                            const Divider(height: 15)
+                          ],
+                        )
+                      ,
+                      StandardButton(
+                        text: "Automatisch füllen",
+                        onPressed: autoFillUrls,
+                        sharedState: sharedState,
+                        color: areCredentialsAvailable ? sharedState.theme.subjectSubstitutionColor.withAlpha(180) : sharedState.theme.subjectDropOutColor.withAlpha(80),
+                        size: 0.5,
+                        fontSize: 15,
+                        disabled: !areCredentialsAvailable,
+                      ),
+                      const Divider(height: 30),
+                      StandardButton(
+                        text: "Fertig",
+                        onPressed: saveAndGoBack,
+                        sharedState: sharedState,
+                        size: 1.5,
+                        fontSize: 25,
+                        color: sharedState.theme.subjectColor
+                      ),
+                    ],
+                  )
                 ],
-              )
-            ],
-          ),
+              ),
+            ),
+          ],
         ),
       ),
     );

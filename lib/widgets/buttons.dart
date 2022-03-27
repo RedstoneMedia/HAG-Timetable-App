@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/theme.dart' as my_theme;
+import 'package:url_launcher/url_launcher.dart';
 
 class SelectableButton extends StatelessWidget {
   const SelectableButton(
@@ -285,6 +287,35 @@ class StandardButton extends StatelessWidget {
               color: sharedState.theme.textColor,
               fontWeight: FontWeight.bold,
               fontSize: fontSize),
+        ),
+      ),
+    );
+  }
+}
+
+/// A Help Button, that opens a help page in the wiki, if pressed. Must be placed in a Stack widget.
+class HelpButton extends StatelessWidget {
+  final SharedState sharedState;
+  final String helpPage;
+
+  const HelpButton(this.helpPage, {required this.sharedState});
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: -10,
+      top: -10,
+      child: FloatingActionButton(
+        onPressed: () async {
+          await launch("${Constants.wikiBaseUrl}/$helpPage", forceWebView: true);
+        },
+        backgroundColor: sharedState.theme.textColor.withAlpha(150),
+        mini: true,
+        tooltip: "Hilfe",
+        child: Icon(
+          Icons.help_outline_sharp,
+          color: sharedState.theme.backgroundColor,
+          size: 25.0,
         ),
       ),
     );
