@@ -96,7 +96,7 @@ class _ClassSelectState extends State<ClassSelect> {
   void initState() {
     super.initState();
     sharedState = widget.sharedState;
-    schoolGrade = sharedState.profileManager.schoolGrade.toString();
+    schoolGrade = sharedState.profileManager.schoolGrade;
     subClassTextEditingController.text = sharedState.profileManager.subSchoolClass;
     subSchoolClassEnabled = !Constants.displayFullHeightSchoolGrades.contains(schoolGrade);
 
