@@ -307,7 +307,7 @@ class HelpButton extends StatelessWidget {
       top: -10,
       child: FloatingActionButton(
         onPressed: () async {
-          await launch("${Constants.wikiBaseUrl}/$helpPage", forceWebView: true);
+          await launch("${Constants.wikiBaseUrl}/$helpPage");
         },
         backgroundColor: sharedState.theme.textColor.withAlpha(150),
         mini: true,
