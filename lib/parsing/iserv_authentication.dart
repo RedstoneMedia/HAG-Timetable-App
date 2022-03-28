@@ -6,8 +6,14 @@ import 'package:tuple/tuple.dart';
 import '../constants.dart';
 import '../helper_functions.dart'; // Contains a client for making API calls
 
+enum IServLoginResponseType {
+  ok,
+  badPassword,
+  badUsername,
+  error
+}
 
-Future<Response?> getIServLoginResponse(Client client, Tuple2<String, String> iServCredentials) async {
+Future<Tuple2<Response?, IServLoginResponseType>> getIServLoginResponse(Client client, Tuple2<String, String> iServCredentials) async {
   final bodyString = "_username=${iServCredentials.item1}&_password=${iServCredentials.item2}";
   final Map<String, String> headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -24,21 +30,26 @@ Future<Response?> getIServLoginResponse(Client client, Tuple2<String, String> iS
   };
   final response = await client.post(Uri.parse(Constants.loginUrlIServ), headers: headers, body: bodyString);
   if (response.body.contains("Anmeldung fehlgeschlagen!")) {
-    log("Cannot login. Bad credentials", name: "iserv.auth");
-    return null;
+    log("Cannot login. Bad password", name: "iserv.auth");
+    return Tuple2(response, IServLoginResponseType.badPassword);
+  }
+  if (response.body.contains("existiert nicht")) {
+    log("Cannot login. Bad username", name: "iserv.auth");
+    return Tuple2(response, IServLoginResponseType.badUsername);
   }
   if (response.statusCode != 302) {
     log("Cannot login. Error code ${response.statusCode}", name: "iserv.auth");
-    return null;
+    return Tuple2(response, IServLoginResponseType.error);
   }
-  return response;
+  return Tuple2(response, IServLoginResponseType.ok);
 }
 
 Future<String?> iServLogin(Client client) async {
   final iServCredentials = await getIServCredentials();
   if (iServCredentials == null) return null;
-  final response = await getIServLoginResponse(client, iServCredentials);
-  if (response == null) return null;
+  final result = await getIServLoginResponse(client, iServCredentials);
+  if (result.item2 != IServLoginResponseType.ok) return null;
+  final response = result.item1!;
 
   final cookiesString = response.headers["set-cookie"];
   final cookies = cookiesString!.split(";");

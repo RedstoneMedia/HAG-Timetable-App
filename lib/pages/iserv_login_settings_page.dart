@@ -25,7 +25,8 @@ class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
 
   final credentialsOutputList = <String>[];
   bool areCredentialsAvailable = false;
-  bool incorrectCredentials = false;
+  bool incorrectUsername = false;
+  bool incorrectPassword = false;
   bool isCheckingCredentials = false;
 
   @override
@@ -35,18 +36,44 @@ class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
   }
 
   Future<void> saveIServCredentialsAndGoBack() async {
-    if (credentialsOutputList.where((element) => element.length > 3).length != 2) {
-      setState(() => incorrectCredentials = true);
-      return;
+    // Reset correctness
+    setState(() {
+      incorrectPassword = false;
+      incorrectUsername = false;
+    });
+    // Check if fields are filled
+    for (int i = 0; i < credentialsOutputList.length; i++) {
+      if (credentialsOutputList[i].length < 4) {
+        setState(() {
+          switch (i) {
+            case 0:
+              incorrectUsername = true;
+              break;
+            case 1:
+              incorrectPassword = true;
+          }
+        });
+        return;
+      }
     }
     // Check if credentials are correct, if internet is available
     if (await isInternetAvailable(Connectivity())) {
       setState(() => isCheckingCredentials = true);
-      final bool isCorrect = (await getIServLoginResponse(Client(), Tuple2(credentialsOutputList[0], credentialsOutputList[1]))) != null;
+      final responseType = (await getIServLoginResponse(Client(), Tuple2(credentialsOutputList[0], credentialsOutputList[1]))).item2;
       setState(() => isCheckingCredentials = false);
-      if (!isCorrect) {
-        setState(() => incorrectCredentials = true);
-        return;
+      switch (responseType) {
+        case IServLoginResponseType.ok:
+          break;
+        case IServLoginResponseType.badPassword:
+          setState(() => incorrectPassword = true);
+          return;
+        case IServLoginResponseType.badUsername:
+          setState(() => incorrectUsername = true);
+          return;
+        case IServLoginResponseType.error:
+          setState(() => incorrectUsername = true);
+          setState(() => incorrectPassword = true);
+          return;
       }
     }
     if (Platform.isAndroid || Platform.isIOS || Platform.isLinux) {
@@ -94,9 +121,9 @@ class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
                           textAlign: TextAlign.center
                       ),
                       const Divider(height: 15),
-                      LabeledTextInput("Nutzername", widget.sharedState, credentialsOutputList, 0, incorrect: incorrectCredentials),
+                      LabeledTextInput("Nutzername", widget.sharedState, credentialsOutputList, 0, incorrect: incorrectUsername),
                       const Divider(height: 15),
-                      LabeledTextInput("Passwort", widget.sharedState, credentialsOutputList, 1, obscureText: true, incorrect: incorrectCredentials),
+                      LabeledTextInput("Passwort", widget.sharedState, credentialsOutputList, 1, obscureText: true, incorrect: incorrectPassword),
                       const Divider(height: 15),
                       if (areCredentialsAvailable)
                         Column(
