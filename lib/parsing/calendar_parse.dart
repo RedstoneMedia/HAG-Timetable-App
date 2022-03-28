@@ -131,19 +131,28 @@ void executeIcsRecurrenceRule(String rRuleString, CalendarDataPoint origDataPoin
 
 CalendarData parseToCalendarData(String iCalendarString, CalendarType type, CalendarData calendarData) {
   final parsedData = ICalendar.fromString(iCalendarString).data;
-  // TODO: Fix the speed of this on large calendars (slows down the UI)
-  for (final data in parsedData) {
+  for (final data in parsedData.reversed) {
     if (data["type"] == "VEVENT") {
       final IcsDateTime dateStart = data["dtstart"] as IcsDateTime;
       final IcsDateTime dateEnd = data["dtend"] as IcsDateTime;
+      final String? rRule = data["rrule"] as String?;
+      // Parse entry's date start time
       DateTime dateStartDateTime;
-      DateTime dateEndDateTime;
-
       if (dateStart.toDateTime() != null) {
         dateStartDateTime = dateStart.toDateTime()!;
       } else {
         dateStartDateTime = parseTimeString(dateStart.dt.split(":")[1]);
       }
+      // This check isn't perfect, but the data can't possibly be in current week, if it passes. It avoids fully parsing entries, which are unimportant.
+      if (DateTime.now().difference(dateStartDateTime).inDays > 7) {
+        if (!Constants.calculateAllCalendarRRules) {
+          break;
+        } else if (rRule == null) {
+          continue;
+        }
+      }
+      // Parse entry's date end time
+      DateTime dateEndDateTime;
       if (dateEnd.toDateTime() != null) {
         dateEndDateTime = dateEnd.toDateTime()!;
       } else {
@@ -152,7 +161,6 @@ CalendarData parseToCalendarData(String iCalendarString, CalendarType type, Cale
 
       final summary = data["summary"] as String;
       final dataPoint = CalendarDataPoint(type, summary, dateStartDateTime, dateEndDateTime);
-      final String? rRule = data["rrule"] as String?;
       if (rRule != null) {
         executeIcsRecurrenceRule(rRule, dataPoint, calendarData);
       } else {

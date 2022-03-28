@@ -14,6 +14,7 @@ class Constants {
       "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
   static const String calDavBaseUrl = "https://hag-iserv.de/caldav";
   static const String calendarIServBaseUrl = "https://hag-iserv.de/iserv/calendar";
+  static const bool calculateAllCalendarRRules = true;
   static const String loginUrlIServ = "https://hag-iserv.de/iserv/app/login";
   static const String publicIServUrl = "https://hag-iserv.de/iserv/public";
   static const String newestVersionPubspecUrl =
