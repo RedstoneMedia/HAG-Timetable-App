@@ -42,6 +42,7 @@ class _CourseInputMethodSelectionPageState
             "Du kannst entweder ein Foto machen, oder deine Kurse selber eingeben.",
         title: "Kurse",
         noButton: true,
+        helpPage: "Set-Up#kurse-eingabe-methoden",
         child: Column(
           children: [
             Padding(

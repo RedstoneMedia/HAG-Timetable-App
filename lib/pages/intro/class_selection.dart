@@ -31,6 +31,7 @@ class _ClassSelectionPageState extends State<ClassSelectionPage> {
           },
           subtitle: "In welcher Klasse bist du?",
           title: "Klasse",
+          helpPage: "Set-Up#eingabe-der-klasse",
           child: ClassSelect(
             initCallback: (validate, save, set) {
               saveClassSelection = save;

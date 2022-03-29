@@ -46,6 +46,7 @@ class _ClassSelectionPageState extends State<CourseSelectionPage> {
       },
       subtitle: "Hier kannst du deine gewählten Kurse eintragen. z.B En",
       title: "Kurse",
+      helpPage: "Set-Up#manuell",
       child: Column(
         children: [
           CourseAutoCompleteAddInput(sharedState: widget.sharedState, onAdd: (courseName) {

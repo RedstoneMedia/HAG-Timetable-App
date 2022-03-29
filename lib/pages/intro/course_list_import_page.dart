@@ -140,6 +140,7 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
         subtitle: subtitle,
         title: "Scanen",
         noButton: courses.isEmpty,
+        helpPage: "Set-Up#automatisch",
         child: Column(
           children: [
             ElevatedButton(

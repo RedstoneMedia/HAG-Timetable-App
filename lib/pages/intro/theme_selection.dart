@@ -39,6 +39,7 @@ class _ClassSelectionPageState extends State<ThemeSelectionPage> {
       },
       title: "Theme",
       subtitle: "Diese App unterstützt verschiedene Themes.",
+      helpPage: "Set-Up#wählen-eines-farbschemas",
       child: ListView.builder(
           shrinkWrap: true,
           itemCount: themeNames.length,
