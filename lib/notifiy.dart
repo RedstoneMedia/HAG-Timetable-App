@@ -1,40 +1,71 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_android/shared_preferences_android.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
+import 'package:stundenplan/integration.dart';
 import 'package:stundenplan/parsing/parse.dart';
+import 'package:stundenplan/parsing/parse_subsitution_plan.dart';
 import 'package:stundenplan/shared_state.dart';
+import 'package:stundenplan/week_subsitutions.dart';
 import 'package:workmanager/workmanager.dart';
 
 Future<FlutterLocalNotificationsPlugin> initializeFlutterLocalNotifications() async {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/launcher_icon');
   const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   return flutterLocalNotificationsPlugin;
 }
 
+NotificationDetails getNotificationDetails() {
+  const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'timetable_notifications',
+      'Stundenplan Benachrichtigungen',
+      channelDescription: 'Wenn Änderungen im Stunden- oder Vertretungsplan vorhanden sind, gibt es eine Benachrichtigung',
+      priority: Priority.high,
+      importance: Importance.high
+  );
+  return const NotificationDetails(android: androidPlatformChannelSpecifics);
+}
+
 void callbackDispatcher() {
   Workmanager().executeTask((task, _inputData) async {
-    final preferences = await SharedPreferences.getInstance(); //Initialize shared preferences
+    // Initialize plugins
+    SharedPreferencesAndroid.registerWith();
+    final preferences = await SharedPreferences.getInstance();
     final notifyPlugin = await initializeFlutterLocalNotifications();
+    // Initialize shared state
     final sharedState = SharedState(preferences, Content(Constants.width, Constants.defaultHeight));
-    if (sharedState.loadStateAndCheckIfFirstTime()) return true; // Should not happen
-    // Todo: Parse the plans and check if they changed
+    if (sharedState.loadStateAndCheckIfFirstTime()) return false; // Should not happen
+    // Load previous substitutions and content from cache
+    (Integrations.instance.getIntegrationByName("IServ")! as IServUnitsSubstitutionIntegration).loadCheckWeekDay = false;
+    (Integrations.instance.getIntegrationByName("Schulmanger")! as SchulmangerIntegration).loadCheckWeekDay = false;
+    sharedState.loadCache();
+    final substitutionsBefore = Integrations.instance.getValue("substitutions") as WeekSubstitutions?;
+    if (substitutionsBefore == null) return true;
+    sharedState.content.lastUpdated = DateTime(0);
+    final substitutionsBeforeJson = substitutionsBefore.toJson();
+    final contentBeforeJson = sharedState.content.toJsonData();
+    // Parse the substitution and timetable
     await parsePlans(sharedState);
-    // Show notification
-    const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        'timetable_notifications',
-        'Stundenplan Benachrichtigungen',
-        channelDescription: 'Wenn Änderungen im Stunden- oder Vertretungsplan vorhanden sind, gibt es eine Benachrichtigung',
-        priority: Priority.high,
-        importance: Importance.high
-    );
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
-    await notifyPlugin.show(Random().nextInt(256), 'Test', 'bruh', platformChannelSpecifics);
+    final substitutions = Integrations.instance.getValue("substitutions") as WeekSubstitutions?;
+    // Send the notifications based on what changed
+    sharedState.content.lastUpdated = DateTime(0);
+    final NotificationDetails platformChannelSpecifics = getNotificationDetails();
+    if (!const DeepCollectionEquality().equals(substitutionsBeforeJson, substitutions?.toJson())) {
+      sharedState.content.updateLastUpdated();
+      sharedState.saveCache();
+      await notifyPlugin.show(Random().nextInt(2147483647), 'Vertretunsplan Änderungen', 'Es gibt Änderungen im Vertretunsplan die dich betreffen', platformChannelSpecifics);
+    } else if (!const DeepCollectionEquality().equals(contentBeforeJson, sharedState.content.toJsonData())) {
+      sharedState.content.updateLastUpdated();
+      sharedState.saveCache();
+      await notifyPlugin.show(Random().nextInt(2147483647), 'Stundenplan Änderungen', 'Es gibt Änderungen im Stundenplan die dich betreffen', platformChannelSpecifics);
+    }
     return true;
   });
 }
@@ -49,11 +80,11 @@ Future<void> initializeNotifications() async {
 
 Future<void> startNotificationTask() async {
   if (!Platform.isAndroid) return;
-  await Workmanager().registerOneOffTask(
+  await Workmanager().registerPeriodicTask(
+    "1",
     "timetableNotificationTask",
-    "timetableNotificationTask",
-    //frequency: const Duration(minutes: 15),
-    existingWorkPolicy: ExistingWorkPolicy.replace,
+    frequency: const Duration(minutes: 15),
+    existingWorkPolicy: ExistingWorkPolicy.keep,
     initialDelay: const Duration(seconds: 10),
     backoffPolicy: BackoffPolicy.linear,
     backoffPolicyDelay: const Duration(minutes: 5),

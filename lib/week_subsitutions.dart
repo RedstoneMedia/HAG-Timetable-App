@@ -5,7 +5,7 @@ import 'package:tuple/tuple.dart';
 class WeekSubstitutions extends IntegratedValue {
   Map<String, Tuple2<List<Tuple2<Map<String, dynamic>, String>>, String>>? weekSubstitutions;
 
-  WeekSubstitutions(dynamic savedSubstitutions, String integrationName) : super(save: true) {
+  WeekSubstitutions(dynamic savedSubstitutions, String integrationName, {bool checkWeekDay = true}) : super(save: true) {
     // Remove old substitutions
     weekSubstitutions = <String, Tuple2<List<Tuple2<Map<String, dynamic>, String>>, String>>{};
     if (savedSubstitutions == null) {return;}
@@ -23,7 +23,7 @@ class WeekSubstitutions extends IntegratedValue {
           continue;
         }
         final weekDay = int.parse(weekDayString as String);
-        if (weekDay < nowWeekDay) {
+        if (weekDay < nowWeekDay || !checkWeekDay) {
           setDay(daySubstitution[0]! as List<dynamic>, substitutionDate, integrationName);
         }
       } catch (e) {
@@ -37,7 +37,6 @@ class WeekSubstitutions extends IntegratedValue {
   }
 
   void setDay(List<dynamic> daySubstitutions, DateTime substituteDate, String integrationName) {
-    log(daySubstitutions.toString(), name : "s");
     final weekDay = substituteDate.weekday;
     if (!weekSubstitutions!.containsKey(weekDay.toString())) {
       weekSubstitutions![weekDay.toString()] = Tuple2([], substituteDate.toString());
