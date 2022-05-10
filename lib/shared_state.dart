@@ -18,6 +18,7 @@ class SharedState {
   Theme theme = darkTheme;
   int? height = Constants.defaultHeight;
   Content content;
+  bool sendNotifications = true;
   ProfileManager profileManager = ProfileManager();
   List<int> holidayWeekdays = getHolidayWeekDays();
   CalendarData calendarData = CalendarData();
@@ -38,6 +39,10 @@ class SharedState {
     saveFileData["jsonProfileManagerData"] = jsonProfileManagerData;
     preferences.setString("jsonProfileManagerData", jsonEncode(jsonProfileManagerData));
 
+    // Notifications
+    preferences.setBool("sendNotifications", sendNotifications);
+    saveFileData["sendNotifications"] = true;
+
     // Save theme and profiles to file
     saveToFile(jsonEncode(saveFileData), Constants.saveDataFileLocation);
 
@@ -57,15 +62,18 @@ class SharedState {
       height = Constants.defaultHeight;
       return true;
     }
+
+    sendNotifications = preferences.getBool("sendNotifications") ?? true;
+
     // Register integrations
     Integrations.instance.registerIntegration(IServUnitsSubstitutionIntegration(this));
     Integrations.instance.registerIntegration(SchulmangerIntegration(this));
 
-    loadThemeAndProfileManagerFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")!));
+    loadThemeProfileManagerAndSendNotificationsFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")!));
     return false;
   }
 
-  void loadThemeAndProfileManagerFromJson(dynamic themeData, dynamic jsonProfileManagerData) {
+  void loadThemeProfileManagerAndSendNotificationsFromJson(dynamic themeData, dynamic jsonProfileManagerData) {
     theme = Theme.fromJsonData(themeData);
     profileManager = ProfileManager.fromJsonData(jsonProfileManagerData);
   }

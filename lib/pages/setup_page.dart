@@ -31,6 +31,7 @@ class _SetupPageState extends State<SetupPage> {
 
   List<String> themeNames = my_theme.Theme.getThemeNames();
   List<String> courses = [];
+  bool sendNotifications = true;
 
   late SharedState sharedState;
   bool? subSchoolClassEnabled;
@@ -45,12 +46,14 @@ class _SetupPageState extends State<SetupPage> {
     themeName = sharedState.theme.themeName;
     profileName = sharedState.profileManager.currentProfileName;
     courses = sharedState.profileManager.subjects;
+    sendNotifications = sharedState.sendNotifications;
   }
 
   void setSharedStateFromLocalStateVars() {
     if (!saveClassSelection()) return;
     sharedState.profileManager.subjects = [];
     sharedState.profileManager.subjects.addAll(courses);
+    sharedState.sendNotifications = sendNotifications;
   }
 
   void saveDataAndGotToMain() {
@@ -269,6 +272,38 @@ class _SetupPageState extends State<SetupPage> {
                     CourseSelectList(
                       sharedState,
                       courses,
+                    ),
+                    Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Text(
+                              "Benachrichtigungen senden",
+                              style: GoogleFonts.poppins(
+                                  color: sharedState.theme.textColor,
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 16.0),
+                            ),
+                            Switch(
+                                splashRadius: 0,
+                                value: sendNotifications,
+                                inactiveTrackColor: sharedState.theme.subjectSubstitutionColor,
+                                activeColor: sharedState.theme.subjectColor,
+                                thumbColor: MaterialStateProperty.resolveWith((states) {
+                                  if (states.contains(MaterialState.selected)) {
+                                    return sharedState.theme.subjectColor;
+                                  }
+                                  return sharedState.theme.textColor;
+                                }),
+                                onChanged: (bool value) {
+                                  setState(() {
+                                    sendNotifications = value;
+                                  });
+                                }
+                            ),
+                          ],
+                        )
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(

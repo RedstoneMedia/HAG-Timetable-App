@@ -59,9 +59,12 @@ Future<void> loadProfileManagerAndThemeFromFile(SharedState sharedState) async {
   try {
     final String data = await loadFromFile(Constants.saveDataFileLocation);
     // Parse the json
-    final jsonData = jsonDecode(data);
+    final jsonData = jsonDecode(data) as Map<String, dynamic>;
     // Load data from json
-    sharedState.loadThemeAndProfileManagerFromJson(jsonData["theme"], jsonData["jsonProfileManagerData"]);
+    sharedState.loadThemeProfileManagerAndSendNotificationsFromJson(jsonData["theme"], jsonData["jsonProfileManagerData"]);
+    if (jsonData.containsKey("sendNotifications")) {
+      sharedState.sendNotifications = jsonData["sendNotifications"] as bool;
+    }
   } catch (e) {
     log("Error while loading save data from file", name: "file", error: e);
   }
