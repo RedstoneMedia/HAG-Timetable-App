@@ -91,7 +91,12 @@ class _MyAppState extends State<MyApp> {
       // App is opened for the firs time -> load settings from file
       await openSetupPageAndCheckForFile(sharedState, context);
     } else {
-      if (sharedState.sendNotifications) await startNotificationTask();
+      // Start and stop the notifications, based on, if they are enable or not
+      if (sharedState.sendNotifications) {
+          await startNotificationTask();
+      } else {
+        await stopNotificationTask();
+      }
       // If not the first time -> Check if Internet is available
       final bool result = await isInternetAvailable(connectivity);
       // Internet is available

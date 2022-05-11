@@ -7,11 +7,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_android/shared_preferences_android.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
+import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/integration.dart';
 import 'package:stundenplan/parsing/parse.dart';
 import 'package:stundenplan/parsing/parse_subsitution_plan.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/week_subsitutions.dart';
+import 'package:tuple/tuple.dart';
 import 'package:workmanager/workmanager.dart';
 
 Future<FlutterLocalNotificationsPlugin> initializeFlutterLocalNotifications() async {
@@ -31,6 +33,105 @@ NotificationDetails getNotificationDetails() {
       importance: Importance.high
   );
   return const NotificationDetails(android: androidPlatformChannelSpecifics);
+}
+
+Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> substitutionsBeforeJson, Map<String, dynamic> substitutionsJson) {
+  final changes = <Tuple3<int, bool, Map<String, dynamic>>>[];
+  // Merge old substitution with current substitutions, to find out what substitutions end up to be new, when merged.
+  final weekSubstitutionsBefore1 = WeekSubstitutions(substitutionsBeforeJson, "before", checkWeekDay: false, checkWeek: false);
+  final weekSubstitutions = WeekSubstitutions(substitutionsJson, "now", checkWeekDay: false, checkWeek: false);
+  weekSubstitutionsBefore1.merge(weekSubstitutions, "now");
+  for (final substitution in weekSubstitutionsBefore1.weekSubstitutions!.entries) {
+    final weekDay = DateTime.parse(substitution.value.item2).weekday;
+    final daySubstitutions = substitution.value.item1;
+    changes.addAll(daySubstitutions.where((e) => e.item2 == "now")
+        .map((e) => Tuple3(weekDay, true, e.item1)));
+  }
+  // Merge old substitution with current substitutions, but overwriting old substitutions, with new ones, even if they are the same, to see what substitutions are old, and not present in the current substitutions anymore (when a substitution gets revoked)
+  final weekSubstitutionsBefore2 = WeekSubstitutions(substitutionsBeforeJson, "before", checkWeekDay: false, checkWeek: false);
+  weekSubstitutionsBefore2.merge(weekSubstitutions, "now", overwriteEqual: true);
+  for (final substitution in weekSubstitutionsBefore2.weekSubstitutions!.entries) {
+    final weekDay = DateTime.parse(substitution.value.item2).weekday;
+    final daySubstitutions = substitution.value.item1;
+    changes.addAll(daySubstitutions.where((e) => e.item2 == "before")
+        .map((e) => Tuple3(weekDay, false, e.item1)));
+  }
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final currentWeekday = today.weekday;
+  // Construct a title, and content for each change and sort them by importance (lower is more important)
+  final changeTexts = <Tuple3<String, String, int>>[];
+  for (final change in changes) {
+    final substitution = change.item3;
+    final revertedChange = !change.item2;
+    // Get the text to describe the day of the change
+    String dayText = "";
+    if (change.item1 - currentWeekday == 0) {
+      dayText = "Heute";
+    } else if (change.item1 - currentWeekday == 1) {
+      dayText = "Morgen";
+    } else {
+      switch (change.item1) {
+        case 1:
+          dayText = "Montag";
+          break;
+        case 2:
+          dayText = "Dienstag";
+          break;
+        case 3:
+          dayText = "Mittwoch";
+          break;
+        case 4:
+          dayText = "Donnerstag";
+          break;
+        case 5:
+          dayText = "Freitag";
+          break;
+      }
+    }
+    String? originalSubject = substitution["statt Fach"] as String?;
+    if (originalSubject == "\u{00A0}") originalSubject = null;
+    final anchorText = originalSubject ?? substitution["Stunde"]; // Text that specifies what lesson or time frame the change is targeting (aka something, where the user can directly infer, when the change is happening)
+    final substitutionTextMessage = substitution["Text"] != null && substitution["Text"] != "---" && !revertedChange ? '\nText: "${(substitution["Text"] as String).truncate(80)}"' : "";
+    // Handle dropped lessons
+    final String isDropped = substitution["Entfall"] as String? ?? "";
+    if (isDropped == "x") {
+      changeTexts.add(Tuple3(
+          "$anchorText fällt${revertedChange ? " nicht" : ""} aus",
+          "$dayText fällt $anchorText${revertedChange ? " doch nicht" : ""} aus$substitutionTextMessage",
+          revertedChange ? 0 : 1)
+      );
+    } else if (substitution["Fach"] != substitution["statt Fach"] && substitution.containsKey("Fach") && substitution.containsKey("statt Fach")) {
+      final newSubject = substitution["Fach"];
+      changeTexts.add(Tuple3(
+          originalSubject != null
+              ? "${revertedChange ? "nicht " : ""}$newSubject anstatt $anchorText"
+              : "${revertedChange ? "nicht " : ""}$newSubject in der $anchorText",
+          originalSubject != null
+              ? "$dayText findet statt $anchorText${revertedChange ? ", doch nicht" : ""}, $newSubject statt$substitutionTextMessage"
+              : "$dayText findet${revertedChange ? " doch nicht" : ""} $newSubject in der $anchorText statt$substitutionTextMessage",
+          revertedChange ? 2 : 3)
+      );
+    } else if (substitution["Raum"] != substitution["statt Raum"] && substitution.containsKey("Raum") && substitution.containsKey("statt Raum")) {
+      final newRoom = substitution["Raum"];
+      changeTexts.add(Tuple3(
+          "${revertedChange ? "nicht " : ""}$anchorText in $newRoom",
+          "$dayText findet $anchorText${revertedChange ? ", doch nicht" : ""} in $newRoom, anstatt in Raum ${substitution["statt Raum"]} statt$substitutionTextMessage",
+          revertedChange ? 4 : 5)
+      );
+    } else if (substitution["Vertretung"] != substitution["statt Lehrer"] && substitution.containsKey("Vertretung") && substitution.containsKey("statt Lehrer")) {
+      final newTeacher = substitution["Vertretung"];
+      changeTexts.add(Tuple3(
+          "$anchorText ${revertedChange ? "nicht " : ""}mit $newTeacher",
+          "$anchorText wird $dayText von $newTeacher, anstatt von ${substitution["statt Lehrer"]} unterrichtet$substitutionTextMessage",
+          revertedChange ? 4 : 5)
+      );
+    }
+  }
+  changeTexts.sort((a, b) => a.item2.compareTo(b.item2));
+  if (changeTexts.isEmpty) return null;
+  final mostImportantChange = changeTexts.first;
+  return Tuple2(mostImportantChange.item1, "${mostImportantChange.item2}${changeTexts.length > 1 ? "\nZudem ${changeTexts.length - 1} weitere Änderung im Veretungsplan" : ""}");
 }
 
 void callbackDispatcher() {
@@ -68,9 +169,13 @@ void callbackDispatcher() {
     if (!const DeepCollectionEquality().equals(substitutionsBeforeJson, substitutionsJson)) {
       sharedState.content.updateLastUpdated();
       sharedState.saveCache();
-      // TODO: Send more insightful notifications, by checking what substitutions changed/got added/removed and somehow conveying those changes in text (For example if a substitution got added, that changes the room on the next day in the second class, the notification should contain that information, and not just say: Something has changed)
-      await notifyPlugin.show(Random().nextInt(2147483647), 'Vertretunsplan Änderungen', 'Es gibt Änderungen im Vertretunsplan die dich betreffen', platformChannelSpecifics);
-    } else if (!const DeepCollectionEquality().equals(contentBeforeJson, sharedState.content.toJsonData())) {
+      final notificationText = getSubstitutionsNotificationText(substitutionsBeforeJson, substitutionsJson);
+      if (notificationText != null) {
+        await notifyPlugin.show(Random().nextInt(2147483647), notificationText.item1, notificationText.item2, platformChannelSpecifics);
+        return true;
+      }
+    }
+    if (!const DeepCollectionEquality().equals(contentBeforeJson, sharedState.content.toJsonData())) {
       sharedState.content.updateLastUpdated();
       sharedState.saveCache();
       await notifyPlugin.show(Random().nextInt(2147483647), 'Stundenplan Änderungen', 'Es gibt Änderungen im Stundenplan die dich betreffen', platformChannelSpecifics);
@@ -102,5 +207,10 @@ Future<void> startNotificationTask() async {
       requiresBatteryNotLow: true
     ),
   );
+}
+
+Future<void> stopNotificationTask() async {
+  if (!Platform.isAndroid) return;
+  await Workmanager().cancelByUniqueName("1");
 }
 
