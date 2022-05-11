@@ -1,4 +1,3 @@
-
 abstract class IntegratedValue {
   final bool save;
   IntegratedValue({required this.save});
@@ -23,6 +22,11 @@ class Integrations {
       valueIntegrations[integration.name] = integration;
     }
     initializedIntegrations[integration.name] = false;
+  }
+
+  Integration? getIntegrationByName(String integrationName) {
+    return integrations.entries.firstWhere((entry) => entry.value.entries.any((entry) => entry.key == integrationName))
+        .value.entries.firstWhere((entry) => entry.key == integrationName).value;
   }
 
   void unregisterIntegration(String integrationName) {

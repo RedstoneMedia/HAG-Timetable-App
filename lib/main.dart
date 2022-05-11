@@ -18,6 +18,7 @@ import 'package:time_ago_provider/time_ago_provider.dart' as time_ago;
 
 import 'content.dart';
 import 'loading_functions.dart';
+import 'notifiy.dart';
 import 'widgets/custom_widgets.dart';
 
 void main() {
@@ -26,6 +27,7 @@ void main() {
   // Disable landscape mode for the app
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+  initializeNotifications();
   // Create a SharedPreferences instance; [Used for caching and storing settings]
   SharedPreferences.getInstance().then((prefs) {
     runApp(
@@ -89,6 +91,12 @@ class _MyAppState extends State<MyApp> {
       // App is opened for the firs time -> load settings from file
       await openSetupPageAndCheckForFile(sharedState, context);
     } else {
+      // Start and stop the notifications, based on, if they are enable or not
+      if (sharedState.sendNotifications) {
+          await startNotificationTask();
+      } else {
+        await stopNotificationTask();
+      }
       // If not the first time -> Check if Internet is available
       final bool result = await isInternetAvailable(connectivity);
       // Internet is available

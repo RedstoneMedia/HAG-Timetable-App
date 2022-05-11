@@ -47,7 +47,6 @@ void main() {
       const Tuple2({"Stunde" : "3-4"}, "B"),
       const Tuple2({"Stunde" : "10-11"}, "B"),
     ], substDate.toString());
-    print(weekSubstitutionsA.weekSubstitutions);
     compareWeekSubstitutions(weekSubstitutionsA, weekSubstitutionsTarget);
   });
 
@@ -56,12 +55,12 @@ void main() {
     final substDate = DateTime.parse("2022-03-23");
     weekSubstitutionsA.setDay([{"Stunde" : "3-4"}], substDate, "A");
     final weekSubstitutionsB = WeekSubstitutions(null, "B");
-    weekSubstitutionsB.setDay([{"Stunde" : "3-4"}], substDate, "B");
+    weekSubstitutionsB.setDay([{"Stunde" : "3-4", "Text" : "Something"}], substDate, "B");
     weekSubstitutionsA.merge(weekSubstitutionsB, "B");
 
     final weekSubstitutionsTarget = WeekSubstitutions(null, "");
     weekSubstitutionsTarget.weekSubstitutions![substDate.weekday.toString()] = Tuple2([
-      const Tuple2({"Stunde" : "3-4"}, "B"),
+      const Tuple2({"Stunde" : "3-4", "Text" : "Something"}, "B"),
     ], substDate.toString());
     compareWeekSubstitutions(weekSubstitutionsA, weekSubstitutionsTarget);
   });

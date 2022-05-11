@@ -33,6 +33,10 @@ dependencies:
   google_ml_kit: ^0.7.2
   flutter_secure_storage: ^5.0.2
   rrule: ^0.2.3
+  workmanager: ^0.4.1
+  flutter_local_notifications: ^9.5.2
+  shared_preferences_android: ^2.0.11
+  collection: ^1.15.0
 
 flutter_icons:
   android: "launcher_icon"

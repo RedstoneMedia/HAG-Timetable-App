@@ -1,11 +1,12 @@
 import 'dart:developer';
+import 'package:collection/collection.dart';
 import 'package:stundenplan/integration.dart';
 import 'package:tuple/tuple.dart';
 
 class WeekSubstitutions extends IntegratedValue {
   Map<String, Tuple2<List<Tuple2<Map<String, dynamic>, String>>, String>>? weekSubstitutions;
 
-  WeekSubstitutions(dynamic savedSubstitutions, String integrationName) : super(save: true) {
+  WeekSubstitutions(dynamic savedSubstitutions, String integrationName, {bool checkWeekDay = true, bool checkWeek = true}) : super(save: true) {
     // Remove old substitutions
     weekSubstitutions = <String, Tuple2<List<Tuple2<Map<String, dynamic>, String>>, String>>{};
     if (savedSubstitutions == null) {return;}
@@ -19,11 +20,11 @@ class WeekSubstitutions extends IntegratedValue {
       try {
         final substitutionDate =  DateTime.parse(daySubstitution[1]! as String);
         // Ignore if data is stale
-        if (now.difference(substitutionDate).inDays >= 7) {
+        if (now.difference(substitutionDate).inDays >= 7 && checkWeek) {
           continue;
         }
         final weekDay = int.parse(weekDayString as String);
-        if (weekDay < nowWeekDay) {
+        if (weekDay < nowWeekDay || !checkWeekDay) {
           setDay(daySubstitution[0]! as List<dynamic>, substitutionDate, integrationName);
         }
       } catch (e) {
@@ -37,7 +38,6 @@ class WeekSubstitutions extends IntegratedValue {
   }
 
   void setDay(List<dynamic> daySubstitutions, DateTime substituteDate, String integrationName) {
-    log(daySubstitutions.toString(), name : "s");
     final weekDay = substituteDate.weekday;
     if (!weekSubstitutions!.containsKey(weekDay.toString())) {
       weekSubstitutions![weekDay.toString()] = Tuple2([], substituteDate.toString());
@@ -61,8 +61,7 @@ class WeekSubstitutions extends IntegratedValue {
   }
 
   @override
-  void merge(IntegratedValue integratedValue, String integrationName) {
-    // TODO: write unit tests for this (im unsure if this works)
+  void merge(IntegratedValue integratedValue, String integrationName, {bool overwriteEqual = false}) {
     final otherWeekSubstitutions = integratedValue as WeekSubstitutions;
     for (final entry in otherWeekSubstitutions.weekSubstitutions!.entries) {
       final weekDay = entry.key;
@@ -103,6 +102,7 @@ class WeekSubstitutions extends IntegratedValue {
           }
           var daySubstitutionsList = currentDaySubstitutions.item1;
           final oldSubstitution = daySubstitutionsList[oldSubstitutionIndex].item1;
+          if (const DeepCollectionEquality().equals(newSubstitution.item1, oldSubstitution) && !overwriteEqual) {continue;} // If nothing changed, just keep the old substitution
           if (newSubstitution.item1["Stunde"] as String != oldSubstitution["Stunde"]! as String) {
             final newClassHourStart = int.parse(newClassHours[0]);
             final newClassHourEnd = newClassHours.length > 1 ? int.parse(newClassHours[1]) : newClassHourStart;

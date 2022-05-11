@@ -94,6 +94,7 @@ void writeSubstitutionPlan(List<Tuple2<Map<String, dynamic>, String>> plan, int 
 class IServUnitsSubstitutionIntegration extends Integration {
   final Client client = Client();
   final SharedState sharedState;
+  bool loadCheckWeekDay = true;
 
   IServUnitsSubstitutionIntegration(this.sharedState) : super(name: "IServ", save: true, precedence: 0, providedValues: ["substitutions"]);
 
@@ -127,7 +128,7 @@ class IServUnitsSubstitutionIntegration extends Integration {
   void loadValuesFromJson(Map<String, dynamic> jsonValues) {
     for (final jsonValueEntry in jsonValues.entries) {
       if (jsonValueEntry.key == "substitutions") {
-        values[jsonValueEntry.key] = WeekSubstitutions(jsonValueEntry.value, name);
+        values[jsonValueEntry.key] = WeekSubstitutions(jsonValueEntry.value, name, checkWeekDay: loadCheckWeekDay);
       }
     }
   }
@@ -221,6 +222,7 @@ class SchulmangerIntegration extends Integration {
   late String authJwt;
   late Map<String, dynamic> studentData;
   bool active = false;
+  bool loadCheckWeekDay = true;
 
   SchulmangerIntegration(this.sharedState) : super(name: "Schulmanger", save: true, precedence: 1, providedValues: ["substitutions"]);
 
@@ -320,7 +322,7 @@ class SchulmangerIntegration extends Integration {
   void loadValuesFromJson(Map<String, dynamic> jsonValues) {
     for (final jsonValueEntry in jsonValues.entries) {
       if (jsonValueEntry.key == "substitutions") {
-        values[jsonValueEntry.key] = WeekSubstitutions(jsonValueEntry.value, name);
+        values[jsonValueEntry.key] = WeekSubstitutions(jsonValueEntry.value, name, checkWeekDay: loadCheckWeekDay);
       }
     }
   }
