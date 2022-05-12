@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -56,7 +57,7 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
     changes.addAll(daySubstitutions.where((e) => e.item2 == "before")
         .map((e) => Tuple3(weekDay, false, e.item1)));
   }
-  final now = DateTime.now();
+  final now = clock.now();
   final today = DateTime(now.year, now.month, now.day);
   final currentWeekday = today.weekday;
   // Construct a title, and content for each change and sort them by importance (lower is more important)
@@ -66,9 +67,9 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
     final revertedChange = !change.item2;
     // Get the text to describe the day of the change
     String dayText = "";
-    if (change.item1 - currentWeekday == 0) {
+    if (currentWeekday - change.item1 == 0) {
       dayText = "Heute";
-    } else if (change.item1 - currentWeekday == 1) {
+    } else if (currentWeekday - change.item1 == 1) {
       dayText = "Morgen";
     } else {
       switch (change.item1) {
@@ -136,7 +137,7 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
 
 void callbackDispatcher() {
   Workmanager().executeTask((task, _inputData) async {
-    final now = DateTime.now();
+    final now = clock.now();
     final today = DateTime(now.year, now.month, now.day);
     // Initialize plugins
     SharedPreferencesAndroid.registerWith();
