@@ -128,4 +128,12 @@ class SharedState {
     }
     return Constants.alwaysDefaultSubjects;
   }
+
+  List<String> get allCurrentSubjects {
+    final allSubjects = profileManager.subjects.toList();
+    for (final defaultSubject in defaultSubjects) {
+      allSubjects.add(defaultSubject);
+    }
+    return allSubjects;
+  }
 }

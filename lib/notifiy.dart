@@ -12,6 +12,7 @@ import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/integration.dart';
 import 'package:stundenplan/parsing/parse.dart';
 import 'package:stundenplan/parsing/parse_subsitution_plan.dart';
+import 'package:stundenplan/parsing/parsing_util.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/week_subsitutions.dart';
 import 'package:tuple/tuple.dart';
@@ -154,7 +155,14 @@ void callbackDispatcher() {
     final substitutionsBefore = Integrations.instance.getValue("substitutions") as WeekSubstitutions?;
     if (substitutionsBefore == null) return true;
     substitutionsBefore.weekSubstitutions!.removeWhere((key, value) => DateTime.parse(value.item2).isBefore(today)); // Remove substitutions on passed days
+    // Remove subjects that the user dose not have from the old substitutions (sometimes kinda redundant)
+    final allSubjects = sharedState.allCurrentSubjects;
+    substitutionsBefore.weekSubstitutions!.forEach((key, value) => value.item1.removeWhere((substitution) {
+      final originalSubject = customStrip(substitution.item1["statt Fach"] as String);
+      return originalSubject != "\u{00A0}" && !allSubjects.contains(originalSubject);
+    }));
     final substitutionsBeforeJson = substitutionsBefore.toJson();
+
     sharedState.content.lastUpdated = DateTime(0);
     final contentBeforeJson = sharedState.content.toJsonData();
     // Parse the substitution and timetable
@@ -164,6 +172,11 @@ void callbackDispatcher() {
     // Remove substitutions on passed days
     final substitutionsJson = substitutions.toJson();
     substitutionsJson.removeWhere((key, value) => DateTime.parse((value as List<dynamic>)[1] as String).isBefore(today));
+    // Remove subjects that the user dose not have from the current week substitutions (sometimes kinda redundant)
+    substitutionsJson.forEach((key, value) => ((value as List<dynamic>)[0] as List<dynamic>).removeWhere((substitution) {
+      final originalSubject = customStrip((substitution as Map<String, dynamic>)["statt Fach"] as String);
+      return originalSubject != "\u{00A0}" && !allSubjects.contains(originalSubject);
+    }));
     // Send the notifications based on what changed
     sharedState.content.lastUpdated = DateTime(0);
     final NotificationDetails platformChannelSpecifics = getNotificationDetails();

@@ -267,7 +267,7 @@ class SchulmangerIntegration extends Integration {
         if (originalLessons.length > 1) continue; // TODO: Don't do this
         final originalLesson = originalLessons[0] as Map<String, dynamic>;
         final originalLessonSubject = originalLesson["subjectLabel"]! as String;
-        if (!sharedState.profileManager.subjects.contains(originalLessonSubject)) continue;
+        if (!sharedState.allCurrentSubjects.contains(originalLessonSubject)) continue;
         final comment = lesson["comment"] as String?;
         final substitutionData = <String, dynamic>{
           "Stunde" : classHour.toString(),

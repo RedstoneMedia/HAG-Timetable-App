@@ -18,28 +18,23 @@ Future<void> parsePlans(SharedState sharedState) async {
   final mainTables = await getTimeTableTables(schoolClassName, Constants.timeTableLinkBase, client);
   // Don't know why but for some reason main tables gets modified by getAvailableSubjectNames so we need to clone it.
   final mainAvailableSubjects = getAvailableSubjectNames(mainTables!.map((e) => e.clone(true)).toList());
-
-  final allSubjects = <String>[];
-  // Add the subject that the user selected
-  for (final subject in sharedState.profileManager.subjects) {
+  // Update the subjects that the user selected
+  for (int i = 0; i < sharedState.profileManager.subjects.length; i++) {
+    final subject = sharedState.profileManager.subjects[i];
     // Check how often the subject exists when ignoring capitalization in the timetable.
     final possibleSubjects = mainAvailableSubjects.where((element) => element.toLowerCase() == subject.toLowerCase());
     if (possibleSubjects.isEmpty) continue;
     if (possibleSubjects.length <= 1) {
-      allSubjects.add(possibleSubjects.single);
+      sharedState.profileManager.subjects[i] = possibleSubjects.single;
     } else {
       // Pick the subject that matches the closest with the inputted capitalization.
       final possibleSubjectList = possibleSubjects.toList();
-      allSubjects.add(findClosestStringInList(possibleSubjectList, subject));
+      sharedState.profileManager.subjects[i] = findClosestStringInList(possibleSubjectList, subject);
     }
-  }
-  // Add the default subjects that can not be changed by the user
-  for (final defaultSubject in sharedState.defaultSubjects) {
-    allSubjects.add(defaultSubject);
   }
 
   log("content length : ${content.cells.length}", name: "parse");
-  await fillTimeTable(schoolClassName, mainTables, content, allSubjects)
+  await fillTimeTable(schoolClassName, mainTables, content, sharedState.allCurrentSubjects)
       .timeout(Constants.clientTimeout);
 
   if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
@@ -51,14 +46,14 @@ Future<void> parsePlans(SharedState sharedState) async {
             courseName,
             courseTables,
             courseTimeTableContent,
-            allSubjects)
+            sharedState.allCurrentSubjects)
         .timeout(Constants.clientTimeout);
     log("Combining both tables", name: "parsing");
     content.combine(courseTimeTableContent);
   }
   sharedState.content = content;
   log("Parsing substitution plan", name: "parsing");
-  await overwriteContentWithSubsitutionPlan(sharedState, client, content, allSubjects, schoolClassName)
+  await overwriteContentWithSubsitutionPlan(sharedState, client, content, sharedState.allCurrentSubjects, schoolClassName)
       .timeout(Constants.clientTimeout);
   sharedState.content = content;
 }
