@@ -1,7 +1,32 @@
 import 'package:clock/clock.dart';
+import 'package:collection/collection.dart';
 import 'package:stundenplan/notifiy.dart';
 import 'package:stundenplan/week_subsitutions.dart';
 import 'package:test/test.dart';
+
+Map<String, dynamic> getSubstitutionMap({
+  required String hour,
+  String originalSubject = "---",
+  String subject = "---",
+  String teacher = "---",
+  String room = "---",
+  String originalTeacher = "---",
+  String originalRoom = "---",
+  String text = "",
+  String dropOut = "",
+}) {
+  return {
+    "Stunde" : hour,
+    "statt Fach" : originalSubject,
+    "Fach" : subject,
+    "Vertretung" : teacher,
+    "Raum" : room,
+    "statt Lehrer" : originalTeacher,
+    "statt Raum" : originalRoom,
+    "Text" : text,
+    "Entfall" : dropOut
+  };
+}
 
 void main() {
   test("Test drop out notification message", () {
@@ -33,7 +58,7 @@ void main() {
   test("Test reverted subject change notification message, with unspecified original subject", () {
     final substitutionsBefore = WeekSubstitutions(null, "before");
     final substDate = DateTime.parse("2022-03-24");
-    substitutionsBefore.setDay([{"Stunde" : "5-6", "statt Fach" : "\u{00A0}", "Fach" : "ma5"}, {"Stunde" : "1-2"}], substDate, "before");
+    substitutionsBefore.setDay([{"Stunde" : "5-6", "statt Fach" : "---", "Fach" : "ma5"}, {"Stunde" : "1-2"}], substDate, "before");
     final weekSubstitutions = WeekSubstitutions(null, "now");
     weekSubstitutions.setDay([{"Stunde" : "1-2"}], substDate, "now");
 
@@ -68,5 +93,32 @@ void main() {
       expect(result.item1, "wn1 mit Swz");
       expect(result.item2, "wn1 wird Morgen von Swz, anstatt von Sz unterrichtet");
     });
+  });
+
+  test("Test cleanupWeekSubstitutionJson", () {
+    final substitutions = WeekSubstitutions(null, "before");
+    final substDate = DateTime.parse("2022-03-24");
+    substitutions.setDay([
+      getSubstitutionMap(hour: "1", originalSubject: "A"),
+      getSubstitutionMap(hour: "2", originalSubject: " B ", teacher: " Swz\t", dropOut: "\nx\n"),
+      getSubstitutionMap(hour: "3-4", originalSubject: "C ", room: " C2.01", originalRoom: "\nC2.01 "),
+      getSubstitutionMap(hour: "5-6", originalSubject: "  D ", subject: "\t B  ", text: "I'm allowed to have spaces"),
+      getSubstitutionMap(hour: "8-9", originalSubject: "\nE\n", originalTeacher: "  Go "),
+      getSubstitutionMap(hour: "3-4", originalSubject: "F"),
+      getSubstitutionMap(hour: "2", originalSubject: "G"),
+      getSubstitutionMap(hour: "1", originalSubject: "H"),
+      getSubstitutionMap(hour: "10-11", originalSubject: "\u{00A0}"),
+    ], substDate, "before");
+    final allSubjects = ["A", "B", "C", "D", "E"];
+    final substitutionsJson = substitutions.toJson();
+    cleanupWeekSubstitutionJson(substitutionsJson, allSubjects);
+    expect(const DeepCollectionEquality().equals(substitutionsJson, {"4" : [[
+      getSubstitutionMap(hour: "1", originalSubject: "A"),
+      getSubstitutionMap(hour: "2", originalSubject: "B", teacher: "Swz", dropOut: "x"),
+      getSubstitutionMap(hour: "3-4", originalSubject: "C", room: "C2.01", originalRoom: "C2.01"),
+      getSubstitutionMap(hour: "5-6", originalSubject: "D", subject: "B", text: "I'm allowed to have spaces"),
+      getSubstitutionMap(hour: "8-9", originalSubject: "E", originalTeacher: "Go"),
+      getSubstitutionMap(hour: "10-11", originalSubject: "\u{00A0}"),
+    ], substDate.toString()]}), true, reason: "Substitutions were not cleaned up sufficiently");
   });
 }

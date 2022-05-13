@@ -59,8 +59,7 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
         .map((e) => Tuple3(weekDay, false, e.item1)));
   }
   final now = clock.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final currentWeekday = today.weekday;
+  final currentWeekday = now.weekday;
   // Construct a title, and content for each change and sort them by importance (lower is more important)
   final changeTexts = <Tuple3<String, String, int>>[];
   for (final change in changes) {
@@ -92,7 +91,7 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
       }
     }
     String? originalSubject = substitution["statt Fach"] as String?;
-    if (originalSubject == "\u{00A0}") originalSubject = null;
+    if (originalSubject == "---") originalSubject = null;
     final anchorText = originalSubject ?? substitution["Stunde"]; // Text that specifies what lesson or time frame the change is targeting (aka something, where the user can directly infer, when the change is happening)
     final substitutionTextMessage = substitution["Text"] != null && substitution["Text"] != "---" && !revertedChange ? '\nText: "${(substitution["Text"] as String).truncate(80)}"' : "";
     // Handle dropped lessons
@@ -136,6 +135,25 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
   return Tuple2(mostImportantChange.item1, "${mostImportantChange.item2}${changeTexts.length > 1 ? "\nZudem ${changeTexts.length - 1} weitere Änderung im Veretungsplan" : ""}");
 }
 
+// Remove subjects that the user dose not have from the old substitutions (sometimes kinda redundant) and strip certain properties
+void cleanupWeekSubstitutionJson(Map<String, dynamic> substitutionsJson, List<String> allSubjects) {
+  substitutionsJson.forEach((key, value) => ((value as List<dynamic>)[0] as List<dynamic>).removeWhere((substitution) {
+    final substitutionMap = substitution as Map<String, dynamic>;
+    // Strip properties
+    substitutionMap["Fach"] = customStrip(substitutionMap["Fach"] as String);
+    substitutionMap["Raum"] = customStrip(substitutionMap["Raum"] as String);
+    substitutionMap["statt Raum"] = customStrip(substitutionMap["statt Raum"] as String);
+    substitutionMap["statt Lehrer"] = customStrip(substitutionMap["statt Lehrer"] as String);
+    substitutionMap["Vertretung"] = customStrip(substitutionMap["Vertretung"] as String);
+    substitutionMap["Raum"] = customStrip(substitutionMap["Raum"] as String);
+    substitutionMap["Entfall"] = customStrip(substitutionMap["Entfall"] as String);
+    // Remove subjects that the user dose not have
+    final originalSubject = customStrip(substitutionMap["statt Fach"] as String);
+    substitutionMap["statt Fach"] = originalSubject;
+    return originalSubject != "\u{00A0}" && !allSubjects.contains(originalSubject);
+  }));
+}
+
 void callbackDispatcher() {
   Workmanager().executeTask((task, _inputData) async {
     final now = clock.now();
@@ -154,14 +172,11 @@ void callbackDispatcher() {
     sharedState.loadCache();
     final substitutionsBefore = Integrations.instance.getValue("substitutions") as WeekSubstitutions?;
     if (substitutionsBefore == null) return true;
-    substitutionsBefore.weekSubstitutions!.removeWhere((key, value) => DateTime.parse(value.item2).isBefore(today)); // Remove substitutions on passed days
-    // Remove subjects that the user dose not have from the old substitutions (sometimes kinda redundant)
-    final allSubjects = sharedState.allCurrentSubjects;
-    substitutionsBefore.weekSubstitutions!.forEach((key, value) => value.item1.removeWhere((substitution) {
-      final originalSubject = customStrip(substitution.item1["statt Fach"] as String);
-      return originalSubject != "\u{00A0}" && !allSubjects.contains(originalSubject);
-    }));
+    // Remove substitutions on passed days and remove irrelevant data
+    substitutionsBefore.weekSubstitutions!.removeWhere((key, value) => DateTime.parse(value.item2).isBefore(today));
     final substitutionsBeforeJson = substitutionsBefore.toJson();
+    final allSubjects = sharedState.allCurrentSubjects;
+    cleanupWeekSubstitutionJson(substitutionsBeforeJson, allSubjects);
 
     sharedState.content.lastUpdated = DateTime(0);
     final contentBeforeJson = sharedState.content.toJsonData();
@@ -169,14 +184,9 @@ void callbackDispatcher() {
     await parsePlans(sharedState);
     final substitutions = Integrations.instance.getValue("substitutions") as WeekSubstitutions?;
     if (substitutions == null) return false;
-    // Remove substitutions on passed days
     final substitutionsJson = substitutions.toJson();
-    substitutionsJson.removeWhere((key, value) => DateTime.parse((value as List<dynamic>)[1] as String).isBefore(today));
-    // Remove subjects that the user dose not have from the current week substitutions (sometimes kinda redundant)
-    substitutionsJson.forEach((key, value) => ((value as List<dynamic>)[0] as List<dynamic>).removeWhere((substitution) {
-      final originalSubject = customStrip((substitution as Map<String, dynamic>)["statt Fach"] as String);
-      return originalSubject != "\u{00A0}" && !allSubjects.contains(originalSubject);
-    }));
+    substitutionsJson.removeWhere((key, value) => DateTime.parse((value as List<dynamic>)[1] as String).isBefore(today)); // Remove substitutions on passed days
+    cleanupWeekSubstitutionJson(substitutionsJson, allSubjects);
     // Send the notifications based on what changed
     sharedState.content.lastUpdated = DateTime(0);
     final NotificationDetails platformChannelSpecifics = getNotificationDetails();
