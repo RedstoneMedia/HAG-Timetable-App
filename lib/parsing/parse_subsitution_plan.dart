@@ -5,6 +5,7 @@ import 'package:html/parser.dart'; // Contains HTML parsers to generate a Docume
 import 'package:http/http.dart';  // Contains a client for making API calls
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
+import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/integration.dart';
 import 'package:stundenplan/parsing/parsing_util.dart';
 import 'package:stundenplan/shared_state.dart';
@@ -239,10 +240,9 @@ class SchulmangerIntegration extends Integration {
   Future<void> update() async {
     if (!active) return;
     final weekSubstitutions = values["substitutions"]! as WeekSubstitutions;
-    var today = DateTime.now();
-    if (today.weekday > 5) today = today.add(const Duration(days: 2));
-    final weekStartDate = today.subtract(Duration(days: today.weekday-1));
-    final weekEndDate = weekStartDate.add(const Duration(days: 6));
+    final weekStartEndDates = getCurrentWeekStartEndDates();
+    final weekStartDate = weekStartEndDates.item1;
+    final weekEndDate = weekStartEndDates.item2;
     final lessons = (await sendSchulmangerApiRequest([{
       "endpointName" : "get-actual-lessons",
       "moduleName" : "schedules",

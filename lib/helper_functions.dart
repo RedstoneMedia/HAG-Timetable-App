@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
+import 'package:clock/clock.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -105,6 +106,14 @@ Future<bool> areIServCredentialsSet() async {
     return true;
   }
   return false;
+}
+
+Tuple2<DateTime, DateTime> getCurrentWeekStartEndDates() {
+  DateTime now = clock.now();
+  if (now.weekday > 5) now = now.add(const Duration(days: 2));
+  DateTime weekStartDate = now.subtract(Duration(days: now.weekday-1));
+  weekStartDate = DateTime(weekStartDate.year, weekStartDate.month, weekStartDate.day); // Strip out time, to just keep the date
+  return Tuple2(weekStartDate, weekStartDate.add(const Duration(days: 6)));
 }
 
 extension StringExtension on String {

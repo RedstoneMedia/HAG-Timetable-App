@@ -135,8 +135,23 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
   return Tuple2(mostImportantChange.item1, "${mostImportantChange.item2}${changeTexts.length > 1 ? "\nZudem ${changeTexts.length - 1} weitere Änderung im Veretungsplan" : ""}");
 }
 
-// Remove subjects that the user dose not have from the old substitutions (sometimes kinda redundant) and strip certain properties
+/// Remove subjects that the user dose not have from the old substitutions (sometimes kinda redundant), strip certain properties and remove days that don't fit in the current timeframe
 void cleanupWeekSubstitutionJson(Map<String, dynamic> substitutionsJson, List<String> allSubjects) {
+  final now = clock.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final weekStartEndDates = getCurrentWeekStartEndDates();
+  final weekStartDate = weekStartEndDates.item1;
+  final weekEndDate = weekStartEndDates.item2;
+  // Remove passed days or days, that are not in the current week
+  substitutionsJson.removeWhere((key, value) {
+    final date = DateTime.parse((value as List<dynamic>)[1] as String);
+    return !(
+        (date.isAfter(weekStartDate) || date.isAtSameMomentAs(weekStartDate))
+        && (date.isAfter(today) || date.isAtSameMomentAs(today))
+        && (date.isBefore(weekEndDate) || date.isAtSameMomentAs(weekEndDate))
+    );
+  });
+  // Remove unsuited substitutions and strip their properties
   substitutionsJson.forEach((key, value) => ((value as List<dynamic>)[0] as List<dynamic>).removeWhere((substitution) {
     final substitutionMap = substitution as Map<String, dynamic>;
     // Strip properties
@@ -156,8 +171,6 @@ void cleanupWeekSubstitutionJson(Map<String, dynamic> substitutionsJson, List<St
 
 void callbackDispatcher() {
   Workmanager().executeTask((task, _inputData) async {
-    final now = clock.now();
-    final today = DateTime(now.year, now.month, now.day);
     // Initialize plugins
     SharedPreferencesAndroid.registerWith();
     final preferences = await SharedPreferences.getInstance();
@@ -166,16 +179,14 @@ void callbackDispatcher() {
     final sharedState = SharedState(preferences, Content(Constants.width, Constants.defaultHeight));
     if (sharedState.loadStateAndCheckIfFirstTime()) return false; // Should not happen
     if (!sharedState.sendNotifications) return true; // Notifications are turned off
+    final allSubjects = sharedState.allCurrentSubjects;
     // Load previous substitutions and content from cache
     (Integrations.instance.getIntegrationByName("IServ")! as IServUnitsSubstitutionIntegration).loadCheckWeekDay = false;
     (Integrations.instance.getIntegrationByName("Schulmanger")! as SchulmangerIntegration).loadCheckWeekDay = false;
     sharedState.loadCache();
     final substitutionsBefore = Integrations.instance.getValue("substitutions") as WeekSubstitutions?;
     if (substitutionsBefore == null) return true;
-    // Remove substitutions on passed days and remove irrelevant data
-    substitutionsBefore.weekSubstitutions!.removeWhere((key, value) => DateTime.parse(value.item2).isBefore(today));
     final substitutionsBeforeJson = substitutionsBefore.toJson();
-    final allSubjects = sharedState.allCurrentSubjects;
     cleanupWeekSubstitutionJson(substitutionsBeforeJson, allSubjects);
 
     sharedState.content.lastUpdated = DateTime(0);
@@ -185,7 +196,6 @@ void callbackDispatcher() {
     final substitutions = Integrations.instance.getValue("substitutions") as WeekSubstitutions?;
     if (substitutions == null) return false;
     final substitutionsJson = substitutions.toJson();
-    substitutionsJson.removeWhere((key, value) => DateTime.parse((value as List<dynamic>)[1] as String).isBefore(today)); // Remove substitutions on passed days
     cleanupWeekSubstitutionJson(substitutionsJson, allSubjects);
     // Send the notifications based on what changed
     sharedState.content.lastUpdated = DateTime(0);

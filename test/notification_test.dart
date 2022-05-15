@@ -95,30 +95,69 @@ void main() {
     });
   });
 
-  test("Test cleanupWeekSubstitutionJson", () {
-    final substitutions = WeekSubstitutions(null, "before");
-    final substDate = DateTime.parse("2022-03-24");
-    substitutions.setDay([
-      getSubstitutionMap(hour: "1", originalSubject: "A"),
-      getSubstitutionMap(hour: "2", originalSubject: " B ", teacher: " Swz\t", dropOut: "\nx\n"),
-      getSubstitutionMap(hour: "3-4", originalSubject: "C ", room: " C2.01", originalRoom: "\nC2.01 "),
-      getSubstitutionMap(hour: "5-6", originalSubject: "  D ", subject: "\t B  ", text: "I'm allowed to have spaces"),
-      getSubstitutionMap(hour: "8-9", originalSubject: "\nE\n", originalTeacher: "  Go "),
-      getSubstitutionMap(hour: "3-4", originalSubject: "F"),
-      getSubstitutionMap(hour: "2", originalSubject: "G"),
-      getSubstitutionMap(hour: "1", originalSubject: "H"),
-      getSubstitutionMap(hour: "10-11", originalSubject: "\u{00A0}"),
-    ], substDate, "before");
-    final allSubjects = ["A", "B", "C", "D", "E"];
-    final substitutionsJson = substitutions.toJson();
-    cleanupWeekSubstitutionJson(substitutionsJson, allSubjects);
-    expect(const DeepCollectionEquality().equals(substitutionsJson, {"4" : [[
-      getSubstitutionMap(hour: "1", originalSubject: "A"),
-      getSubstitutionMap(hour: "2", originalSubject: "B", teacher: "Swz", dropOut: "x"),
-      getSubstitutionMap(hour: "3-4", originalSubject: "C", room: "C2.01", originalRoom: "C2.01"),
-      getSubstitutionMap(hour: "5-6", originalSubject: "D", subject: "B", text: "I'm allowed to have spaces"),
-      getSubstitutionMap(hour: "8-9", originalSubject: "E", originalTeacher: "Go"),
-      getSubstitutionMap(hour: "10-11", originalSubject: "\u{00A0}"),
-    ], substDate.toString()]}), true, reason: "Substitutions were not cleaned up sufficiently");
+  group("cleanupWeekSubstitutionJson", () {
+    test("Test cleanupWeekSubstitutionJson", () {
+      final substitutions = WeekSubstitutions(null, "before");
+      final substDate = DateTime.parse("2022-03-24");
+      substitutions.setDay([
+        getSubstitutionMap(hour: "1", originalSubject: "A"),
+        getSubstitutionMap(hour: "2", originalSubject: " B ", teacher: " Swz\t", dropOut: "\nx\n"),
+        getSubstitutionMap(hour: "3-4", originalSubject: "C ", room: " C2.01", originalRoom: "\nC2.01 "),
+        getSubstitutionMap(hour: "5-6", originalSubject: "  D ", subject: "\t B  ", text: "I'm allowed to have spaces"),
+        getSubstitutionMap(hour: "8-9", originalSubject: "\nE\n", originalTeacher: "  Go "),
+        getSubstitutionMap(hour: "3-4", originalSubject: "F"),
+        getSubstitutionMap(hour: "2", originalSubject: "G"),
+        getSubstitutionMap(hour: "1", originalSubject: "H"),
+        getSubstitutionMap(hour: "10-11", originalSubject: "\u{00A0}"),
+      ], substDate, "before");
+      final allSubjects = ["A", "B", "C", "D", "E"];
+      final substitutionsJson = substitutions.toJson();
+      withClock(Clock.fixed(substDate), () => cleanupWeekSubstitutionJson(substitutionsJson, allSubjects));
+      expect(const DeepCollectionEquality().equals(substitutionsJson, {"4" : [[
+        getSubstitutionMap(hour: "1", originalSubject: "A"),
+        getSubstitutionMap(hour: "2", originalSubject: "B", teacher: "Swz", dropOut: "x"),
+        getSubstitutionMap(hour: "3-4", originalSubject: "C", room: "C2.01", originalRoom: "C2.01"),
+        getSubstitutionMap(hour: "5-6", originalSubject: "D", subject: "B", text: "I'm allowed to have spaces"),
+        getSubstitutionMap(hour: "8-9", originalSubject: "E", originalTeacher: "Go"),
+        getSubstitutionMap(hour: "10-11", originalSubject: "\u{00A0}"),
+      ], substDate.toString()]}), true, reason: "Substitutions were not cleaned up sufficiently");
+    });
+
+    test("Test cleanupWeekSubstitutionJson check day removal mid week", () {
+      final substitutions = WeekSubstitutions(null, "before");
+      substitutions.setDay([getSubstitutionMap(hour: "1", originalSubject: "A")], DateTime.parse("2022-03-21"), "something");
+      substitutions.setDay([getSubstitutionMap(hour: "2", originalSubject: "A")], DateTime.parse("2022-03-25"), "something");
+      substitutions.setDay([getSubstitutionMap(hour: "3", originalSubject: "A")], DateTime.parse("2022-03-28"), "something");
+      final substitutionsJson = substitutions.toJson();
+      withClock(Clock.fixed(DateTime.parse("2022-03-23")), () => cleanupWeekSubstitutionJson(substitutionsJson, ["A"]));
+      expect(const DeepCollectionEquality().equals(substitutionsJson, {
+        "5" : [[getSubstitutionMap(hour: "2", originalSubject: "A")], DateTime.parse("2022-03-25").toString()]
+      }), true);
+    });
+
+    test("Test cleanupWeekSubstitutionJson check day removal week start", () {
+      final substitutions = WeekSubstitutions(null, "before");
+      substitutions.setDay([getSubstitutionMap(hour: "1", originalSubject: "A")], DateTime.parse("2022-03-17"), "something");
+      substitutions.setDay([getSubstitutionMap(hour: "2", originalSubject: "A")], DateTime.parse("2022-03-21"), "something");
+      substitutions.setDay([getSubstitutionMap(hour: "3", originalSubject: "A")], DateTime.parse("2022-03-25"), "something");
+      final substitutionsJson = substitutions.toJson();
+      withClock(Clock.fixed(DateTime.parse("2022-03-21")), () => cleanupWeekSubstitutionJson(substitutionsJson, ["A"]));
+      expect(const DeepCollectionEquality().equals(substitutionsJson, {
+        "1" : [[getSubstitutionMap(hour: "2", originalSubject: "A")], DateTime.parse("2022-03-21").toString()],
+        "5" : [[getSubstitutionMap(hour: "3", originalSubject: "A")], DateTime.parse("2022-03-25").toString()]
+      }), true);
+    });
+
+    test("Test cleanupWeekSubstitutionJson check day removal next week", () {
+      final substitutions = WeekSubstitutions(null, "before");
+      substitutions.setDay([getSubstitutionMap(hour: "1", originalSubject: "A")], DateTime.parse("2022-03-22"), "something");
+      substitutions.setDay([getSubstitutionMap(hour: "2", originalSubject: "A")], DateTime.parse("2022-03-25"), "something");
+      substitutions.setDay([getSubstitutionMap(hour: "3", originalSubject: "A")], DateTime.parse("2022-03-28"), "something");
+      final substitutionsJson = substitutions.toJson();
+      withClock(Clock.fixed(DateTime.parse("2022-03-26")), () => cleanupWeekSubstitutionJson(substitutionsJson, ["A"]));
+      expect(const DeepCollectionEquality().equals(substitutionsJson, {
+        "1" : [[getSubstitutionMap(hour: "3", originalSubject: "A")], DateTime.parse("2022-03-28").toString()]
+      }), true);
+    });
   });
 }
