@@ -95,6 +95,18 @@ void main() {
     });
   });
 
+  test("Test no notification message, when nothing changed", () {
+    final substitutionsBefore = WeekSubstitutions(null, "before");
+    final substDate = DateTime.parse("2022-03-23");
+    substitutionsBefore.setDay([{"Stunde" : "1-2", "statt Fach" : "PO1", "Raum" : "C1.05", "Entfall" : "x"}, {"Stunde" : "5-6", "statt Fach" : "ek1", "Raum" : "C1.03", "Entfall" : "x"}], substDate, "before");
+    final weekSubstitutions = WeekSubstitutions(null, "now");
+    weekSubstitutions.setDay([{"Stunde" : "5-6", "statt Fach" : "ek1", "Raum" : "C1.03", "Entfall" : "---"}, {"Stunde" : "1-2", "statt Fach" : "PO1", "Raum" : "C1.05", "Entfall" : "x"}], substDate, "now");
+    withClock(Clock.fixed(substDate), () {
+      final result = getSubstitutionsNotificationText(substitutionsBefore.toJson(), weekSubstitutions.toJson());
+      expect(result, null);
+    });
+  });
+
   group("cleanupWeekSubstitutionJson", () {
     test("Test cleanupWeekSubstitutionJson", () {
       final substitutions = WeekSubstitutions(null, "before");

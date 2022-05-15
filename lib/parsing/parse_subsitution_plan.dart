@@ -56,6 +56,7 @@ void writeSubstitutionPlan(List<Tuple2<Map<String, dynamic>, String>> plan, int 
     cell.room = customStrip(substitution["Raum"] as String);
     cell.originalRoom = customStrip(substitution["statt Raum"] as String);
     cell.text = substitution["Text"] as String;
+    cell.source = plan[i].item2;
     cell.isDropped = customStrip(substitution["Entfall"] as String) == "x";
 
     // Sometimes a substitution is set, but there is no data set which means that it is dropped.

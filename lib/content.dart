@@ -114,7 +114,7 @@ class Footnote {
       "room": room,
       "schoolClasses": schoolClasses,
       "schoolWeek": schoolWeek,
-      "text": text,
+      "text": text
     };
   }
 
@@ -149,6 +149,7 @@ class Cell {
   String teacher = "---";
   String originalTeacher = "---";
   String text = "---";
+  String? source;
   String footNoteTextId = "";
   List<Footnote>? footnotes;
   bool isSubstitute = false;
@@ -177,6 +178,7 @@ class Cell {
     newCell.teacher = parsedJson["teacher"].toString() ;
     newCell.originalTeacher = parsedJson["originalTeacher"].toString() ;
     newCell.text = parsedJson["text"].toString();
+    newCell.source = parsedJson["source"] as String?;
     newCell.footNoteTextId = parsedJson["footNoteTextId"].toString() ;
     final footnotes = parsedJson["footnotes"];
     if (footnotes != null) {
@@ -209,6 +211,7 @@ class Cell {
       "teacher": teacher,
       "originalTeacher": originalTeacher,
       "text": text,
+      "source": source,
       "footNoteTextId": footNoteTextId,
       "footnotes": footnotesJsonDataList,
       "isSubstitute": isSubstitute,
