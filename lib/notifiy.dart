@@ -93,7 +93,7 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
     String? originalSubject = substitution["statt Fach"] as String?;
     if (originalSubject == "---") originalSubject = null;
     final anchorText = originalSubject ?? substitution["Stunde"]; // Text that specifies what lesson or time frame the change is targeting (aka something, where the user can directly infer, when the change is happening)
-    final substitutionTextMessage = substitution["Text"] != null && substitution["Text"] != "---" && !revertedChange ? '\nText: "${(substitution["Text"] as String).truncate(80)}"' : "";
+    final substitutionTextMessage = customStrip(substitution["Text"] as String? ?? "").isNotEmpty && substitution["Text"] != "---" && !revertedChange ? '\nText: "${(substitution["Text"] as String).truncate(80)}"' : "";
     // Handle dropped lessons
     final String isDropped = substitution["Entfall"] as String? ?? "";
     if (isDropped == "x") {
