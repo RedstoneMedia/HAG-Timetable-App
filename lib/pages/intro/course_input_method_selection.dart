@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:stundenplan/pages/intro/course_list_import_page.dart';
 import 'package:stundenplan/pages/intro/course_selection.dart';
@@ -20,7 +19,6 @@ class CourseInputMethodSelectionPage extends StatefulWidget {
 class _CourseInputMethodSelectionPageState
     extends State<CourseInputMethodSelectionPage> {
   final ImagePicker picker = ImagePicker();
-  final textDetector = GoogleMlKit.vision.textDetector();
 
   @override
   void initState() {

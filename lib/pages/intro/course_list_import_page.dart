@@ -1,17 +1,17 @@
 import 'dart:developer';
-import 'package:http/http.dart';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:http/http.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/helper_functions.dart';
+import 'package:stundenplan/main.dart';
 import 'package:stundenplan/parsing/parse_timetable.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/widgets/base_intro_screen.dart';
 import 'package:stundenplan/widgets/course_select_list.dart';
-import 'package:stundenplan/constants.dart';
-import 'package:stundenplan/main.dart';
 
 
 class CourseListImportPage extends StatefulWidget {
@@ -28,7 +28,7 @@ const String introScreenCourseListImportPageSubtitle = "Mach ein Foto von deinem
 class _CourseListImportPageState extends State<CourseListImportPage> {
 
   final ImagePicker picker = ImagePicker();
-  final textDetector = GoogleMlKit.vision.textDetector();
+  final textRecognizer = TextRecognizer();
   String subtitle = introScreenCourseListImportPageSubtitle;
   List<String> courses = [];
   List<String> availableCourses = [];
@@ -80,7 +80,7 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
     });
     final XFile? photo = await picker.pickImage(source: ImageSource.camera);
     final inputImage = InputImage.fromFilePath(photo!.path);
-    final RecognisedText recognisedText = await textDetector.processImage(inputImage);
+    final RecognizedText recognisedText = await textRecognizer.processImage(inputImage);
 
     final headerLocations = <String, Rect>{};
     const headerNames = ["montag", "dienstag", "mittwoch", "donnerstag", "freitag"];
@@ -88,7 +88,7 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
     for (final block in recognisedText.blocks) {
       final lowerCaseText = block.text.trim().toLowerCase();
       if (headerNames.contains(lowerCaseText)) {
-        headerLocations[lowerCaseText] = block.rect;
+        headerLocations[lowerCaseText] = block.boundingBox;
       } else {
         final regExpr = RegExp(r"^[a-zA-Z]{2}([0-9]|[a-zA-Z])$");
         if (regExpr.hasMatch(block.text.trim())) {
