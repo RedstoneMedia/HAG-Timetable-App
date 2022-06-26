@@ -217,7 +217,7 @@ class IServUnitsSubstitutionIntegration extends Integration {
 }
 
 
-class SchulmangerIntegration extends Integration {
+class SchulmanagerIntegration extends Integration {
   Client client = Client();
   SharedState sharedState;
   late String bundleVersion;
@@ -226,7 +226,7 @@ class SchulmangerIntegration extends Integration {
   bool active = false;
   bool loadCheckWeekDay = true;
 
-  SchulmangerIntegration(this.sharedState) : super(name: "Schulmanger", save: true, precedence: 1, providedValues: ["substitutions"]);
+  SchulmanagerIntegration.Schulmanager(this.sharedState) : super(name: "Schulmanager", save: true, precedence: 1, providedValues: ["substitutions"]);
 
   @override
   Future<void> init() async {
@@ -244,7 +244,7 @@ class SchulmangerIntegration extends Integration {
     final weekStartEndDates = getCurrentWeekStartEndDates();
     final weekStartDate = weekStartEndDates.item1;
     final weekEndDate = weekStartEndDates.item2;
-    final lessons = (await sendSchulmangerApiRequest([{
+    final lessons = (await sendSchulmanagerApiRequest([{
       "endpointName" : "get-actual-lessons",
       "moduleName" : "schedules",
       "parameters" : {
@@ -364,11 +364,11 @@ class SchulmangerIntegration extends Integration {
   }
 
   // Not currently used but could be used, by parents who don't have an IServ account
-  Future<bool> loginSchulmanger(String email, String password) async {
+  Future<bool> loginSchulmanager(String email, String password) async {
     // Send login request to get jwt token
     final loginRequestBody = {"emailOrUsername": email, "password": password, "hash":null, "mobileApp": false, "institutionId":null};
     final response = await client.post(
-      Uri.parse("${Constants.schulmangerApiBaseUrl}/login"),
+      Uri.parse("${Constants.schulmanagerApiBaseUrl}/login"),
       body: jsonEncode(loginRequestBody),
       headers: {"Content-Type": "application/json;charset=utf-8"},
     );
@@ -383,7 +383,7 @@ class SchulmangerIntegration extends Integration {
 
   Future<bool> loginOauth() async {
     // Make initial oidc request to schulmanager
-    final oidcRequest = Request("Get", Uri.parse("${Constants.schulmangerOicdBaseUrl}/${Constants.schulmanagerSchoolId}"))..followRedirects = false;
+    final oidcRequest = Request("Get", Uri.parse("${Constants.schulmanagerOicdBaseUrl}/${Constants.schulmanagerSchoolId}"))..followRedirects = false;
     final oidcResponse = await client.send(oidcRequest);
     if (oidcResponse.statusCode != 302) {
       log("Initializing Oauth failed: ${oidcResponse.statusCode}", name: "schulmanager-integration");
@@ -415,14 +415,14 @@ class SchulmangerIntegration extends Integration {
     }
     final callBackSessionCookieString = getCookieStringFromSetCookieHeader(callbackResponse.headers["set-cookie"]!, ["session", "session.sig"]);
     // Get jwt
-    final jwtResponse = await client.get(Uri.parse("${Constants.schulmangerOicdBaseUrl}/get-jwt"), headers: {"Cookie" : callBackSessionCookieString});
+    final jwtResponse = await client.get(Uri.parse("${Constants.schulmanagerOicdBaseUrl}/get-jwt"), headers: {"Cookie" : callBackSessionCookieString});
     if (jwtResponse.statusCode != 204) {
       log("Oauth failed on getting jwt: ${jwtResponse.statusCode} ${jwtResponse.body}", name: "schulmanager-integration");
       return false;
     }
     final jwt = jwtResponse.headers["x-new-bearer-token"]!;
     // Get user info
-    final userInfoResponse = await client.post(Uri.parse("${Constants.schulmangerApiBaseUrl}/login-status"), headers: {
+    final userInfoResponse = await client.post(Uri.parse("${Constants.schulmanagerApiBaseUrl}/login-status"), headers: {
       "Authorization" : "Bearer $jwt"
     });
     if (userInfoResponse.statusCode != 200) {
@@ -436,8 +436,8 @@ class SchulmangerIntegration extends Integration {
     return true;
   }
 
-  Future<List<dynamic>?> sendSchulmangerApiRequest(List<Map<String, dynamic>> requests) async {
-    final response = await client.post(Uri.parse("${Constants.schulmangerApiBaseUrl}/calls"),
+  Future<List<dynamic>?> sendSchulmanagerApiRequest(List<Map<String, dynamic>> requests) async {
+    final response = await client.post(Uri.parse("${Constants.schulmanagerApiBaseUrl}/calls"),
       body: jsonEncode({"bundleVersion" : bundleVersion, "requests" : requests}),
       headers: {"Content-Type": "application/json;charset=utf-8", "Authorization": "Bearer $authJwt"},
     );

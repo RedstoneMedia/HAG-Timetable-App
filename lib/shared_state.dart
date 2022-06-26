@@ -67,7 +67,7 @@ class SharedState {
 
     // Register integrations
     Integrations.instance.registerIntegration(IServUnitsSubstitutionIntegration(this));
-    Integrations.instance.registerIntegration(SchulmangerIntegration(this));
+    Integrations.instance.registerIntegration(SchulmanagerIntegration.Schulmanager(this));
 
     loadThemeProfileManagerAndSendNotificationsFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")!));
     return false;

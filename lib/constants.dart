@@ -72,8 +72,8 @@ class Constants {
   static const List<String> displayFullHeightSchoolGrades = ["Q1", "Q2"];
   static const String saveDataFileLocation = "/storage/emulated/0/Android/data/stundenplan-data.save";
 
-  static const String schulmangerOicdBaseUrl = "https://login.schulmanager-online.de/oidc";
-  static const String schulmangerApiBaseUrl = "https://login.schulmanager-online.de/api";
+  static const String schulmanagerOicdBaseUrl = "https://login.schulmanager-online.de/oidc";
+  static const String schulmanagerApiBaseUrl = "https://login.schulmanager-online.de/api";
   static const int schulmanagerSchoolId = 776;
 
   static const String wikiBaseUrl = "https://github.com/RedstoneMedia/HAG-Timetable-App/wiki";

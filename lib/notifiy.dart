@@ -182,7 +182,7 @@ void callbackDispatcher() {
     final allSubjects = sharedState.allCurrentSubjects;
     // Load previous substitutions and content from cache
     (Integrations.instance.getIntegrationByName("IServ")! as IServUnitsSubstitutionIntegration).loadCheckWeekDay = false;
-    (Integrations.instance.getIntegrationByName("Schulmanger")! as SchulmangerIntegration).loadCheckWeekDay = false;
+    (Integrations.instance.getIntegrationByName("Schulmanager")! as SchulmanagerIntegration).loadCheckWeekDay = false;
     sharedState.loadCache();
     final substitutionsBefore = Integrations.instance.getValue("substitutions") as WeekSubstitutions?;
     if (substitutionsBefore == null) return true;
