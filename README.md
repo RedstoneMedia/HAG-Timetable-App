@@ -4,7 +4,7 @@
 ![Last Commit](https://img.shields.io/github/last-commit/RedstoneMedia/HAG-Timetable-App?style=flat-square)
 ![Bugs](https://img.shields.io/github/issues-raw/RedstoneMedia/HAG-Timetable-App/bug?label=bugs&style=flat-square)
 
-![stundeplan_wide](https://user-images.githubusercontent.com/34373974/132096176-e38f8157-3571-4f8a-9582-b62a21d34f8b.png)
+![stundeplan_wide](https://user-images.githubusercontent.com/34373974/185638161-9b39c7c5-f139-4459-bd7e-12f327f2753e.png)
 [English version](README-eng.md)
 
 Dies ist eine App für das HAG in Deutschland.
