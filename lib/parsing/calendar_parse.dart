@@ -25,7 +25,9 @@ Future<CalendarData> loadCalendarData(SharedState sharedState) async {
   {
     final iServCredentials = await getIServCredentials();
     if (iServCredentials != null) {
-      await getCaldavCalendarData("${Constants.calDavBaseUrl}/schueler/calendar", CalendarType.students, client, calendarData);
+      await getCaldavCalendarData("${Constants.calDavBaseUrl}/schuelerinnen/calendar", CalendarType.students, client, calendarData);
+      //                                                              ^^^^^
+      //                                                              why ?
       await getCaldavCalendarData("${Constants.calDavBaseUrl}/${iServCredentials.item1}/home", CalendarType.personal, client, calendarData);
     }
   }
@@ -36,7 +38,7 @@ Future<CalendarData> loadCalendarData(SharedState sharedState) async {
 Future<Map<String, String>?> enableAllCalendarPluginUrls() async {
   final client = Client();
   // Login
-  final cookies = await iServLogin(client);
+  final cookies = await iServLogin();
   if (cookies == null) return null;
   // Get plugin list to get feed ids
   final response = await client.get(Uri.parse("${Constants.calendarIServBaseUrl}/plugin"), headers: getAuthHeaderFromCookies(cookies));
@@ -122,7 +124,7 @@ void executeIcsRecurrenceRule(String rRuleString, CalendarDataPoint origDataPoin
   final weekStartDate = now.subtract(Duration(days: now.weekday));
   if (weekStartDate.difference(origDataPoint.startDate).inDays.isNegative) return; // Recurrent rule hasn't started yet.
   final instances = rRule.getInstances(start: weekStartDate.toUtc());
-  for (final instance in instances) {
+  for (final instance in instances.take(5)) {
     final newStartDate = DateTime(instance.year, instance.month, instance.day, origDataPoint.startDate.hour, origDataPoint.startDate.minute, origDataPoint.startDate.second);
     final newEndDate = DateTime(instance.year, instance.month, instance.day, origDataPoint.endDate.hour, origDataPoint.endDate.minute, origDataPoint.endDate.second);
     calendarData.addCalendarDataPoint(CalendarDataPoint(origDataPoint.calendarType, origDataPoint.name, newStartDate, newEndDate));
@@ -142,14 +144,6 @@ CalendarData parseToCalendarData(String iCalendarString, CalendarType type, Cale
         dateStartDateTime = dateStart.toDateTime()!;
       } else {
         dateStartDateTime = parseTimeString(dateStart.dt.split(":")[1]);
-      }
-      // This check isn't perfect, but the data can't possibly be in current week, if it passes. It avoids fully parsing entries, which are unimportant.
-      if (DateTime.now().difference(dateStartDateTime).inDays > 7) {
-        if (!Constants.calculateAllCalendarRRules) {
-          break;
-        } else if (rRule == null) {
-          continue;
-        }
       }
       // Parse entry's date end time
       DateTime dateEndDateTime;

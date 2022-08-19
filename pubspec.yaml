@@ -14,7 +14,7 @@ dependencies:
 
   connectivity_plus: ^2.3.5
   flutter_colorpicker: ^1.0.3
-  flutter_launcher_icons: ^0.9.3
+  flutter_launcher_icons: ^0.10.0
   google_fonts: ^3.0.1
   html: ^0.15.0
   http: ^0.13.4
@@ -26,12 +26,13 @@ dependencies:
   shared_preferences: ^2.0.15
   time_ago_provider: ^4.1.2
   tuple: ^2.0.0
-  url_launcher: ^6.1.4
+  url_launcher: ^6.1.5
   yaml: ^3.1.1
-  icalendar_parser: ^1.0.1+1
+  icalendar_parser: ^1.0.2
   image_picker: ^0.8.5+3
-  google_ml_kit: ^0.11.0
-  flutter_secure_storage: ^5.0.2
+  google_ml_kit: ^0.12.0
+  cookie_jar: ^3.0.1
+  flutter_secure_storage: ^6.0.0
   rrule: ^0.2.10
   workmanager: ^0.5.0
   flutter_local_notifications: ^9.6.1

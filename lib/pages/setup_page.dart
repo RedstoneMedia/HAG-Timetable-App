@@ -31,7 +31,7 @@ class _SetupPageState extends State<SetupPage> {
 
   List<String> themeNames = my_theme.Theme.getThemeNames();
   List<String> courses = [];
-  bool sendNotifications = true;
+  bool sendNotifications = false;
 
   late SharedState sharedState;
   bool? subSchoolClassEnabled;
@@ -278,12 +278,26 @@ class _SetupPageState extends State<SetupPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            Text(
-                              "Benachrichtigungen senden",
-                              style: GoogleFonts.poppins(
-                                  color: sharedState.theme.textColor,
-                                  fontWeight: FontWeight.normal,
-                                  fontSize: 16.0),
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  Text(
+                                    "Benachrichtigungen senden",
+                                    style: GoogleFonts.poppins(
+                                        color: sharedState.theme.textColor,
+                                        fontWeight: FontWeight.normal,
+                                        fontSize: 16.0),
+                                  ),
+                                  Text(
+                                    "Kann zu duplizierten Benachrichtungen führen\n(Experimentell)",
+                                    textAlign: TextAlign.start,
+                                    style: GoogleFonts.poppins(
+                                        color: sharedState.theme.textColor,
+                                        fontWeight: FontWeight.w200,
+                                        fontSize: 10.0),
+                                  ),
+                                ],
+                              ),
                             ),
                             Switch(
                                 splashRadius: 0,

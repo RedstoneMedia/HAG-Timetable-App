@@ -18,7 +18,7 @@ class SharedState {
   Theme theme = darkTheme;
   int? height = Constants.defaultHeight;
   Content content;
-  bool sendNotifications = true;
+  bool sendNotifications = false;
   ProfileManager profileManager = ProfileManager();
   List<int> holidayWeekdays = getHolidayWeekDays();
   CalendarData calendarData = CalendarData();
@@ -41,7 +41,7 @@ class SharedState {
 
     // Notifications
     preferences.setBool("sendNotifications", sendNotifications);
-    saveFileData["sendNotifications"] = true;
+    saveFileData["sendNotifications"] = sendNotifications;
 
     // Save theme and profiles to file
     saveToFile(jsonEncode(saveFileData), Constants.saveDataFileLocation);

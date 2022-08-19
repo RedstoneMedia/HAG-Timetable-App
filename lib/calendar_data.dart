@@ -96,7 +96,11 @@ class CalendarData {
     }
     // Strip time out of the date so that the current time does not influence the isBefore and isAfter functions
     weekStartDate = DateTime(weekStartDate.year, weekStartDate.month, weekStartDate.day);
-
+    final weekEndDate = weekStartDate.add(const Duration(days: 6));
+    // If the data point is not in the current week skip it
+    if (dataPoint.startDate.isAfter(weekEndDate)) return;
+    if (dataPoint.endDate.isBefore(weekStartDate)) return;
+    // Calculate days between start and end date
     final daysBetween = (dataPoint.endDate.difference(dataPoint.startDate).inHours / 24).ceil();
     var daysToAdd = daysBetween;
     if (daysBetween == 0) {
@@ -109,7 +113,7 @@ class CalendarData {
       final weekDay = newDate.weekday-1;
       if (weekDay > 4) continue;
       if (newDate.isBefore(weekStartDate)) continue;
-      if (newDate.isAfter(weekStartDate.add(const Duration(days: 6)))) break;
+      if (newDate.isAfter(weekEndDate)) break;
       days[weekDay].add(dataPoint);
     }
   }

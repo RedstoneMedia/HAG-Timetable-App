@@ -65,6 +65,7 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
   for (final change in changes) {
     final substitution = change.item3;
     final revertedChange = !change.item2;
+    if (revertedChange) continue; // Temporary "fix" to somewhat reduce duplicate notifications
     // Get the text to describe the day of the change
     String dayText = "";
     if (currentWeekday - change.item1 == 0) {

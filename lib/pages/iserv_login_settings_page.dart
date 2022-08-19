@@ -1,10 +1,11 @@
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart';
+import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/parsing/iserv_authentication.dart';
 import 'package:stundenplan/widgets/buttons.dart';
 import 'package:stundenplan/widgets/labeled_text_input.dart';
@@ -59,18 +60,24 @@ class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
     // Check if credentials are correct, if internet is available
     if (await isInternetAvailable(Connectivity())) {
       setState(() => isCheckingCredentials = true);
-      final responseType = (await getIServLoginResponse(Client(), Tuple2(credentialsOutputList[0], credentialsOutputList[1]))).item2;
+      // Make Request to check url and get the response kind
+      final iServCredentials = Tuple2(credentialsOutputList[0], credentialsOutputList[1]);
+      final httpClient = HttpClient();
+      final result = await makeRequestWithRedirects("POST", Uri.parse(Constants.credentialCheckUrlIServ), httpClient, CookieJar(), headers: iServLoginExtraHeaders, body: getIServLoginPostBody(iServCredentials));
+      final responseKind = getIServLoginResponseKind(result.item3.statusCode, result.item4);
+      httpClient.close();
       setState(() => isCheckingCredentials = false);
-      switch (responseType) {
-        case IServLoginResponseType.ok:
+      // Display possible to user
+      switch (responseKind) {
+        case IServLoginResponseKind.ok:
           break;
-        case IServLoginResponseType.badPassword:
+        case IServLoginResponseKind.badPassword:
           setState(() => incorrectPassword = true);
           return;
-        case IServLoginResponseType.badUsername:
+        case IServLoginResponseKind.badUsername:
           setState(() => incorrectUsername = true);
           return;
-        case IServLoginResponseType.error:
+        case IServLoginResponseKind.error:
           setState(() => incorrectUsername = true);
           setState(() => incorrectPassword = true);
           return;

@@ -336,7 +336,7 @@ class SchulmanagerIntegration extends Integration {
     final scripts = result.getElementsByTagName("script");
     String? bundleVersion;
     for (final script in scripts) {
-      if (script.attributes["type"] == "module") {
+      if (script.attributes["src"]?.contains("bundle") ?? false) {
         final srcSplit = script.attributes["src"]!.split(".");
         bundleVersion = srcSplit[srcSplit.length-2];
         break;
@@ -392,7 +392,7 @@ class SchulmanagerIntegration extends Integration {
     final oidcCookieString = getCookieStringFromSetCookieHeader(oidcResponse.headers["set-cookie"]!, ["session", "session.sig"]);
     final iservRedirectUri = Uri.parse(oidcResponse.headers['location']!);
     // Login to iserv and grab the cookies
-    final iServCookies = await iServLogin(client);
+    final iServCookies = await iServLogin();
     if (iServCookies == null) return false;
     // Authorize schulmangager with iserv cookies
     final iservAuthRequest = Request("Get", iservRedirectUri)..followRedirects = false;

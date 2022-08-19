@@ -8,17 +8,22 @@ class Constants {
   static const List<String> weekDays = ["", "Mo", "Di", "Mi", "Do", "Fr"];
   static const String newestReleaseUrlPart =
       "https://github.com/RedstoneMedia/HAG-Timetable-App/releases/tag/";
+  static const String iServHost = "https://hag-iserv.de";
   static const String substitutionLinkBase =
-      "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/svertretung/svertretungen";
+      "$iServHost/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/svertretung/svertretungen";
   static const String timeTableLinkBase =
-      "https://hag-iserv.de/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
-  static const String calDavBaseUrl = "https://hag-iserv.de/caldav";
-  static const String calendarIServBaseUrl = "https://hag-iserv.de/iserv/calendar";
-  static const bool calculateAllCalendarRRules = true;
-  static const String loginUrlIServ = "https://hag-iserv.de/iserv/app/login";
-  static const String publicIServUrl = "https://hag-iserv.de/iserv/public";
+      "$iServHost/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
+  static const String calDavBaseUrl = "$iServHost/caldav";
+  static const String calendarIServBaseUrl = "$iServHost/iserv/calendar";
+  static const String loginUrlIServ = "$iServHost/iserv/login";
+  // This url is used instead of loginUrlIServ, because it requires less redirects to know, if the credentials were correct.
+  // It however needs additional redirects to get the actual IServ session cookies, that's why this url is only used for credential checks.
+  static const String credentialCheckUrlIServ = "$iServHost/iserv/auth/login";
+
+  static const String publicIServUrl = "$iServHost/iserv/public";
   static const String newestVersionPubspecUrl =
       "https://raw.githubusercontent.com/RedstoneMedia/HAG-Timetable-App/master/pubspec.yaml";
+
   static const List<String> alwaysDefaultSubjects = [
     "De",
     "Ma",
