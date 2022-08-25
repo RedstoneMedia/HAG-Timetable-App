@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:math' as math;
+
 import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
 import 'package:http/http.dart';  // Contains a client for making API calls
 import 'package:stundenplan/constants.dart';
@@ -290,7 +291,8 @@ class SchulmanagerIntegration extends Integration {
       }
       final subject = actualLesson["subjectLabel"]! as String;
       if (!sharedState.profileManager.subjects.contains(subject)) continue;
-      final room = (actualLesson["room"]! as Map<String, dynamic>)["name"]! as String;
+      if (actualLesson.containsKey("room")) continue;
+      final room = (actualLesson["room"] as Map<String, dynamic>)["name"]! as String;
       final teachers = actualLesson["teachers"]! as List<dynamic>;
       final teacher = (teachers[0] as Map<String, dynamic>)["abbreviation"] as String;
       final text = actualLesson["comment"] as String?;
