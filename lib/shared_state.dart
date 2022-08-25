@@ -63,7 +63,7 @@ class SharedState {
       return true;
     }
 
-    sendNotifications = preferences.getBool("sendNotifications") ?? true;
+    sendNotifications = preferences.getBool("sendNotifications") ?? false;
 
     // Register integrations
     Integrations.instance.registerIntegration(IServUnitsSubstitutionIntegration(this));

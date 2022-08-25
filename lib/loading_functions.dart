@@ -19,7 +19,7 @@ Future<void> openSetupPageAndCheckForFile(SharedState sharedState, BuildContext 
     await loadProfileManagerAndThemeFromFile(sharedState);
   }
   // Making sure the Frame has been completely drawn and everything has loaded before navigating to new Page
-  WidgetsBinding.instance!.addPostFrameCallback((_) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
     // Opening the setupPage
     Navigator.push(
       context,
