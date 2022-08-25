@@ -51,21 +51,8 @@ Future<List<dom.Element>?> getTimeTableTables(String course, String linkBase, Cl
 
 
 dom.Document getParsedDocumentFromResponse(Response response) {
-  // Change the encoding manually because the encoding is somehow wrong on the website it self and the property on the parse method dose nothing yay.
-  final headers = <String, String>{};
-  response.headers.forEach((key, value) {
-    if (key == "content-type") {
-      final splitStuff = value.replaceAll(" ", "").split(";");
-      splitStuff.remove("charset=UTF-8");
-      headers["content-type"] = splitStuff.join(";");
-    } else {
-      headers[key] = value;
-    }
-  });
-  final modResponse = Response.bytes(response.bodyBytes, response.statusCode, headers: headers);
-
   // Init the parser
-  final document = parse(modResponse.body, encoding: "ISO-8859-1");
+  final document = parse(response.body, encoding: "UTF-8");
   return document;
 }
 
@@ -226,6 +213,10 @@ HashMap<String, List<Footnote>> parseFootnoteTable(dom.Element footnoteTable) {
             break;
           case "Text":
             footnotes[rowIndex].text = customStrip(value);
+            break;
+          case "ZeilenText-2":
+            final footnote = footnotes[rowIndex];
+            footnote.text += "${footnote.text.isEmpty ? " " : ""}${customStrip(value)}";
             break;
           default:
             break;

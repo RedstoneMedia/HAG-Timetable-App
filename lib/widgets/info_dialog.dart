@@ -94,7 +94,7 @@ Future<void> showInfoDialog(
                         InfoProperty(cell.subject, name: "Fach", sharedState: sharedState),
                         InfoProperty(cell.originalRoom, name: "Orginal-Raum", sharedState: sharedState),
                         InfoProperty(cell.room, name: "Raum", sharedState: sharedState),
-                        InfoProperty(cell.originalSubject, name: "Orginal-Lehrer", sharedState: sharedState),
+                        InfoProperty(cell.originalTeacher, name: "Orginal-Lehrer", sharedState: sharedState),
                         InfoProperty(cell.teacher, name: "Lehrer", sharedState: sharedState),
                         InfoProperty(cell.isDropped, name: "Entfall", sharedState: sharedState),
                         if (cell.isDropped || cell.isSubstitute) InfoProperty(cell.text, name: "Text", sharedState: sharedState) else
