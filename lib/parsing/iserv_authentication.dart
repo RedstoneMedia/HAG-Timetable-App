@@ -3,10 +3,9 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:stundenplan/constants.dart';
+import 'package:stundenplan/helper_functions.dart'; // Contains a client for making API calls
 import 'package:tuple/tuple.dart';
-
-import '../constants.dart';
-import '../helper_functions.dart'; // Contains a client for making API calls
 
 enum IServLoginResponseKind {
   ok,
@@ -133,7 +132,25 @@ Future<Tuple2<List<Cookie>?, IServLoginResponseKind>> getIServLoginCookies(Tuple
   return Tuple2(cookies, IServLoginResponseKind.ok);
 }
 
+Future<bool> areCookiesGood(String? cookies) async {
+  if (cookies == null) return false;
+  // Make request to badges (Used because it's response size is quite small and requires authentication)
+  final client = HttpClient();
+  final request = await client.openUrl("GET", Uri.parse("${Constants.iServHost}/iserv/app/navigation/badges"));
+  request.followRedirects = false;
+  request.headers.add("Cookie", cookies);
+  final HttpClientResponse response = await request.close();
+  if (response.statusCode != 302) response.transform(utf8.decoder).listen((_) {});
+  // Cookies are good, when the status code is ok
+  return response.statusCode == 200;
+}
+
 Future<String?> iServLogin() async {
+  final storedSessionCookies = await getIServSessionCookies();
+  if (await areCookiesGood(storedSessionCookies)) {
+    log("Using stored cookies", name: "iserv.auth");
+    return storedSessionCookies;
+  }
   final iServCredentials = await getIServCredentials();
   if (iServCredentials == null) return null;
   final result = await getIServLoginCookies(iServCredentials);
@@ -145,7 +162,10 @@ Future<String?> iServLogin() async {
       authCookieStringBuffer.write("${cookie.name}=${cookie.value}; ");
     }
   }
-  return authCookieStringBuffer.toString();
+  // Construct string from buffer, return it, and store it for later to avoid unnecessary login requests.
+  final authCookieString = authCookieStringBuffer.toString();
+  await setIServSessionCookies(authCookieString);
+  return authCookieString;
 }
 
 Map<String, String> getAuthHeaderFromCookies(String cookies) {

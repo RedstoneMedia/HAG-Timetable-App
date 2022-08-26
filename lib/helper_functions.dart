@@ -75,31 +75,57 @@ String findClosestStringInList(List<String> stringList, String string) {
   return clonedStringList.first;
 }
 
-Future<Tuple2<String, String>?> getIServCredentials() async {
+Future<void> setIServSessionCookies(String sessionCookies) async {
   if (Platform.isAndroid || Platform.isIOS || Platform.isLinux) {
-    FlutterSecureStorage? storage = FlutterSecureStorage();
-    final lastLoadedString = await storage.read(key: "credentialsLastLoaded");
-    if (lastLoadedString == null) return null; // No credentials are defined
+    const storage = FlutterSecureStorage();
+    return storage.write(key: "sessionCookies", value: sessionCookies);
+  }
+}
 
-    // Delete credentials if they haven't been loaded in roughly half a year
-    final lastLoaded = DateTime.parse(lastLoadedString);
-    if (DateTime.now().difference(lastLoaded).inDays > 178) {
-      log("Credentials have expired", name: "credentials");
-      await storage.deleteAll();
+Future<String?> getIServSessionCookies() async {
+  if (Platform.isAndroid || Platform.isIOS || Platform.isLinux) {
+    const storage = FlutterSecureStorage();
+    final lastLoadedTime = await updateLastLoaded(storage);
+    if (lastLoadedTime == null) return null;
+    // Session cookies are too old
+    if (lastLoadedTime.difference(DateTime.now()).inHours > 3) {
+      await storage.delete(key: "sessionCookies");
       return null;
     }
-    await storage.write(key: "credentialsLastLoaded", value: DateTime.now().toIso8601String());
+    return storage.read(key: "sessionCookies");
+  }
+  return null;
+}
 
+Future<DateTime?> updateLastLoaded(FlutterSecureStorage storage) async {
+  final lastLoadedString = await storage.read(key: "credentialsLastLoaded");
+  if (lastLoadedString == null) return null;
+  // Delete credentials if they haven't been loaded in roughly half a year
+  final lastLoaded = DateTime.parse(lastLoadedString);
+  if (DateTime.now().difference(lastLoaded).inDays > 178) {
+    log("Credentials have expired", name: "credentials");
+    await storage.deleteAll();
+    return null;
+  }
+  await storage.write(key: "credentialsLastLoaded", value: DateTime.now().toIso8601String());
+  return lastLoaded;
+}
+
+Future<Tuple2<String, String>?> getIServCredentials() async {
+  if (Platform.isAndroid || Platform.isIOS || Platform.isLinux) {
+    FlutterSecureStorage? storage = const FlutterSecureStorage();
+    if (await updateLastLoaded(storage) == null) return null;
     final userName = await storage.read(key: "username");
     final password = await storage.read(key: "password");
     storage = null;
     return Tuple2(userName!, password!);
   }
+  return null;
 }
 
 Future<bool> areIServCredentialsSet() async {
   if (Platform.isAndroid || Platform.isIOS || Platform.isLinux) {
-    FlutterSecureStorage? storage = FlutterSecureStorage();
+    FlutterSecureStorage? storage = const FlutterSecureStorage();
     final lastSavedString = await storage.read(key: "credentialsLastLoaded");
     if (lastSavedString == null) return false; // No credentials are defined
     storage = null;
