@@ -77,6 +77,7 @@ class _SetupPageState extends State<SetupPage> {
   void setProfile(String profileName) {
     setState(() {
       if (!validateClassSelection()) return;
+      sharedState.hasChangedCourses = true;
       setSharedStateFromLocalStateVars(); // Save old profile local state variables into shared state
       sharedState.profileManager.currentProfileName =
           profileName; // Change to new profile name

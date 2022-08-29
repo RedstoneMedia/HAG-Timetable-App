@@ -8,6 +8,7 @@ import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
 import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/integration.dart';
+import 'package:stundenplan/parsing/parse.dart';
 import 'package:stundenplan/parsing/parsing_util.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/week_subsitutions.dart';
@@ -16,12 +17,11 @@ import 'package:tuple/tuple.dart';
 import 'iserv_authentication.dart';
 
 
-Future<void> overwriteContentWithSubsitutionPlan(
+Future<void> overwriteContentWithSubstitutionPlan(
     SharedState sharedState,
     Client client,
     Content content,
-    List<String> subjects,
-    String schoolClassName) async
+    List<String> subjects) async
 {
   await Integrations.instance.update(values: ["substitutions"]);
   final weekSubstitutions = Integrations.instance.getValue("substitutions")! as WeekSubstitutions;
@@ -109,21 +109,13 @@ class IServUnitsSubstitutionIntegration extends Integration {
   @override
   Future<void> update() async {
     final weekSubstitutions = values["substitutions"]! as WeekSubstitutions;
-    final schoolClassName = "${sharedState.profileManager.schoolGrade}${sharedState.profileManager.subSchoolClass}";
-    // Get main substitutions
-    final ret = await getCourseSubstitutionPlan(schoolClassName);
-    final mainPlan = ret["substitutions"] as List<Map<String, String>>;
-    final mainSubstituteDate = ret["substituteDate"] as DateTime;
-    weekSubstitutions.setDay(mainPlan, mainSubstituteDate, name);
-
-    //  Get course substitutions
-    if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
-      final courseRet = await getCourseSubstitutionPlan(
-          "${sharedState.profileManager.schoolGrade}K",
-      );
-      final coursePlan = courseRet["substitutions"] as List<Map<String, String>>;
-      final courseSubstituteDate = ret["substituteDate"] as DateTime;
-      weekSubstitutions.setDay(coursePlan, courseSubstituteDate, name);
+    final schoolClasses = getRelevantSchoolClasses(sharedState);
+    // Get substitutions for each class and write it to week substitutions
+    for (final schoolClassName in schoolClasses) {
+      final ret = await getCourseSubstitutionPlan(schoolClassName);
+      final classPlan = ret["substitutions"] as List<Map<String, String>>;
+      final classSubstituteDate = ret["substituteDate"] as DateTime;
+      weekSubstitutions.setDay(classPlan, classSubstituteDate, name);
     }
   }
 

@@ -22,6 +22,9 @@ class SharedState {
   ProfileManager profileManager = ProfileManager();
   List<int> holidayWeekdays = getHolidayWeekDays();
   CalendarData calendarData = CalendarData();
+  // Internal flags
+  bool hasChangedCourses = true;
+  bool processSpecialAGClass = true;
 
   SharedState(this.preferences, this.content);
 
@@ -46,6 +49,9 @@ class SharedState {
     // Save theme and profiles to file
     saveToFile(jsonEncode(saveFileData), Constants.saveDataFileLocation);
 
+    // Internal flags
+    saveInternalFlags();
+
     preferences.setInt("height", height!);
   }
 
@@ -62,18 +68,24 @@ class SharedState {
       height = Constants.defaultHeight;
       return true;
     }
-
+    // Load User flags
     sendNotifications = preferences.getBool("sendNotifications") ?? false;
-
+    // Load Internal flags
+    loadInternalFlags();
     // Register integrations
     Integrations.instance.registerIntegration(IServUnitsSubstitutionIntegration(this));
     Integrations.instance.registerIntegration(SchulmanagerIntegration.Schulmanager(this));
 
-    loadThemeProfileManagerAndSendNotificationsFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")!));
+    loadThemeProfileManagerFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")!));
     return false;
   }
 
-  void loadThemeProfileManagerAndSendNotificationsFromJson(dynamic themeData, dynamic jsonProfileManagerData) {
+  void loadInternalFlags() {
+    hasChangedCourses = preferences.getBool("hasChangedCourses") ?? true;
+    processSpecialAGClass = preferences.getBool("processSpecialAGClass") ?? true;
+  }
+
+  void loadThemeProfileManagerFromJson(dynamic themeData, dynamic jsonProfileManagerData) {
     theme = Theme.fromJsonData(themeData);
     profileManager = ProfileManager.fromJsonData(jsonProfileManagerData);
   }
@@ -90,6 +102,13 @@ class SharedState {
     log("[SAVED] lastUpdated: ${content.lastUpdated}", name: "cache");
     final encodedContent = jsonEncode(content.toJsonData());
     preferences.setString("cachedContent", encodedContent);
+    // Save internal flags
+    saveInternalFlags();
+  }
+
+  void saveInternalFlags() {
+    preferences.setBool("hasChangedCourses", hasChangedCourses);
+    preferences.setBool("processSpecialAGClass", processSpecialAGClass);
   }
 
   void loadCache() {

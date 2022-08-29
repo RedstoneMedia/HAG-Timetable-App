@@ -73,6 +73,7 @@ class _CourseSelectListState extends State<CourseSelectList> {
                 ),
                 onDismissed: (_) {
                   setState(() {
+                    widget.sharedState.hasChangedCourses = true;
                     widget.courses.removeAt(index);
                     controllers[index].dispose();
                     controllers.removeAt(index);
@@ -95,6 +96,7 @@ class _CourseSelectListState extends State<CourseSelectList> {
                             ),
                           ),
                           onChanged: (text) {
+                            widget.sharedState.hasChangedCourses = true;
                             widget.courses[index] = text;
                           },
                           controller: controllers[index],

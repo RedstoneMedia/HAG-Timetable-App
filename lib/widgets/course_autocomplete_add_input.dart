@@ -27,10 +27,14 @@ class _CourseAutoCompleteAddInput extends State<CourseAutoCompleteAddInput> {
     final client = Client();
     final fullSchoolGradeName = widget.sharedState.profileManager.schoolClassFullName;
     final tablesMain = await getTimeTableTables(fullSchoolGradeName, Constants.timeTableLinkBase, client);
-    options = (await getAvailableSubjectNames(tablesMain)).toList();
+    options = (getAvailableSubjectNames(tablesMain)).toList();
     if (!Constants.displayFullHeightSchoolGrades.contains(widget.sharedState.profileManager.schoolGrade)) {
       final tablesCourse = await getTimeTableTables("${fullSchoolGradeName}K", Constants.timeTableLinkBase, client);
-      options.addAll(await getAvailableSubjectNames(tablesCourse));
+      options.addAll(getAvailableSubjectNames(tablesCourse));
+    }
+    if (Constants.useAGs) {
+      final tablesCourse = await getTimeTableTables(Constants.specialClassNameAG, Constants.timeTableLinkBase, client);
+      options.addAll(getAvailableSubjectNames(tablesCourse));
     }
   }
 
@@ -129,6 +133,7 @@ class _CourseAutoCompleteAddInput extends State<CourseAutoCompleteAddInput> {
               ),
               onPressed: () {
                 setState(() {
+                  widget.sharedState.hasChangedCourses = true;
                   widget.onAdd(courseAddNameTextEditingController.text);
                   courseAddNameTextEditingController.text = "";
                 });

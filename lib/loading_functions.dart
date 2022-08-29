@@ -61,7 +61,7 @@ Future<void> loadProfileManagerAndThemeFromFile(SharedState sharedState) async {
     // Parse the json
     final jsonData = jsonDecode(data) as Map<String, dynamic>;
     // Load data from json
-    sharedState.loadThemeProfileManagerAndSendNotificationsFromJson(jsonData["theme"], jsonData["jsonProfileManagerData"]);
+    sharedState.loadThemeProfileManagerFromJson(jsonData["theme"], jsonData["jsonProfileManagerData"]);
     if (jsonData.containsKey("sendNotifications")) {
       sharedState.sendNotifications = jsonData["sendNotifications"] as bool;
     }
