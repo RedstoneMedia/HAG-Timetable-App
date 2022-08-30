@@ -8,11 +8,14 @@ import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/parsing/parse_subsitution_plan.dart';
 import 'package:stundenplan/parsing/parse_timetable.dart';
 import 'package:stundenplan/shared_state.dart';
+import 'package:tuple/tuple.dart';
 
 List<String> getRelevantSchoolClasses(SharedState sharedState) {
   final classes = [sharedState.profileManager.schoolClassFullName];
-  if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade)) {
-    classes.add("${sharedState.profileManager.schoolClassFullName}K");
+  if (!Constants.displayFullHeightSchoolGrades.contains(sharedState.profileManager.schoolGrade) &&
+      (sharedState.processSpecialCourseClass || sharedState.hasChangedCourses)
+  ) {
+    classes.add("${sharedState.profileManager.schoolGrade}K");
   }
   if ((sharedState.hasChangedCourses || sharedState.processSpecialAGClass) && Constants.useAGs) classes.add(Constants.specialClassNameAG);
   return classes;
@@ -23,12 +26,21 @@ Future<void> parsePlans(SharedState sharedState) async {
   final client = Client();
   final schoolClasses = getRelevantSchoolClasses(sharedState);
   final List<String> mainAvailableSubjects = [];
-  final List<List<dom.Element>?> classesTimeTables = [];
+  final List<Tuple2<List<dom.Element>, String>> classesTimeTables = [];
   List<String>? agAvailableClassSubjects;
+  // Get the time tables for each class
   for (final schoolClassName in schoolClasses) {
     log("Parsing $schoolClassName time table", name: "parsing");
-    final timeTables = await getTimeTableTables(schoolClassName, Constants.timeTableLinkBase, client);
-    if (timeTables == null) continue;
+    final getTimeTablesResult = await getTimeTableTables(schoolClassName, Constants.timeTableLinkBase, client);
+    final timeTables = getTimeTablesResult.item1;
+    // Check if special course class was not found, if so don't attempt to get data from this class anymore, since it does not exist.
+    if (timeTables == null) {
+      if (getTimeTablesResult.item2 == GetTileTablesResponse.notFound &&
+          schoolClassName == "${sharedState.profileManager.schoolGrade}K"
+      ) sharedState.processSpecialCourseClass = false;
+      continue; // Always skip empty timeTables, as the cannot be parsed
+    }
+    if (schoolClassName == "${sharedState.profileManager.schoolGrade}K") sharedState.processSpecialCourseClass = true;
     // Don't know why but for some reason main tables gets modified by getAvailableSubjectNames so we need to clone it.
     final classAvailableSubjects = getAvailableSubjectNames(timeTables.map((e) => e.clone(true)).toList());
     // Store special ag class subjects separately
@@ -37,7 +49,7 @@ Future<void> parsePlans(SharedState sharedState) async {
     }
     // Add class subject and timetables to lists
     mainAvailableSubjects.addAll(classAvailableSubjects);
-    classesTimeTables.add(timeTables);
+    classesTimeTables.add(Tuple2(timeTables, schoolClassName));
   }
   // Update the subjects that the user selected
   for (int i = 0; i < sharedState.profileManager.subjects.length; i++) {
@@ -68,8 +80,8 @@ Future<void> parsePlans(SharedState sharedState) async {
   log("Writing to content", name: "parse");
   // Write time tables to content
   for (var i = 0; i < classesTimeTables.length; i++) {
-    final classTimeTables = classesTimeTables[i];
-    final schoolClassName = schoolClasses[i];
+    final classTimeTables = classesTimeTables[i].item1;
+    final schoolClassName = classesTimeTables[i].item2;
     // Fill class content
     final classTimeTableContent = Content(Constants.width, sharedState.height!);
     await fillTimeTable(schoolClassName, classTimeTables, classTimeTableContent, sharedState.allCurrentSubjects)

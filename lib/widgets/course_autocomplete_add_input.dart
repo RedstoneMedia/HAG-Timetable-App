@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart';
 import 'package:stundenplan/parsing/parse_timetable.dart';
 import 'package:stundenplan/shared_state.dart';
-import 'package:http/http.dart';
-
-import '../constants.dart'; // Contains a client for making API calls
 
 
 class CourseAutoCompleteAddInput extends StatefulWidget {
@@ -25,17 +23,7 @@ class _CourseAutoCompleteAddInput extends State<CourseAutoCompleteAddInput> {
 
   Future<void> setOptions() async {
     final client = Client();
-    final fullSchoolGradeName = widget.sharedState.profileManager.schoolClassFullName;
-    final tablesMain = await getTimeTableTables(fullSchoolGradeName, Constants.timeTableLinkBase, client);
-    options = (getAvailableSubjectNames(tablesMain)).toList();
-    if (!Constants.displayFullHeightSchoolGrades.contains(widget.sharedState.profileManager.schoolGrade)) {
-      final tablesCourse = await getTimeTableTables("${fullSchoolGradeName}K", Constants.timeTableLinkBase, client);
-      options.addAll(getAvailableSubjectNames(tablesCourse));
-    }
-    if (Constants.useAGs) {
-      final tablesCourse = await getTimeTableTables(Constants.specialClassNameAG, Constants.timeTableLinkBase, client);
-      options.addAll(getAvailableSubjectNames(tablesCourse));
-    }
+    options = await getAllAvailableSubjects(client, widget.sharedState.profileManager.schoolClassFullName, widget.sharedState.profileManager.schoolGrade!);
   }
 
   @override

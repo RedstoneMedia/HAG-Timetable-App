@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:http/http.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/helper_functions.dart';
 import 'package:stundenplan/main.dart';
 import 'package:stundenplan/parsing/parse_timetable.dart';
@@ -43,12 +42,7 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
   Future<void> getAvailableCourses() async {
     final client = Client();
     final fullSchoolGradeName = widget.sharedState.profileManager.schoolClassFullName;
-    final tablesMain = await getTimeTableTables(fullSchoolGradeName, Constants.timeTableLinkBase, client);
-    availableCourses = getAvailableSubjectNames(tablesMain).toList();
-    if (!Constants.displayFullHeightSchoolGrades.contains(widget.sharedState.profileManager.schoolGrade)) {
-      final tablesCourse = await getTimeTableTables("${fullSchoolGradeName}K", Constants.timeTableLinkBase, client);
-      availableCourses.addAll(getAvailableSubjectNames(tablesCourse));
-    }
+    availableCourses = await getAllAvailableSubjects(client, fullSchoolGradeName, widget.sharedState.profileManager.schoolGrade!);
   }
 
   void saveDataToProfile() {

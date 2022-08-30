@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
@@ -25,6 +26,7 @@ class SharedState {
   // Internal flags
   bool hasChangedCourses = true;
   bool processSpecialAGClass = true;
+  bool processSpecialCourseClass = true;
 
   SharedState(this.preferences, this.content);
 
@@ -83,6 +85,14 @@ class SharedState {
   void loadInternalFlags() {
     hasChangedCourses = preferences.getBool("hasChangedCourses") ?? true;
     processSpecialAGClass = preferences.getBool("processSpecialAGClass") ?? true;
+    processSpecialCourseClass = preferences.getBool("processSpecialCourseClass") ?? true;
+    // Randomly activate hasChangedCourses to force update the special classes.
+    // This is important, since there is a very small probability that teachers accidentally remove courses or classes from the website, without the user actually chaining their courses
+    if (math.Random().nextDouble() < Constants.randomUpdateSpecialClassesChance &&
+        (!processSpecialAGClass || !processSpecialCourseClass)
+    ) {
+      hasChangedCourses = true;
+    }
   }
 
   void loadThemeProfileManagerFromJson(dynamic themeData, dynamic jsonProfileManagerData) {
@@ -109,6 +119,7 @@ class SharedState {
   void saveInternalFlags() {
     preferences.setBool("hasChangedCourses", hasChangedCourses);
     preferences.setBool("processSpecialAGClass", processSpecialAGClass);
+    preferences.setBool("processSpecialCourseClass", processSpecialCourseClass);
   }
 
   void loadCache() {

@@ -6,6 +6,9 @@ import 'package:http/http.dart'; // Contains a client for making API calls
 
 import 'package:stundenplan/parsing/parsing_util.dart'; // Contains parsing utils
 import 'package:stundenplan/content.dart';
+import 'package:tuple/tuple.dart';
+
+import '../constants.dart';
 
 
 /// This will fill the input content with a timetable based on the other arguments
@@ -20,17 +23,29 @@ Future<void> fillTimeTable(String course, List<dom.Element>? tables,
   }
 }
 
-Future<List<dom.Element>?> getTimeTableTables(String course, String linkBase, Client client) async {
+enum GetTileTablesResponse {
+  notFound,
+  badStatus,
+  fatalError,
+  noTable,
+  ok
+}
+
+Future<Tuple2<List<dom.Element>?, GetTileTablesResponse>> getTimeTableTables(String course, String linkBase, Client client) async {
   // Get the html file
   final response = await client.get(Uri.parse('${linkBase}_$course.htm'));
   if (response.statusCode != 200) {
-    log("Cannot get timetable", name: "parsing.timetable");
-    return null;
+    if (response.body.contains("FileNotFoundException")) {
+      log("Cannot get timetable $course: Not found", name: "parsing.timetable");
+      return const Tuple2(null, GetTileTablesResponse.notFound);
+    }
+    log("Cannot get timetable $course: Bad status code ${response.statusCode}", name: "parsing.timetable");
+    return const Tuple2(null, GetTileTablesResponse.badStatus);
   }
   final dom.Document document = getParsedDocumentFromResponse(response);
   if (document.outerHtml.contains("Fatal error")) {
-    log("Cannot get timetable", name: "parsing.timetable");
-    return null;
+    log("Cannot get timetable $course: Fatal error", name: "parsing.timetable");
+    return const Tuple2(null, GetTileTablesResponse.fatalError);
   }
 
   // Find all elements with attr rules
@@ -44,9 +59,9 @@ Future<List<dom.Element>?> getTimeTableTables(String course, String linkBase, Cl
   }
   // Check if tables exists if not don't parse the table
   if (tables.length > 1) {
-    return tables;
+    return Tuple2(tables, GetTileTablesResponse.ok);
   }
-  return null;
+  return const Tuple2(null, GetTileTablesResponse.noTable);
 }
 
 
@@ -283,6 +298,21 @@ void parseMainTimeTable(
   }
 }
 
+/// Gets all theoretically available subjects, only supposed to be used for autocompletion
+Future<List<String>> getAllAvailableSubjects(Client client, String fullSchoolGradeName, String schoolGrade) async {
+  final tablesMain = (await getTimeTableTables(fullSchoolGradeName, Constants.timeTableLinkBase, client)).item1;
+  if (tablesMain == null) return [];
+  final options = (getAvailableSubjectNames(tablesMain)).toList();
+  if (!Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
+    final tablesCourse = (await getTimeTableTables("${schoolGrade}K", Constants.timeTableLinkBase, client)).item1;
+    if (tablesCourse != null) options.addAll(getAvailableSubjectNames(tablesCourse));
+  }
+  if (Constants.useAGs) {
+    final tablesAgs = (await getTimeTableTables(Constants.specialClassNameAG, Constants.timeTableLinkBase, client)).item1;
+    if (tablesAgs != null) options.addAll(getAvailableSubjectNames(tablesAgs));
+  }
+  return options;
+}
 
 HashSet<String> getAvailableSubjectNamesInTimetable(dom.Element mainTimeTable) {
   final rows = mainTimeTable.children[0].children; // Gets all <tr> elements of the main table

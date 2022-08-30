@@ -9,6 +9,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:tuple/tuple.dart';
+import 'constants.dart';
 import 'pages/setup_page.dart';
 
 Future<bool> isInternetAvailable(Connectivity connectivity) async {
@@ -94,7 +95,7 @@ Future<String?> getIServSessionCookies() async {
     final lastLoadedTime = await updateLastLoaded(storage);
     if (lastLoadedTime == null) return null;
     // Session cookies are too old
-    if (lastLoadedTime.difference(DateTime.now()).inMinutes > 30) {
+    if (lastLoadedTime.difference(DateTime.now()) > Constants.loginSessionExpireDuration) {
       await storage.delete(key: "sessionCookies");
       return null;
     }
@@ -150,7 +151,7 @@ Future<DateTime?> updateLastLoaded(FlutterSecureStorage storage) async {
   if (lastLoadedString == null) return null;
   // Delete credentials if they haven't been loaded in roughly half a year
   final lastLoaded = DateTime.parse(lastLoadedString);
-  if (DateTime.now().difference(lastLoaded).inDays > 178) {
+  if (DateTime.now().difference(lastLoaded) > Constants.credentialExpireDuration) {
     log("Credentials have expired", name: "credentials");
     if (Platform.isWindows) {
       await storage.delete(key: "username");
