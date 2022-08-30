@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:clock/clock.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -75,24 +77,70 @@ String findClosestStringInList(List<String> stringList, String string) {
   return clonedStringList.first;
 }
 
+bool canUseSecureStorage() {
+  return Platform.isAndroid || Platform.isIOS || Platform.isLinux || Platform.isWindows;
+}
+
 Future<void> setIServSessionCookies(String sessionCookies) async {
-  if (Platform.isAndroid || Platform.isIOS || Platform.isLinux) {
+  if (canUseSecureStorage()) {
     const storage = FlutterSecureStorage();
     return storage.write(key: "sessionCookies", value: sessionCookies);
   }
 }
 
 Future<String?> getIServSessionCookies() async {
-  if (Platform.isAndroid || Platform.isIOS || Platform.isLinux) {
+  if (canUseSecureStorage()) {
     const storage = FlutterSecureStorage();
     final lastLoadedTime = await updateLastLoaded(storage);
     if (lastLoadedTime == null) return null;
     // Session cookies are too old
-    if (lastLoadedTime.difference(DateTime.now()).inHours > 3) {
+    if (lastLoadedTime.difference(DateTime.now()).inMinutes > 30) {
       await storage.delete(key: "sessionCookies");
       return null;
     }
     return storage.read(key: "sessionCookies");
+  }
+  return null;
+}
+
+Future<void> setSchulmanagerJWT(String jwt) async {
+  if (canUseSecureStorage()) {
+    const storage = FlutterSecureStorage();
+    return storage.write(key: "schulmanagerJWT", value: jwt);
+  }
+}
+
+Future<String?> getSchulmanagerJWT() async {
+  if (canUseSecureStorage()) {
+    const storage = FlutterSecureStorage();
+    final jwt = await storage.read(key: "schulmanagerJWT");
+    if (jwt == null) return null;
+    final jwtComponents = jwt.split(".");
+    if (jwtComponents.length != 3) return null;
+    var jwtBase64String = jwtComponents[1];
+    Uint8List? payloadBytes = null;
+    // I honestly have no Idea how base64 padding works so this will just have to do
+    for (var i = 0; i <= 2; i++) {
+      try {
+        payloadBytes = base64Decode(jwtBase64String);
+      } on FormatException {
+        jwtBase64String += "=";
+      }
+    }
+    if (payloadBytes == null) {
+      log("Could not decode jwt base64 payload", name: "credential", level: 2);
+      return null;
+    }
+    final payloadJson = String.fromCharCodes(payloadBytes);
+    final payload = jsonDecode(payloadJson) as Map<String, dynamic>;
+    final expireUNIXTimestamp = payload["exp"] as int;
+    final expireTime = DateTime.fromMillisecondsSinceEpoch(expireUNIXTimestamp * 1000);
+    if (DateTime.now().isAfter(expireTime)) {
+      log("Schulmanager JWT has expired", name: "credentials");
+      await storage.delete(key: "schulmanagerJWT");
+      return null;
+    }
+    return jwt;
   }
   return null;
 }
@@ -104,7 +152,15 @@ Future<DateTime?> updateLastLoaded(FlutterSecureStorage storage) async {
   final lastLoaded = DateTime.parse(lastLoadedString);
   if (DateTime.now().difference(lastLoaded).inDays > 178) {
     log("Credentials have expired", name: "credentials");
-    await storage.deleteAll();
+    if (Platform.isWindows) {
+      await storage.delete(key: "username");
+      await storage.delete(key: "password");
+      await storage.delete(key: "sessionCookies");
+      await storage.delete(key: "schulmanagerJWT");
+      await storage.delete(key: "credentialsLastLoaded");
+    } else {
+      await storage.deleteAll();
+    }
     return null;
   }
   await storage.write(key: "credentialsLastLoaded", value: DateTime.now().toIso8601String());
@@ -112,7 +168,7 @@ Future<DateTime?> updateLastLoaded(FlutterSecureStorage storage) async {
 }
 
 Future<Tuple2<String, String>?> getIServCredentials() async {
-  if (Platform.isAndroid || Platform.isIOS || Platform.isLinux) {
+  if (canUseSecureStorage()) {
     FlutterSecureStorage? storage = const FlutterSecureStorage();
     if (await updateLastLoaded(storage) == null) return null;
     final userName = await storage.read(key: "username");
@@ -124,7 +180,7 @@ Future<Tuple2<String, String>?> getIServCredentials() async {
 }
 
 Future<bool> areIServCredentialsSet() async {
-  if (Platform.isAndroid || Platform.isIOS || Platform.isLinux) {
+  if (canUseSecureStorage()) {
     FlutterSecureStorage? storage = const FlutterSecureStorage();
     final lastSavedString = await storage.read(key: "credentialsLastLoaded");
     if (lastSavedString == null) return false; // No credentials are defined

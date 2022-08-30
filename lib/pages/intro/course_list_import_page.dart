@@ -79,7 +79,13 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
       loading = true;
     });
     final XFile? photo = await picker.pickImage(source: ImageSource.camera);
-    final inputImage = InputImage.fromFilePath(photo!.path);
+    if (photo == null) {
+      setState(() {
+        loading = false;
+      });
+      return;
+    }
+    final inputImage = InputImage.fromFilePath(photo.path);
     final RecognizedText recognisedText = await textRecognizer.processImage(inputImage);
 
     final headerLocations = <String, Rect>{};

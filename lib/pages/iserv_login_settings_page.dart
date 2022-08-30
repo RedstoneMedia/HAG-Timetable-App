@@ -83,7 +83,7 @@ class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
           return;
       }
     }
-    if (Platform.isAndroid || Platform.isIOS || Platform.isLinux) {
+    if (canUseSecureStorage()) {
       const FlutterSecureStorage storage = FlutterSecureStorage();
       await storage.write(key: "username", value: credentialsOutputList[0]);
       await storage.write(key: "password", value: credentialsOutputList[1]);

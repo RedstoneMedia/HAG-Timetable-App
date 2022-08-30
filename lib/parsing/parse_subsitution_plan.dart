@@ -226,7 +226,19 @@ class SchulmanagerIntegration extends Integration {
     final _bundleVersion = await getBundleVersion();
     if (_bundleVersion == null) return;
     bundleVersion = _bundleVersion;
-    active = await loginOauth();
+    // Attempt to init with stored jwt
+    final checkAuthJwt = await getSchulmanagerJWT();
+    var needsOauthLogin = true;
+    if (checkAuthJwt != null) {
+      if (await setStudentDateFromJWT(checkAuthJwt)) {
+        authJwt = checkAuthJwt;
+        active = true;
+        needsOauthLogin = false;
+      }
+    }
+    // Otherwise login with oauth
+    if (needsOauthLogin) active = await loginOauth();
+
     if (active) values["substitutions"] = WeekSubstitutions(null, name);
   }
 
@@ -357,6 +369,19 @@ class SchulmanagerIntegration extends Integration {
     };
   }
 
+  Future<bool> setStudentDateFromJWT(String jwt) async {
+    final userInfoResponse = await client.post(Uri.parse("${Constants.schulmanagerApiBaseUrl}/login-status"), headers: {
+      "Authorization" : "Bearer $jwt"
+    });
+    if (userInfoResponse.statusCode != 200) {
+      log("Oauth failed on getting user info: ${userInfoResponse.statusCode} ${userInfoResponse.body}", name: "schulmanager-integration");
+      return false;
+    }
+    final userInfo = (jsonDecode(userInfoResponse.body) as Map<String, dynamic>)["user"] as Map<String, dynamic>;
+    setStudentDataFromUserInfo(userInfo);
+    return true;
+  }
+
   // Not currently used but could be used, by parents who don't have an IServ account
   Future<bool> loginSchulmanager(String email, String password) async {
     // Send login request to get jwt token
@@ -371,6 +396,7 @@ class SchulmanagerIntegration extends Integration {
     final jwt = responseJson["jwt"]! as String;
     final userInfo = responseJson["user"]! as Map<String, dynamic>;
     setStudentDataFromUserInfo(userInfo);
+    await setSchulmanagerJWT(jwt);
     authJwt = jwt;
     return true;
   }
@@ -415,17 +441,11 @@ class SchulmanagerIntegration extends Integration {
       return false;
     }
     final jwt = jwtResponse.headers["x-new-bearer-token"]!;
-    // Get user info
-    final userInfoResponse = await client.post(Uri.parse("${Constants.schulmanagerApiBaseUrl}/login-status"), headers: {
-      "Authorization" : "Bearer $jwt"
-    });
-    if (userInfoResponse.statusCode != 200) {
-      log("Oauth failed on getting user info: ${jwtResponse.statusCode} ${jwtResponse.body}", name: "schulmanager-integration");
-      return false;
-    }
-    final userInfo = (jsonDecode(userInfoResponse.body) as Map<String, dynamic>)["user"] as Map<String, dynamic>;
+    // Attempt to get user info
+    if (!await setStudentDateFromJWT(jwt)) return false;
+    // Store jwt, if successful
     authJwt = jwt;
-    setStudentDataFromUserInfo(userInfo);
+    await setSchulmanagerJWT(jwt);
     log("Oauth was successful", name: "schulmanager-integration");
     return true;
   }
