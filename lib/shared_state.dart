@@ -132,8 +132,11 @@ class SharedState {
   }
 
   Future<void> saveSchulmanagerClassName() async {
+    log("Save schulmanager class name: $schulmanagerClassName", name: "save");
     if (schulmanagerClassName != null) {
       await preferences.setString("schulmanagerClassName", schulmanagerClassName!);
+    } else {
+      await preferences.remove("schulmanagerClassName");
     }
   }
 

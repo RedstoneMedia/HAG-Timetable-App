@@ -86,6 +86,9 @@ class _SetupPageState extends State<SetupPage> {
       // Set local state variables
       this.profileName = sharedState.profileManager.currentProfileName;
       courses = sharedState.profileManager.currentProfile.subjects;
+      // Force update Schulmanager class name
+      widget.sharedState.schulmanagerClassName = null;
+      widget.sharedState.saveSchulmanagerClassName();
     });
   }
 
@@ -103,8 +106,10 @@ class _SetupPageState extends State<SetupPage> {
         sharedState.profileManager.currentProfileName = profileName!;
         setClassSelectionClass(sharedState.profileManager.currentProfile.schoolGrade!, sharedState.profileManager.currentProfile.subSchoolClass);
         courses = sharedState.profileManager.currentProfile.subjects;
-        sharedState.profileManager.profiles
-            .remove(toDeleteProfileName); // Remove profile
+        sharedState.profileManager.profiles.remove(toDeleteProfileName); // Remove profile
+        // Force update Schulmanager class name
+        widget.sharedState.schulmanagerClassName = null;
+        widget.sharedState.saveSchulmanagerClassName();
       }
     });
   }

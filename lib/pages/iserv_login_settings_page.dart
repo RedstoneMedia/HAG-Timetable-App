@@ -88,6 +88,10 @@ class _IServLoginSettingsPageState extends State<IServLoginSettingsPage> {
       await storage.write(key: "username", value: credentialsOutputList[0]);
       await storage.write(key: "password", value: credentialsOutputList[1]);
       await storage.write(key: "credentialsLastLoaded", value: DateTime.now().toIso8601String());
+      // Clear the schulmanagerClassName, that is dependent on the, with IServ associated Schulmanager account.
+      // This is done, so that the schulmanger is forced to refresh the current school class
+      widget.sharedState.schulmanagerClassName = null;
+      await widget.sharedState.saveSchulmanagerClassName();
     }
 
     if (!mounted) return;

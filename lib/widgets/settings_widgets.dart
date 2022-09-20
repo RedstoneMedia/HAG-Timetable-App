@@ -69,14 +69,23 @@ class _ClassSelectState extends State<ClassSelect> {
     });
   }
 
+  void onSchoolClassChanged() {
+    // Force the schulmanger to refresh the current school class
+    widget.sharedState.schulmanagerClassName = null;
+    widget.sharedState.saveSchulmanagerClassName();
+  }
+
   bool save() {
     if (!validateClassInput()) return false;
+    if (schoolGrade != sharedState.profileManager.schoolGrade) onSchoolClassChanged();
     sharedState.profileManager.schoolGrade = schoolGrade;
 
     if (Constants.displayFullHeightSchoolGrades.contains(schoolGrade)) {
+      if ("" != sharedState.profileManager.subSchoolClass) onSchoolClassChanged();
       sharedState.profileManager.subSchoolClass = "";
       widget.sharedState.height = Constants.fullHeight;
     } else {
+      if (subClassTextEditingController.text != sharedState.profileManager.subSchoolClass) onSchoolClassChanged();
       sharedState.profileManager.subSchoolClass = subClassTextEditingController.text;
       widget.sharedState.height = Constants.defaultHeight;
     }
