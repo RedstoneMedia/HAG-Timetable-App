@@ -178,7 +178,7 @@ void callbackDispatcher() {
     final notifyPlugin = await initializeFlutterLocalNotifications();
     // Initialize shared state
     final sharedState = SharedState(preferences, Content(Constants.width, Constants.defaultHeight));
-    if (sharedState.loadStateAndCheckIfFirstTime()) return false; // Should not happen
+    if (sharedState.loadStateAndCheckIfFirstTime(fromBackgroundTask: true)) return false; // Should not happen
     if (!sharedState.sendNotifications) return true; // Notifications are turned off
     final allSubjects = sharedState.allCurrentSubjects;
     // Load previous substitutions and content from cache

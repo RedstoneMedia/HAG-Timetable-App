@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:math' as math;
 
+import 'package:collection/collection.dart';
 import 'package:html/parser.dart'; // Contains HTML parsers to generate a Document object
 import 'package:http/http.dart';  // Contains a client for making API calls
 import 'package:stundenplan/constants.dart';
@@ -239,12 +240,16 @@ class SchulmanagerIntegration extends Integration {
     // Otherwise login with oauth
     if (needsOauthLogin) active = await loginOauth();
 
-    if (active) values["substitutions"] = WeekSubstitutions(null, name);
+    if (active) {
+      values["substitutions"] = WeekSubstitutions(null, name);
+      await setSchulmanagerClassName();
+    }
   }
 
   @override
   Future<void> update() async {
     if (!active) return;
+    if (sharedState.profileManager.schoolClassFullName != sharedState.schulmanagerClassName) return; // It does not make sense to show substitutions from the wrong class
     final weekSubstitutions = values["substitutions"]! as WeekSubstitutions;
     final weekStartEndDates = getCurrentWeekStartEndDates();
     final weekStartDate = weekStartEndDates.item1;
@@ -349,6 +354,46 @@ class SchulmanagerIntegration extends Integration {
       }
     }
     return bundleVersion;
+  }
+
+  Future<void> setSchulmanagerClassName() async {
+    if (sharedState.schulmanagerClassName == null) {
+      // Get the term id (which is for some reason required to get the list of all classes)
+      final termResponse = await sendSchulmanagerApiRequest([{
+        "endpointName" : "get-current-term",
+        "moduleName" : null
+      }]);
+      if (termResponse == null) {log("Could not get term id", name: "schulmanager-integration"); return;}
+      final termId = (termResponse[0] as Map<String, dynamic>)["id"] as int;
+      // Get a list of all classes, to map a classId to an actual name
+      final classesResponse = await sendSchulmanagerApiRequest([{
+        "endpointName" : "poqa",
+        "moduleName" : "schedules",
+        "parameters" : {
+          "action" : {
+            "action" : "findAll",
+            "model" : "main/class",
+            "parameters" : [{
+              "attributes" : ["id", "name", "gradeLevels"],
+              "where" : {
+                "termId" : termId
+              }
+            }]
+          }
+        }
+      }]);
+      // Check for any errors
+      if (classesResponse == null) {log("Could not class ids with term id", name: "schulmanager-integration"); return;}
+      final classesActualResponse = classesResponse[0] as Map<String, dynamic>;
+      if (classesActualResponse["status"] != 200) {log("Class response data had not ok error code: ${classesActualResponse["status"]}", name: "schulmanager-integration"); return;}
+      // Try to find the current students classes name from the class id
+      final classesData = classesActualResponse["data"] as List<dynamic>;
+      final schulmanagerClassData = classesData.firstWhereOrNull((classData) => (classData as Map<String, dynamic>)["id"] == studentData["classId"]);
+      if (schulmanagerClassData == null) {log("Could not find the class name, that is associated with the students class id", name: "schulmanager-integration"); return;}
+      // Save the class name
+      sharedState.schulmanagerClassName = (schulmanagerClassData as Map<String, dynamic>)["name"] as String;
+      await sharedState.saveSchulmanagerClassName();
+    }
   }
 
   void setStudentDataFromUserInfo(Map<String, dynamic> userInfo) {

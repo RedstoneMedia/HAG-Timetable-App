@@ -21,6 +21,7 @@ class SharedState {
   Content content;
   bool sendNotifications = false;
   ProfileManager profileManager = ProfileManager();
+  String? schulmanagerClassName;
   List<int> holidayWeekdays = getHolidayWeekDays();
   CalendarData calendarData = CalendarData();
   // Internal flags
@@ -61,7 +62,7 @@ class SharedState {
     return Theme.fromJsonData(jsonThemeData);
   }
 
-  bool loadStateAndCheckIfFirstTime() {
+  bool loadStateAndCheckIfFirstTime({bool fromBackgroundTask = false}) {
     final String themeDataString = preferences.getString("theme") ?? "dark";
     height = preferences.getInt("height");
 
@@ -78,8 +79,19 @@ class SharedState {
     Integrations.instance.registerIntegration(IServUnitsSubstitutionIntegration(this));
     Integrations.instance.registerIntegration(SchulmanagerIntegration.Schulmanager(this));
 
+    loadSchulmangerClassName(fromBackgroundTask: fromBackgroundTask);
     loadThemeProfileManagerFromJson(jsonDecode(themeDataString), jsonDecode(preferences.getString("jsonProfileManagerData")!));
     return false;
+  }
+
+  void loadSchulmangerClassName({bool fromBackgroundTask = false}) {
+    final now = DateTime.now();
+    final lastOpened = DateTime.tryParse(preferences.getString("appLastOpened") ?? "");
+    if (lastOpened != null && !fromBackgroundTask && lastOpened.difference(DateTime.now()).inDays > 10) {
+      preferences.remove("schulmanagerClassName");
+    }
+    if (!fromBackgroundTask) preferences.setString("appLastOpened", now.toIso8601String());
+    schulmanagerClassName = preferences.getString("schulmanagerClassName");
   }
 
   void loadInternalFlags() {
@@ -114,6 +126,12 @@ class SharedState {
     preferences.setString("cachedContent", encodedContent);
     // Save internal flags
     saveInternalFlags();
+  }
+
+  Future<void> saveSchulmanagerClassName() async {
+    if (schulmanagerClassName != null) {
+      await preferences.setString("schulmanagerClassName", schulmanagerClassName!);
+    }
   }
 
   void saveInternalFlags() {
