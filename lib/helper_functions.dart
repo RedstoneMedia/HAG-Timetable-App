@@ -95,7 +95,7 @@ Future<String?> getIServSessionCookies() async {
     final lastLoadedTime = await updateLastLoaded(storage);
     if (lastLoadedTime == null) return null;
     // Session cookies are too old
-    if (lastLoadedTime.difference(DateTime.now()) > Constants.loginSessionExpireDuration) {
+    if (DateTime.now().difference(lastLoadedTime) > Constants.loginSessionExpireDuration) {
       await storage.delete(key: "sessionCookies");
       return null;
     }

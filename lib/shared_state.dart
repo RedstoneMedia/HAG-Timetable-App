@@ -87,8 +87,11 @@ class SharedState {
   void loadSchulmangerClassName({bool fromBackgroundTask = false}) {
     final now = DateTime.now();
     final lastOpened = DateTime.tryParse(preferences.getString("appLastOpened") ?? "");
-    if (lastOpened != null && !fromBackgroundTask && lastOpened.difference(DateTime.now()).inDays > 10) {
+    if (lastOpened != null && !fromBackgroundTask && now.difference(lastOpened) > Constants.refreshSchulmanagerClassNameDuration) {
       preferences.remove("schulmanagerClassName");
+      schulmanagerClassName = null;
+      preferences.setString("appLastOpened", now.toIso8601String());
+      return;
     }
     if (!fromBackgroundTask) preferences.setString("appLastOpened", now.toIso8601String());
     schulmanagerClassName = preferences.getString("schulmanagerClassName");

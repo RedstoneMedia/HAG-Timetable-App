@@ -18,6 +18,7 @@ class Constants {
   static const String loginUrlIServ = "$iServHost/iserv/login";
   static const Duration credentialExpireDuration = Duration(days: 178);
   static const Duration loginSessionExpireDuration = Duration(hours: 2);
+  static const Duration refreshSchulmanagerClassNameDuration = Duration(days: 14);
   // This url is used instead of loginUrlIServ, because it requires less redirects to know, if the credentials were correct.
   // It however needs additional redirects to get the actual IServ session cookies, that's why this url is only used for credential checks.
   static const String credentialCheckUrlIServ = "$iServHost/iserv/auth/login";
