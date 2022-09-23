@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:stundenplan/calendar_data.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
-import 'package:stundenplan/calendar_data.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:stundenplan/widgets/calender_info_diaglog.dart';
+
 import 'info_dialog.dart';
 
 class WeekdayGridObject extends StatelessWidget {
@@ -133,6 +134,7 @@ class ClassGridObject extends StatelessWidget {
             ),
               )
             : Material(
+          color: Colors.transparent,
               child: InkWell(
                 onTap: () {
                   showInfoDialog(content.cells[y][x], context, sharedState);
@@ -144,16 +146,16 @@ class ClassGridObject extends StatelessWidget {
                             ? sharedState.theme.subjectSubstitutionColor
                             : sharedState.theme.subjectColor
                         : sharedState.theme.subjectDropOutColor,
-                    border: Border(
-                      bottom: BorderSide(
-                          color: (y - 1) % 2 == 0
-                              ? Colors.black54
-                              : Colors.black26),
-                      right:
-                          const BorderSide(width: 0.5, color: Colors.black26),
-                      left: const BorderSide(width: 0.5, color: Colors.black26),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(
+                          (y == sharedState.height! - 2 && x == 1) ? 5 : 0),
+                      bottomRight: Radius.circular(
+                          (y == sharedState.height! - 2 && x == Constants.width - 1)
+                              ? 5
+                              : 0),
                     ),
-                  ),
+                    border: Border.all(width: 0.5, color: Colors.black26,
+                  ),),
                   child: Column(
                     children: content.cells[y][x].isDropped
                         ? [
