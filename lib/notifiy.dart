@@ -1,9 +1,14 @@
+import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
-import 'dart:math';
+import 'dart:math' as math;
 
+import 'package:archive/archive.dart';
 import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_android/shared_preferences_android.dart';
 import 'package:stundenplan/constants.dart';
@@ -18,6 +23,25 @@ import 'package:stundenplan/week_subsitutions.dart';
 import 'package:tuple/tuple.dart';
 import 'package:workmanager/workmanager.dart';
 
+const String notifyDebugLogFileLocation = "/storage/emulated/0/Android/data/stundenplan-notfiy-debug.log";
+
+void fileLog(String msg, {String? name}) {
+  log(msg, name: name ?? "log");
+  if (!Constants.notifyDebugLogToFile || kDebugMode) return;
+  final File logFile = File(notifyDebugLogFileLocation);
+  String logData = "";
+  if (logFile.existsSync()) {
+    final logDataRaw = logFile.readAsBytesSync();
+    logData = utf8.decode(GZipDecoder().decodeBytes(logDataRaw.toList()));
+  }
+  final encodedMsg = Uri.encodeComponent(msg);
+  final dateString = DateFormat("dd-MM-yyy HH:mm:ss").format(DateTime.now());
+  logData += "[$dateString | $name]: $encodedMsg\r\n";
+
+  final newLogDataRaw = GZipEncoder().encode(utf8.encode(logData));
+  logFile.writeAsBytesSync(newLogDataRaw!, flush: true);
+}
+
 Future<FlutterLocalNotificationsPlugin> initializeFlutterLocalNotifications() async {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/launcher_icon');
@@ -31,6 +55,7 @@ NotificationDetails getNotificationDetails() {
       'timetable_notifications',
       'Stundenplan Benachrichtigungen',
       channelDescription: 'Wenn Änderungen im Stunden- oder Vertretungsplan vorhanden sind, gibt es eine Benachrichtigung',
+      category: AndroidNotificationCategory.event,
       priority: Priority.high,
       importance: Importance.high
   );
@@ -41,7 +66,9 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
   final changes = <Tuple3<int, bool, Map<String, dynamic>>>[];
   // Merge old substitution with current substitutions, to find out what substitutions end up to be new, when merged.
   final weekSubstitutionsBefore1 = WeekSubstitutions(substitutionsBeforeJson, "before", checkWeekDay: false, checkWeek: false);
+  if (weekSubstitutionsBefore1.removeOverlaying()) fileLog("Found bad overlaying substitutions in old substitutions", name: "getSubstitutionsNotificationText");
   final weekSubstitutions = WeekSubstitutions(substitutionsJson, "now", checkWeekDay: false, checkWeek: false);
+  if (weekSubstitutions.removeOverlaying()) fileLog("Found bad overlaying substitutions in new substitutions", name: "getSubstitutionsNotificationText");
   weekSubstitutionsBefore1.merge(weekSubstitutions, "now");
   for (final substitution in weekSubstitutionsBefore1.weekSubstitutions!.entries) {
     final weekDay = DateTime.parse(substitution.value.item2).weekday;
@@ -49,8 +76,9 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
     changes.addAll(daySubstitutions.where((e) => e.item2 == "now")
         .map((e) => Tuple3(weekDay, true, e.item1)));
   }
+  fileLog("Changes now: $changes", name: "getSubstitutionsNotificationText");
   // Merge old substitution with current substitutions, but overwriting old substitutions, with new ones, even if they are the same, to see what substitutions are old, and not present in the current substitutions anymore (when a substitution gets revoked)
-  final weekSubstitutionsBefore2 = WeekSubstitutions(substitutionsBeforeJson, "before", checkWeekDay: false, checkWeek: false);
+  final weekSubstitutionsBefore2 = WeekSubstitutions(substitutionsBeforeJson, "before", checkWeekDay: false, checkWeek: false)..removeOverlaying();
   weekSubstitutionsBefore2.merge(weekSubstitutions, "now", overwriteEqual: true);
   for (final substitution in weekSubstitutionsBefore2.weekSubstitutions!.entries) {
     final weekDay = DateTime.parse(substitution.value.item2).weekday;
@@ -58,6 +86,7 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
     changes.addAll(daySubstitutions.where((e) => e.item2 == "before")
         .map((e) => Tuple3(weekDay, false, e.item1)));
   }
+  fileLog("Changes before: $changes", name: "getSubstitutionsNotificationText");
   final now = clock.now();
   final currentWeekday = now.weekday;
   // Construct a title, and content for each change and sort them by importance (lower is more important)
@@ -65,7 +94,6 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
   for (final change in changes) {
     final substitution = change.item3;
     final revertedChange = !change.item2;
-    if (revertedChange) continue; // Temporary "fix" to somewhat reduce duplicate notifications
     // Get the text to describe the day of the change
     String dayText = "";
     if (currentWeekday - change.item1 == 0) {
@@ -94,7 +122,9 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
     String? originalSubject = substitution["statt Fach"] as String?;
     if (originalSubject == "---") originalSubject = null;
     final anchorText = originalSubject ?? substitution["Stunde"]; // Text that specifies what lesson or time frame the change is targeting (aka something, where the user can directly infer, when the change is happening)
-    final substitutionTextMessage = customStrip(substitution["Text"] as String? ?? "").isNotEmpty && substitution["Text"] != "---" && !revertedChange ? '\nText: "${(substitution["Text"] as String).truncate(80)}"' : "";
+    final substitutionTextMessage = customStrip(substitution["Text"] as String? ?? "").replaceAll("\u{00A0}", "").isNotEmpty && substitution["Text"] != "---" && !revertedChange
+        ? '\nText: "${(substitution["Text"] as String).truncate(80)}"'
+        : "";
     // Handle dropped lessons
     final String isDropped = substitution["Entfall"] as String? ?? "";
     if (isDropped == "x") {
@@ -131,6 +161,7 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
     }
   }
   changeTexts.sort((a, b) => a.item2.compareTo(b.item2));
+  fileLog("Sorted change texts: $changeTexts", name: "getSubstitutionsNotificationText");
   if (changeTexts.isEmpty) return null;
   final mostImportantChange = changeTexts.first;
   return Tuple2(mostImportantChange.item1, "${mostImportantChange.item2}${changeTexts.length > 1 ? "\nZudem ${changeTexts.length - 1} weitere Änderung im Veretungsplan" : ""}");
@@ -145,7 +176,8 @@ void cleanupWeekSubstitutionJson(Map<String, dynamic> substitutionsJson, List<St
   final weekEndDate = weekStartEndDates.item2;
   // Remove passed days or days, that are not in the current week
   substitutionsJson.removeWhere((key, value) {
-    final date = DateTime.parse((value as List<dynamic>)[1] as String);
+    var date = DateTime.parse((value as List<dynamic>)[1] as String);
+    date = DateTime(date.year, date.month, date.day);
     return !(
         (date.isAfter(weekStartDate) || date.isAtSameMomentAs(weekStartDate))
         && (date.isAfter(today) || date.isAtSameMomentAs(today))
@@ -156,6 +188,7 @@ void cleanupWeekSubstitutionJson(Map<String, dynamic> substitutionsJson, List<St
   substitutionsJson.forEach((key, value) => ((value as List<dynamic>)[0] as List<dynamic>).removeWhere((substitution) {
     final substitutionMap = substitution as Map<String, dynamic>;
     // Strip properties
+    substitutionMap["Stunde"] = customStrip(substitutionMap["Stunde"] as String);
     substitutionMap["Fach"] = customStrip(substitutionMap["Fach"] as String);
     substitutionMap["Raum"] = customStrip(substitutionMap["Raum"] as String);
     substitutionMap["statt Raum"] = customStrip(substitutionMap["statt Raum"] as String);
@@ -171,7 +204,7 @@ void cleanupWeekSubstitutionJson(Map<String, dynamic> substitutionsJson, List<St
 }
 
 void callbackDispatcher() {
-  Workmanager().executeTask((task, _inputData) async {
+  Workmanager().executeTask((task, inputData) async {
     // Initialize plugins
     SharedPreferencesAndroid.registerWith();
     final preferences = await SharedPreferences.getInstance();
@@ -204,16 +237,20 @@ void callbackDispatcher() {
     if (!const DeepCollectionEquality().equals(substitutionsBeforeJson, substitutionsJson)) {
       sharedState.content.updateLastUpdated();
       sharedState.saveCache();
+      fileLog("substitutions before clean: $substitutionsBeforeJson\nparsed substitutions clean: $substitutionsJson\nsubstitutions before raw: ${substitutionsBefore.weekSubstitutions}\r\nparsed substitutions raw: ${substitutions.weekSubstitutions}", name: "start");
       final notificationText = getSubstitutionsNotificationText(substitutionsBeforeJson, substitutionsJson);
       if (notificationText != null) {
-        await notifyPlugin.show(Random().nextInt(2147483647), notificationText.item1, notificationText.item2, platformChannelSpecifics);
+        fileLog("Show notification: title: ${notificationText.item1}, body: ${notificationText.item2}", name: "end");
+        await notifyPlugin.show(math.Random().nextInt(2147483647), notificationText.item1, notificationText.item2, platformChannelSpecifics);
         return true;
+      } else {
+        fileLog("Initial change detected, but no notification text", name: "end");
       }
-    }
+    } else {fileLog("No change detected", name: "end");}
     if (!const DeepCollectionEquality().equals(contentBeforeJson, sharedState.content.toJsonData())) {
       sharedState.content.updateLastUpdated();
       sharedState.saveCache();
-      await notifyPlugin.show(Random().nextInt(2147483647), 'Stundenplan Änderungen', 'Es gibt Änderungen im Stundenplan die dich betreffen', platformChannelSpecifics);
+      // TODO: Maybe add content change notifications here
     }
     return true;
   });
@@ -231,7 +268,7 @@ Future<void> startNotificationTask() async {
   await Workmanager().registerPeriodicTask(
     "1",
     "timetableNotificationTask",
-    frequency: const Duration(minutes: 15),
+    frequency: Constants.notifyUpdateFrequency,
     existingWorkPolicy: ExistingWorkPolicy.keep,
     initialDelay: const Duration(seconds: 10),
     backoffPolicy: BackoffPolicy.linear,

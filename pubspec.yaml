@@ -35,9 +35,10 @@ dependencies:
   flutter_secure_storage: ^6.0.0
   rrule: ^0.2.10
   workmanager: ^0.5.0
-  flutter_local_notifications: ^9.6.1
+  flutter_local_notifications: ^11.0.1
   collection: ^1.16.0
   clock: ^1.1.1
+  archive: ^3.3.1
 
 flutter_icons:
   android: "launcher_icon"
@@ -48,7 +49,7 @@ flutter_icons:
 
 dev_dependencies:
   lint: ^1.5.3
-  test: ^1.17.3
+  test: ^1.21.4
 
 flutter:
   uses-material-design: true

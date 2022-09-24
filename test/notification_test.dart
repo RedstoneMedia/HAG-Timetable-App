@@ -113,7 +113,7 @@ void main() {
       final substDate = DateTime.parse("2022-03-24");
       substitutions.setDay([
         getSubstitutionMap(hour: "1", originalSubject: "A"),
-        getSubstitutionMap(hour: "2", originalSubject: " B ", teacher: " Swz\t", dropOut: "\nx\n"),
+        getSubstitutionMap(hour: " 2", originalSubject: " B ", teacher: " Swz\t", dropOut: "\nx\n"),
         getSubstitutionMap(hour: "3-4", originalSubject: "C ", room: " C2.01", originalRoom: "\nC2.01 "),
         getSubstitutionMap(hour: "5-6", originalSubject: "  D ", subject: "\t B  ", text: "I'm allowed to have spaces"),
         getSubstitutionMap(hour: "8-9", originalSubject: "\nE\n", originalTeacher: "  Go "),
@@ -170,6 +170,14 @@ void main() {
       expect(const DeepCollectionEquality().equals(substitutionsJson, {
         "1" : [[getSubstitutionMap(hour: "3", originalSubject: "A")], DateTime.parse("2022-03-28").toString()]
       }), true);
+    });
+
+    test("Test cleanupWeekSubstitutionJson day boundary", () {
+      final substitutions = WeekSubstitutions(null, "before");
+      substitutions.setDay([getSubstitutionMap(hour: "5-6", originalSubject: "PO")], DateTime.parse("2022-09-15"), "something");
+      final substitutionsJson = substitutions.toJson();
+      withClock(Clock.fixed(DateTime.parse("2022-09-17 00:11:53")), () => cleanupWeekSubstitutionJson(substitutionsJson, ["PO"]));
+      expect(const DeepCollectionEquality().equals(substitutionsJson, {}), true);
     });
   });
 }

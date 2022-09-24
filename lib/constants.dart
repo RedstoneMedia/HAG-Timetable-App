@@ -23,6 +23,9 @@ class Constants {
   // It however needs additional redirects to get the actual IServ session cookies, that's why this url is only used for credential checks.
   static const String credentialCheckUrlIServ = "$iServHost/iserv/auth/login";
 
+  static const Duration notifyUpdateFrequency = Duration(minutes: 20);
+  static const bool notifyDebugLogToFile = false;
+
   static const String publicIServUrl = "$iServHost/iserv/public";
   static const String newestVersionPubspecUrl =
       "https://raw.githubusercontent.com/RedstoneMedia/HAG-Timetable-App/master/pubspec.yaml";

@@ -285,24 +285,27 @@ class _SetupPageState extends State<SetupPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             Expanded(
-                              child: Column(
-                                children: [
-                                  Text(
-                                    "Benachrichtigungen senden",
-                                    style: GoogleFonts.poppins(
-                                        color: sharedState.theme.textColor,
-                                        fontWeight: FontWeight.normal,
-                                        fontSize: 16.0),
-                                  ),
-                                  Text(
-                                    "Kann zu duplizierten Benachrichtungen führen\n(Experimentell)",
-                                    textAlign: TextAlign.start,
-                                    style: GoogleFonts.poppins(
-                                        color: sharedState.theme.textColor,
-                                        fontWeight: FontWeight.w200,
-                                        fontSize: 10.0),
-                                  ),
-                                ],
+                              child: Center(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Benachrichtigungen senden",
+                                      style: GoogleFonts.poppins(
+                                          color: sharedState.theme.textColor,
+                                          fontWeight: FontWeight.normal,
+                                          fontSize: 16.0),
+                                    ),
+                                    Text(
+                                      "(Experimentell)",
+                                      textAlign: TextAlign.start,
+                                      style: GoogleFonts.poppins(
+                                          color: sharedState.theme.textColor,
+                                          fontWeight: FontWeight.w200,
+                                          fontSize: 10.0),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                             Switch(

@@ -60,6 +60,64 @@ class WeekSubstitutions extends IntegratedValue {
     return outputJson;
   }
 
+  /// Tries to find all substitutions that overlap with a given substitution
+  Iterable<Tuple2<int, Tuple2<Map<String, dynamic>, String>>> findSubstitutionsInRangeOnDay(List<Tuple2<Map<String, dynamic>, String>> daySubstitutions, Tuple2<Map<String, dynamic>, String> checkSubstitution) {
+    final checkClassHours = (checkSubstitution.item1["Stunde"]! as String).split("-");
+    return daySubstitutions.mapIndexed((index, element) => Tuple2(index, element)).where((element) {
+      final substitution = element.item2;
+      final oldSplitClassHour = (substitution.item1["Stunde"]! as String).split("-");
+      if (oldSplitClassHour.any((classHour) => checkClassHours.any((newClassHour) => newClassHour == classHour))) return true; // If any numbers directly match there is an overlap
+      // Check in class hour ranges if both substitutions have ranges
+      if (oldSplitClassHour.length > 1 && checkClassHours.length > 1) {
+        final newClassHourStart = int.parse(checkClassHours[0]);
+        final newClassHourEnd = int.parse(checkClassHours[1]);
+        final oldClassHourStart = int.parse(oldSplitClassHour[0]);
+        final oldClassHourEnd = int.parse(oldSplitClassHour[1]);
+        if (newClassHourStart > oldClassHourStart && newClassHourEnd < oldClassHourEnd || oldClassHourStart > newClassHourStart && oldClassHourStart < newClassHourEnd) return true;
+      }
+      // Check in class hour ranges if only one substitution has ranges
+      else if (oldSplitClassHour.length > 1 || checkClassHours.length > 1) {
+        final List<String>? classHourRange;
+        final int? classHour;
+        if (oldSplitClassHour.length > 1) {classHourRange = oldSplitClassHour; classHour = int.parse(checkClassHours.first);}
+        else {classHourRange = checkClassHours; classHour = int.parse(oldSplitClassHour.first);}
+        final classHourStart = int.parse(classHourRange[0]);
+        final classHourEnd = int.parse(classHourRange[1]);
+        if (classHour > classHourStart && classHour < classHourEnd) return true;
+      }
+      return false;
+    });
+  }
+
+  /// Removes substitutions, so that only one substitution can occupied a given class hour
+  /// Does not preserve partially overlaying substitutions
+  /// Preserves substitution order
+  bool removeOverlaying() {
+    var didRemoveOne = false;
+    for (final daySubstitutions in weekSubstitutions!.values) {
+      final Set<int> markedSubstitutionsIndices = {};
+      // Find the overlaying substations of that day
+      for (int i = 0; i < daySubstitutions.item1.length; i++) {
+        if (markedSubstitutionsIndices.contains(i)) continue;
+        final checkSubstitution = daySubstitutions.item1[i];
+        // Get the overlaying substitution indices excluding the current one (since a substitution always overlaps with itself)
+        final overlayingSubstitutionsIndices = findSubstitutionsInRangeOnDay(daySubstitutions.item1, checkSubstitution)
+          .map((e) => e.item1)
+          .toList()
+          ..removeWhere((j) => j == i);
+        markedSubstitutionsIndices.addAll(overlayingSubstitutionsIndices);
+      }
+      // Remove the overlaying substitutions
+      final markedSubstitutionsIndicesList = markedSubstitutionsIndices.toList(growable: false);
+      for (int i = 0; i < markedSubstitutionsIndicesList.length; i++) {
+        final markedSubstitutionIndex = markedSubstitutionsIndicesList[i];
+        daySubstitutions.item1.removeAt(markedSubstitutionIndex-i);
+      }
+      didRemoveOne = markedSubstitutionsIndicesList.isNotEmpty;
+    }
+    return didRemoveOne;
+  }
+
   @override
   void merge(IntegratedValue integratedValue, String integrationName, {bool overwriteEqual = false}) {
     final otherWeekSubstitutions = integratedValue as WeekSubstitutions;
@@ -69,39 +127,17 @@ class WeekSubstitutions extends IntegratedValue {
         weekSubstitutions![weekDay] = entry.value;
       } else {
         final newDaySubstitutions = [];
-        final currentDaySubstitutions = weekSubstitutions![weekDay]!;
+        var currentDaySubstitutions = weekSubstitutions![weekDay]!;
         for (final newSubstitution in entry.value.item1) {
           final newClassHours = (newSubstitution.item1["Stunde"]! as String).split("-");
-          // Find the old substitution index
-          final oldSubstitutionIndex = currentDaySubstitutions.item1.indexWhere((substitution) {
-            final oldSplitClassHour = (substitution.item1["Stunde"]! as String).split("-");
-            if (oldSplitClassHour.any((classHour) => newClassHours.any((newClassHour) => newClassHour == classHour))) return true; // If any numbers directly match there is an overlap
-            // Check in class hour ranges if both substitutions have ranges
-            if (oldSplitClassHour.length > 1 && newClassHours.length > 1) {
-              final newClassHourStart = int.parse(newClassHours[0]);
-              final newClassHourEnd = int.parse(newClassHours[1]);
-              final oldClassHourStart = int.parse(oldSplitClassHour[0]);
-              final oldClassHourEnd = int.parse(oldSplitClassHour[1]);
-              if (newClassHourStart > oldClassHourStart && newClassHourEnd < oldClassHourEnd || oldClassHourStart > newClassHourStart && oldClassHourStart < newClassHourEnd) return true;
-            }
-            // Check in class hour ranges if only one substitution has ranges
-            else if (oldSplitClassHour.length > 1 || newClassHours.length > 1) {
-              final List<String>? classHourRange;
-              final int? classHour;
-              if (oldSplitClassHour.length > 1) {classHourRange = oldSplitClassHour; classHour = int.parse(newClassHours.first);}
-              else {classHourRange = newClassHours; classHour = int.parse(oldSplitClassHour.first);}
-              final classHourStart = int.parse(classHourRange[0]);
-              final classHourEnd = int.parse(classHourRange[1]);
-              if (classHour > classHourStart && classHour < classHourEnd) return true;
-            }
-            return false;
-          });
-          if (oldSubstitutionIndex == -1) {
+          // Find the old substitution
+          final oldSubstitutions = findSubstitutionsInRangeOnDay(currentDaySubstitutions.item1, newSubstitution).toList(growable: false);
+          if (oldSubstitutions.isEmpty) {
             weekSubstitutions![weekDay]!.item1.add(newSubstitution);
             continue;
           }
           var daySubstitutionsList = currentDaySubstitutions.item1;
-          final oldSubstitution = daySubstitutionsList[oldSubstitutionIndex].item1;
+          final oldSubstitution = oldSubstitutions.first.item2.item1;
           if (const DeepCollectionEquality().equals(newSubstitution.item1, oldSubstitution) && !overwriteEqual) {continue;} // If nothing changed, just keep the old substitution
           if (newSubstitution.item1["Stunde"] as String != oldSubstitution["Stunde"]! as String) {
             final newClassHourStart = int.parse(newClassHours[0]);
@@ -133,15 +169,19 @@ class WeekSubstitutions extends IntegratedValue {
               if (i >= newClassHourStart) {
                 final modifiedSubstitution = Map<String, dynamic>.from(newSubstitution.item1);
                 modifiedSubstitution["Stunde"] = i.toString();
+                if (const DeepCollectionEquality().equals(modifiedSubstitution, newDaySubstitutionsList[i-1].item1) && !overwriteEqual) {continue;} // If nothing changed, just keep the old substitution
                 newDaySubstitutionsList[i-1] = Tuple2(modifiedSubstitution, newSubstitution.item2);
               }
             }
             newDaySubstitutionsList.removeWhere((substitution) => substitution.item2 == "Placeholder");
             daySubstitutionsList = newDaySubstitutionsList;
           } else {
+            final oldSubstitutionIndex = oldSubstitutions.first.item1;
             daySubstitutionsList[oldSubstitutionIndex] = newSubstitution;
           }
+          // Make sure to update current day substitution, for next iteration or end
           weekSubstitutions![weekDay] = Tuple2(daySubstitutionsList, currentDaySubstitutions.item2);
+          currentDaySubstitutions = weekSubstitutions![weekDay]!;
         }
         setDay(newDaySubstitutions, DateTime.parse(entry.value.item2), integrationName);
       }
