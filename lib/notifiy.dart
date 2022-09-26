@@ -90,7 +90,7 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
   final now = clock.now();
   final currentWeekday = now.weekday;
   // Construct a title, and content for each change and sort them by importance (lower is more important)
-  final changeTexts = <Tuple3<String, String, int>>[];
+  var changeTexts = <Tuple3<String, String, int>>[];
   for (final change in changes) {
     final substitution = change.item3;
     final revertedChange = !change.item2;
@@ -160,6 +160,7 @@ Tuple2<String, String>? getSubstitutionsNotificationText(Map<String, dynamic> su
       );
     }
   }
+  changeTexts = changeTexts.toSet().toList(); // Remove duplicates
   changeTexts.sort((a, b) => a.item2.compareTo(b.item2));
   fileLog("Sorted change texts: $changeTexts", name: "getSubstitutionsNotificationText");
   if (changeTexts.isEmpty) return null;
