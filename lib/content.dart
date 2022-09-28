@@ -69,6 +69,22 @@ class Content {
     return cells[y][x];
   }
 
+  bool isEmpty({bool onePerDay = false}) {
+    if (cells.isEmpty) return true;
+    int totalNonEmptyCount = 0;
+    final width = cells[0].length;
+    for (var x = 0; x < width; x++) {
+      int dayNonEmptyCount = 0;
+      for (var y = 0; y < cells.length; y++) {
+        final wasEmpty = cells[y][x].isEmpty();
+        if (!wasEmpty) dayNonEmptyCount += 1;
+      }
+      if (onePerDay && dayNonEmptyCount == 0 && x != 0) return true;
+      totalNonEmptyCount += dayNonEmptyCount;
+    }
+    return totalNonEmptyCount == 0;
+  }
+
   @override
   String toString() {
     return cells.toString();

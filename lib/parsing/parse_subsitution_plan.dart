@@ -278,6 +278,8 @@ class SchulmanagerIntegration extends Integration {
         if (originalLessons.length > 1) continue; // TODO: Don't do this
         final originalLesson = originalLessons[0] as Map<String, dynamic>;
         final originalLessonSubject = originalLesson["subjectLabel"]! as String;
+        final originalLessonTeacher = ((originalLesson["teachers"] as List<dynamic>?)?[0] as Map<String, dynamic>?)?["abbreviation"] as String?;
+        final originalLessonRoom = (originalLesson["room"] as Map<String, dynamic>?)?["name"] as String?;
         if (!sharedState.allCurrentSubjects.contains(originalLessonSubject)) continue;
         final comment = lesson["comment"] as String?;
         final substitutionData = <String, dynamic>{
@@ -285,9 +287,9 @@ class SchulmanagerIntegration extends Integration {
           "Fach" : "---",
           "Vertretung" : "---",
           "Raum" : "---",
-          "statt Fach" : currentCell.subject,
-          "statt Lehrer" : currentCell.teacher,
-          "statt Raum" : currentCell.room,
+          "statt Fach" : originalLessonSubject,
+          "statt Lehrer" : originalLessonTeacher ?? currentCell.teacher,
+          "statt Raum" : originalLessonRoom ?? currentCell.room,
           "Text" : comment ?? "\u{00A0}",
           "Entfall" : "x"
         };
