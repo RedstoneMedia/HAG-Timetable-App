@@ -204,6 +204,7 @@ void cleanupWeekSubstitutionJson(Map<String, dynamic> substitutionsJson, List<St
   }));
 }
 
+@pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     // Don't update and show notifications, if at night (default: 22 to 04 O'clock)
