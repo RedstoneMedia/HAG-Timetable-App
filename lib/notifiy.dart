@@ -219,10 +219,6 @@ void callbackDispatcher() {
     (Integrations.instance.getIntegrationByName("IServ")! as IServUnitsSubstitutionIntegration).loadCheckWeekDay = false;
     (Integrations.instance.getIntegrationByName("Schulmanager")! as SchulmanagerIntegration).loadCheckWeekDay = false;
     sharedState.loadCache();
-    if (sharedState.content.isEmpty(onePerDay: true)) {
-      fileLog("Error: Empty content detected", name: "init");
-      return true; // Wait for another execution and then try again
-    }
     final substitutionsBefore = Integrations.instance.getValue("substitutions") as WeekSubstitutions?;
     if (substitutionsBefore == null) return true;
     final substitutionsBeforeJson = substitutionsBefore.toJson();
@@ -232,6 +228,10 @@ void callbackDispatcher() {
     final contentBeforeJson = sharedState.content.toJsonData();
     // Parse the substitution and timetable
     await parsePlans(sharedState);
+    if (sharedState.content.isEmpty(onePerDay: true)) {
+      fileLog("Error: Empty content detected", name: "init");
+      return false; // Back off and try again
+    }
     final substitutions = Integrations.instance.getValue("substitutions") as WeekSubstitutions?;
     if (substitutions == null) return false;
     final substitutionsJson = substitutions.toJson();
