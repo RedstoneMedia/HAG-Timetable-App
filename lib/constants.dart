@@ -24,6 +24,8 @@ class Constants {
   static const String credentialCheckUrlIServ = "$iServHost/iserv/auth/login";
 
   static const Duration notifyUpdateFrequency = Duration(minutes: 20);
+  static const int notifyUpdateDaySleepStartHour = 22;
+  static const int notifyUpdateDaySleepEndHour = 4;
   static const bool notifyDebugLogToFile = false;
 
   static const String publicIServUrl = "$iServHost/iserv/public";

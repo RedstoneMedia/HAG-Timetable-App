@@ -206,6 +206,9 @@ void cleanupWeekSubstitutionJson(Map<String, dynamic> substitutionsJson, List<St
 
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
+    // Don't update and show notifications, if at night (default: 22 to 04 O'clock)
+    final currentHour = DateTime.now().hour;
+    if (currentHour >= Constants.notifyUpdateDaySleepStartHour || currentHour <= Constants.notifyUpdateDaySleepEndHour) return true;
     // Initialize plugins
     SharedPreferencesAndroid.registerWith();
     final preferences = await SharedPreferences.getInstance();
