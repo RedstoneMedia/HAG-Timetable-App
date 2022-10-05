@@ -53,13 +53,13 @@ void writeSubstitutionPlan(List<Tuple2<Map<String, dynamic>, String>> plan, int 
         continue;
       }
     }
-    cell.teacher = customStrip(substitution["Vertretung"] as String);
-    cell.originalTeacher = customStrip(substitution["statt Lehrer"] as String);
-    cell.room = customStrip(substitution["Raum"] as String);
-    cell.originalRoom = customStrip(substitution["statt Raum"] as String);
+    cell.teacher = customStrip(substitution["Vertretung"]! as String);
+    cell.originalTeacher = customStrip(substitution["statt Lehrer"]! as String);
+    cell.room = customStrip(substitution["Raum"]! as String);
+    cell.originalRoom = customStrip(substitution["statt Raum"]! as String);
     cell.text = substitution["Text"] as String;
     cell.source = plan[i].item2;
-    cell.isDropped = customStrip(substitution["Entfall"] as String) == "x";
+    cell.isDropped = customStrip(substitution["Entfall"]! as String) == "x";
 
     // Sometimes a substitution is set, but there is no data set which means that it is dropped.
     if (cell.originalSubject == "\u{00A0}" && cell.subject == "\u{00A0}" && cell.room == "\u{00A0}" && cell.teacher == "\u{00A0}") {
@@ -156,7 +156,7 @@ class IServUnitsSubstitutionIntegration extends Integration {
         .children[2]
         .text
         .replaceAll("  ", "/"));
-    final regexp = RegExp(r"^\w+\/(?<day>\d+).(?<month>\d+).");
+    final regexp = RegExp(r"^[\w-]*\w+\/(?<day>\d+).(?<month>\d+).");
     final match = regexp.firstMatch(headerText)!;
 
     final substituteDate = DateTime(
@@ -180,24 +180,47 @@ class IServUnitsSubstitutionIntegration extends Integration {
     final headerInformation = [
       "Stunde",
       "Fach",
-      "Vertretung",
       "Raum",
-      "statt Fach",
-      "statt Lehrer",
-      "statt Raum",
+      "Art",
+      "Lehrer",
       "Text",
-      "Entfall"
+      "(Le.) nach"
     ];
     rows.removeAt(0);
     final substitutions = <Map<String, String>>[];
 
     for (final row in rows) {
-      final substitution = <String, String>{};
+      final substitution = <String, String>{"Entfall": ""};
       final columns = row.getElementsByTagName("td");
-      for (var i = 0; i < columns.length; i++) {
-        substitution[headerInformation[i]] =
-            columns[i].text.replaceAll("\n", " ");
+      for (var i = 1; i < columns.length; i++) {
+        if (columns[i].children.isEmpty) continue;
+        final cellElement = columns[i].children[0];
+        // Get the substitution keys for the header information and the current columns index
+        var substitutionKey = headerInformation[i-1];
+        substitutionKey = substitutionKey == "Lehrer" ? "Vertretung" : substitutionKey;
+        String? beforeSubstitutionKey;
+        if (["Fach", "Raum", "Vertretung"].contains(substitutionKey)) {
+          beforeSubstitutionKey = "statt ${substitutionKey == "Vertretung" ? "Lehrer" : substitutionKey}";
+        }
+        final strikethroughElements = cellElement.getElementsByTagName("s");
+        // Strikethrough indicates before value
+        if (strikethroughElements.isNotEmpty && beforeSubstitutionKey != null) {
+          final beforeSubstitutionValue = strikethroughElements[0].text;
+          substitution[beforeSubstitutionKey] = beforeSubstitutionValue.replaceAll("\n", " ");
+          // If there is only strikethrough text, the actual value will be empty (non breaking whitespace)
+          if (!cellElement.text.contains("→")) {
+            substitution[substitutionKey] = "\u{00A0}";
+            continue;
+          }
+        }
+        // Add the substitution value (Sometimes after an arrow)
+        final cellValue = cellElement.text.replaceAll("\n", " ").split("→").last;
+        substitution[substitutionKey] = cellValue;
+        if (strikethroughElements.isEmpty && beforeSubstitutionKey != null) {
+          substitution[beforeSubstitutionKey] = cellValue;
+        }
       }
+      if (substitution["Art"]!.contains("Entfall")) substitution["Entfall"] = "x";
       substitutions.add(substitution);
     }
 
