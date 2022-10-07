@@ -59,6 +59,7 @@ void writeSubstitutionPlan(List<Tuple2<Map<String, dynamic>, String>> plan, int 
     cell.originalRoom = customStrip(substitution["statt Raum"]! as String);
     cell.text = substitution["Text"] as String;
     cell.source = plan[i].item2;
+    if (substitution.containsKey("Art")) cell.substitutionKind = substitution["Art"]!.toString();
     cell.isDropped = substitution["Entfall"]! == "x";
 
     // Sometimes a substitution is set, but there is no data set which means that it is dropped.
@@ -195,8 +196,6 @@ class IServUnitsSubstitutionIntegration extends Integration {
       final substitution = <String, String>{"Entfall": ""};
       final columns = row.getElementsByTagName("td");
       for (var i = 1; i < columns.length; i++) {
-        if (columns[i].children.isEmpty) continue;
-        final cellElement = columns[i].children[0];
         // Get the substitution keys for the header information and the current columns index
         var substitutionKey = headerInformation[i-1];
         substitutionKey = substitutionKey == "Lehrer" ? "Vertretung" : substitutionKey;
@@ -204,6 +203,13 @@ class IServUnitsSubstitutionIntegration extends Integration {
         if (["Fach", "Raum", "Vertretung"].contains(substitutionKey)) {
           beforeSubstitutionKey = "statt ${substitutionKey == "Vertretung" ? "Lehrer" : substitutionKey}";
         }
+        // Handle random edge case, when there is no font child element
+        if (columns[i].text == "\u{00A0}") {
+          substitution[substitutionKey] = "\u{00A0}";
+          if (beforeSubstitutionKey != null) substitution[beforeSubstitutionKey] = "\u{00A0}";
+        }
+        if (columns[i].children.isEmpty) continue;
+        final cellElement = columns[i].children[0];
         final strikethroughElements = cellElement.getElementsByTagName("s");
         // Strikethrough indicates before value
         if (strikethroughElements.isNotEmpty && beforeSubstitutionKey != null) {

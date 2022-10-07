@@ -100,6 +100,8 @@ Future<void> showInfoDialog(
                         if (cell.isDropped || cell.isSubstitute) InfoProperty(cell.text, name: "Text", sharedState: sharedState) else
                           if (cell.footnotes == null) Container()
                           else InfoProperty(cell.footnotes![0].text, name: "Text", sharedState: sharedState),
+                        if (!cell.isDropped && cell.substitutionKind != "Entfall") InfoProperty(cell.substitutionKind, name: "Art", sharedState: sharedState)
+                        else Container(),
                         InfoProperty(cell.source, name: "Quelle", sharedState: sharedState)
                       ],
                     ),
