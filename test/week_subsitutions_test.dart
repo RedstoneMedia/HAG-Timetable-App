@@ -223,6 +223,28 @@ void main() {
     compareWeekSubstitutions(weekSubstitutionsA, weekSubstitutionsTarget);
   });
 
+  test("Merge test irrelevant properties without overwrite equal", () {
+    final weekSubstitutionsA = WeekSubstitutions(null, "A");
+    final substDate = DateTime.parse("2022-03-23");
+    weekSubstitutionsA.setDay([{"Stunde" : "1-2", "Art" : "Entfall"}, {"Stunde" : "5-6", "(Le.) nach": "Hosp"}, {"Stunde": "8"}], substDate, "A");
+    final weekSubstitutionsB = WeekSubstitutions(null, "B");
+    weekSubstitutionsB.setDay([{"Stunde" : "1-2"}], substDate, "B");
+    weekSubstitutionsB.setDay([{"Stunde" : "5"}], substDate, "B");
+    weekSubstitutionsB.setDay([{"Stunde" : "6"}], substDate, "B");
+    weekSubstitutionsB.setDay([{"Stunde" : "8", "Text" : "Test"}], substDate, "B");
+    weekSubstitutionsA.merge(weekSubstitutionsB, "B");
+
+    final weekSubstitutionsTarget = WeekSubstitutions(null, "");
+    weekSubstitutionsTarget.weekSubstitutions![substDate.weekday.toString()] = Tuple2([
+      const Tuple2({"Stunde" : "1", "Art" : "Entfall"}, "A"),
+      const Tuple2({"Stunde" : "2", "Art" : "Entfall"}, "A"),
+      const Tuple2({"Stunde" : "5", "(Le.) nach": "Hosp"}, "A"),
+      const Tuple2({"Stunde" : "6", "(Le.) nach": "Hosp"}, "A"),
+      const Tuple2({"Stunde" : "8", "Text": "Test"}, "B")
+    ], substDate.toString());
+    compareWeekSubstitutions(weekSubstitutionsA, weekSubstitutionsTarget);
+  });
+
   test("Test remove overlaying", () {
     final weekSubstitutions = WeekSubstitutions(null, "A");
     final substDate = DateTime.parse("2022-03-23");

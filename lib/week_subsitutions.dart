@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:collection/collection.dart';
 import 'package:stundenplan/integration.dart';
+import 'package:stundenplan/parsing/parse_subsitution_plan.dart';
 import 'package:tuple/tuple.dart';
 
 class WeekSubstitutions extends IntegratedValue {
@@ -138,7 +139,7 @@ class WeekSubstitutions extends IntegratedValue {
           }
           var daySubstitutionsList = currentDaySubstitutions.item1;
           final oldSubstitution = oldSubstitutions.first.item2.item1;
-          if (const DeepCollectionEquality().equals(newSubstitution.item1, oldSubstitution) && !overwriteEqual) {continue;} // If nothing changed, just keep the old substitution
+          if (areSubstitutionsEqual(newSubstitution.item1, oldSubstitution) && !overwriteEqual) {continue;} // If nothing changed, just keep the old substitution
           if (newSubstitution.item1["Stunde"] as String != oldSubstitution["Stunde"]! as String) {
             final newClassHourStart = int.parse(newClassHours[0]);
             final newClassHourEnd = newClassHours.length > 1 ? int.parse(newClassHours[1]) : newClassHourStart;
@@ -169,7 +170,7 @@ class WeekSubstitutions extends IntegratedValue {
               if (i >= newClassHourStart) {
                 final modifiedSubstitution = Map<String, dynamic>.from(newSubstitution.item1);
                 modifiedSubstitution["Stunde"] = i.toString();
-                if (const DeepCollectionEquality().equals(modifiedSubstitution, newDaySubstitutionsList[i-1].item1) && !overwriteEqual) {continue;} // If nothing changed, just keep the old substitution
+                if (areSubstitutionsEqual(modifiedSubstitution, newDaySubstitutionsList[i-1].item1) && !overwriteEqual) {continue;} // If nothing changed, just keep the old substitution
                 newDaySubstitutionsList[i-1] = Tuple2(modifiedSubstitution, newSubstitution.item2);
               }
             }
@@ -188,4 +189,18 @@ class WeekSubstitutions extends IntegratedValue {
     }
   }
 
+}
+
+/// Determine if two substitutions are equal
+bool areSubstitutionsEqual(Map<String, dynamic> a, Map<String, dynamic> b) {
+  return const DeepCollectionEquality().equals(equalityProperties(a), equalityProperties(b));
+}
+
+
+/// Returns a substitution with only the properties, that are relevant for determining, if to substitutions are equal
+Map<String, dynamic> equalityProperties(Map<String, dynamic> substitution) {
+  final shallowSubstitutionCopy = Map<String, dynamic>.from(substitution);
+  const irrelevantKeys = IServUnitsSubstitutionIntegration.customSubstitutionProperties;
+  shallowSubstitutionCopy.removeWhere((key, _) => irrelevantKeys.contains(key));
+  return shallowSubstitutionCopy;
 }

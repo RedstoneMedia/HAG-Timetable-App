@@ -59,7 +59,7 @@ void writeSubstitutionPlan(List<Tuple2<Map<String, dynamic>, String>> plan, int 
     cell.originalRoom = customStrip(substitution["statt Raum"]! as String);
     cell.text = substitution["Text"] as String;
     cell.source = plan[i].item2;
-    cell.isDropped = customStrip(substitution["Entfall"]! as String) == "x";
+    cell.isDropped = substitution["Entfall"]! == "x";
 
     // Sometimes a substitution is set, but there is no data set which means that it is dropped.
     if (cell.originalSubject == "\u{00A0}" && cell.subject == "\u{00A0}" && cell.room == "\u{00A0}" && cell.teacher == "\u{00A0}") {
@@ -96,6 +96,8 @@ void writeSubstitutionPlan(List<Tuple2<Map<String, dynamic>, String>> plan, int 
 }
 
 class IServUnitsSubstitutionIntegration extends Integration {
+  static const List<String> customSubstitutionProperties = ["(Le.) nach", "Art"];
+
   final Client client = Client();
   final SharedState sharedState;
   bool loadCheckWeekDay = true;
@@ -209,7 +211,7 @@ class IServUnitsSubstitutionIntegration extends Integration {
           substitution[beforeSubstitutionKey] = beforeSubstitutionValue.replaceAll("\n", " ");
           // If there is only strikethrough text, the actual value will be empty (non breaking whitespace)
           if (!cellElement.text.contains("→")) {
-            substitution[substitutionKey] = "\u{00A0}";
+            substitution[substitutionKey] = "---";
             continue;
           }
         }
