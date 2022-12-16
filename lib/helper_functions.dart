@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:clock/clock.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -14,7 +15,7 @@ import 'pages/setup_page.dart';
 
 Future<bool> isInternetAvailable(Connectivity connectivity) async {
   //TODO: Check on Windows
-  if(Platform.isWindows) return true;
+  if (!kIsWeb && Platform.isWindows) return true;
   final result = await connectivity.checkConnectivity();
   return result == ConnectivityResult.mobile ||
       result == ConnectivityResult.wifi;
@@ -29,6 +30,7 @@ void showSettingsWindow(BuildContext context, SharedState sharedState) {
 
 Future<void> saveToFile(String data, String path) async {
   // This function uses root-level file access, which is only available on android
+  if (kIsWeb) return;
   if (!Platform.isAndroid) return;
   // Check if we have the storage Permission
   if (await Permission.storage.request().isDenied) return;
@@ -43,6 +45,7 @@ Future<void> saveToFile(String data, String path) async {
 
 Future<String> loadFromFile(String path) async {
   // This function uses root-level file access, which is only available on android
+  if (kIsWeb) throw const OSError("Root-level file access is only available on android");
   if (!Platform.isAndroid) throw const OSError("Root-level file access is only available on android");
   // Check if we have the storage Permission
   if (await Permission.storage.request().isDenied) throw const OSError("Storage access is denied");
@@ -79,6 +82,7 @@ String findClosestStringInList(List<String> stringList, String string) {
 }
 
 bool canUseSecureStorage() {
+  if (kIsWeb) return true;
   return Platform.isAndroid || Platform.isIOS || Platform.isLinux || Platform.isWindows;
 }
 
@@ -153,6 +157,7 @@ Future<DateTime?> updateLastLoaded(FlutterSecureStorage storage) async {
   final lastLoaded = DateTime.parse(lastLoadedString);
   if (DateTime.now().difference(lastLoaded) > Constants.credentialExpireDuration) {
     log("Credentials have expired", name: "credentials");
+    if (kIsWeb) await storage.deleteAll();
     if (Platform.isWindows) {
       await storage.delete(key: "username");
       await storage.delete(key: "password");
