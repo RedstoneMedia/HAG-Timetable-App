@@ -10,7 +10,7 @@ class Constants {
       "https://github.com/RedstoneMedia/HAG-Timetable-App/releases/tag/";
   static const String iServHost = "https://hag-iserv.de";
   static const String substitutionLinkBase =
-      "$iServHost/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/svertretung/Druck_Kla";
+      "$iServHost/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/svertretung/svertretungen";
   static const String timeTableLinkBase =
       "$iServHost/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/splan/Kla1A";
   static const String calDavBaseUrl = "$iServHost/caldav";
