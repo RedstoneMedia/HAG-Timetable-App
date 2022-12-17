@@ -8,6 +8,8 @@ class Constants {
   static const List<String> weekDays = ["", "Mo", "Di", "Mi", "Do", "Fr"];
   static const String newestReleaseUrlPart =
       "https://github.com/RedstoneMedia/HAG-Timetable-App/releases/tag/";
+  static const String newestReleaseDownloadUrlPart =
+      "https://github.com/RedstoneMedia/HAG-Timetable-App/releases/download/";
   static const String iServHost = "https://hag-iserv.de";
   static const String substitutionLinkBase =
       "$iServHost/iserv/public/plan/show/Schüler-Stundenpläne/b006cb5cf72cba5c/svertretung/svertretungen";

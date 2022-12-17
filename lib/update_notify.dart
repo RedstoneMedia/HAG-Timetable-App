@@ -1,9 +1,13 @@
+import 'dart:developer';
+import 'dart:io';
+
+import 'package:app_installer/app_installer.dart';
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:http/http.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/shared_state.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:yaml/yaml.dart'; // Contains a client for making API calls
 
 class Version {
@@ -60,12 +64,12 @@ class UpdateNotifier {
       BuildContext context, SharedState sharedState) async {
     final newestVersion = await getNewestVersion();
     if (currentVersion.isOtherVersionGreater(newestVersion)) {
-      await showNewVersionDialog(context, sharedState, newestVersion);
+      await showNewVersionDialog(context, sharedState, newestVersion, currentVersion);
     }
   }
 
   Future<void> showNewVersionDialog(
-      BuildContext context, SharedState sharedState, Version newVersion) async {
+      BuildContext context, SharedState sharedState, Version newVersion, Version currentVersion) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -77,8 +81,10 @@ class UpdateNotifier {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('Es ist eine neue Version verfügbar : $newVersion',
-                    style: TextStyle(color: sharedState.theme.textColor))
+                Text('Es ist eine neue Version verfügbar: $newVersion',
+                    style: TextStyle(color: sharedState.theme.textColor)),
+                Text('(Aktuelle Version: $currentVersion)',
+                    style: TextStyle(color: sharedState.theme.textColor)),
               ],
             ),
           ),
@@ -102,12 +108,9 @@ class UpdateNotifier {
                 ),
               ),
               onPressed: () async {
-                final newReleaseUrl =
-                    Constants.newestReleaseUrlPart + newVersion.toString();
-                if (await canLaunch(newReleaseUrl)) {
-                  await launch(newReleaseUrl);
-                }
-                Navigator.of(context).pop();
+                final path = await downloadNewAPKVersion(newVersion);
+                final dir = await getTemporaryDirectory();
+                await installAPK("${dir.path}/stundenplan.apk");
               },
               child: Text('Herunterladen',
                   style: TextStyle(color: sharedState.theme.textColor)),
@@ -117,4 +120,22 @@ class UpdateNotifier {
       },
     );
   }
+
+  Future<String> downloadNewAPKVersion(Version newVersion) async {
+      final url = Uri.parse("${Constants.newestReleaseDownloadUrlPart}$newVersion/app-arm64-v8a-release.apk");
+      log("Downloading new APK", name: "updater");
+      final response = await client.get(url);
+      log("Download done. Downloaded ${response.contentLength} bytes.", name: "updater");
+      final output = await getTemporaryDirectory();
+      log("Saving APK in ${output.path}", name: "updater");
+      final file = File("${output.path}/stundenplan.apk");
+      await file.writeAsBytes(response.bodyBytes);
+      return file.path;
+  }
+
+  Future<void> installAPK(String path) async {
+    log("Installing APK.", name: "updater");
+    await AppInstaller.installApk(path);
+    log("APK installed.", name: "updater");
+}
 }
