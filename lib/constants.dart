@@ -1,4 +1,6 @@
 class Constants {
+  static const bool defineHasTesterFeature = bool.fromEnvironment("DEFINE_HAS_TESTER_FEATURE");
+
   // Grid Properties
   static const int width = 6;
   static const int defaultHeight = 10;
@@ -28,7 +30,7 @@ class Constants {
   static const Duration notifyUpdateFrequency = Duration(minutes: 20);
   static const int notifyUpdateDaySleepStartHour = 22;
   static const int notifyUpdateDaySleepEndHour = 4;
-  static const bool notifyDebugLogToFile = false;
+  static const bool notifyDebugLogToFile = defineHasTesterFeature;
 
   static const String publicIServUrl = "$iServHost/iserv/public";
   static const String newestVersionPubspecUrl =
