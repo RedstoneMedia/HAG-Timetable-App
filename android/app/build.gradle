@@ -22,7 +22,8 @@ if (flutterVersionName == null) {
 }
 
 def dartEnvironmentVariables = [
-        DEFINE_HAS_TESTER_FEATURE: false
+        DEFINE_HAS_TESTER_FEATURE: false,
+        DEFINE_HAS_SMALL_FEATURE: false
 ]
 
 if (project.hasProperty('dart-defines')) {

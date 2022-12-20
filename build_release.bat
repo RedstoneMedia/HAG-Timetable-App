@@ -18,7 +18,7 @@ if "%1%"=="small" (
   @rem Remove google_ml_kit just to be safe
   flutter pub remove google_ml_kit
   @rem Actually build the dam thing
-  flutter build apk --split-per-abi
+  flutter build apk --split-per-abi --dart-define=DEFINE_HAS_SMALL_FEATURE=true
   exit /b
 )
 @rem Default release build
