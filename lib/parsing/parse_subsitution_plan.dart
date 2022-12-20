@@ -305,8 +305,8 @@ class SchulmanagerIntegration extends Integration {
         continue;
       }
       final subject = actualLesson["subjectLabel"]! as String;
-      if (!sharedState.profileManager.subjects.contains(subject)) continue;
-      if (actualLesson.containsKey("room")) continue;
+      if (!sharedState.allCurrentSubjects.contains(subject)) continue;
+      if (!actualLesson.containsKey("room") || actualLesson["room"] == null) continue;
       final room = (actualLesson["room"] as Map<String, dynamic>)["name"]! as String;
       final teachers = actualLesson["teachers"]! as List<dynamic>;
       final teacher = (teachers[0] as Map<String, dynamic>)["abbreviation"] as String;
