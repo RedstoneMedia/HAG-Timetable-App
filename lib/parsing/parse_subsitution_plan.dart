@@ -183,13 +183,11 @@ class IServUnitsSubstitutionIntegration extends Integration {
     final headerInformation = [
       "Stunde",
       "Fach",
-      "Vertretung",
       "Raum",
-      "statt Fach",
-      "statt Lehrer",
-      "statt Raum",
+      "Art",
+      "Lehrer",
       "Text",
-      "Entfall"
+      "(Le.) nach"
     ];
     rows.removeAt(0);
     final substitutions = <Map<String, String>>[];
@@ -197,11 +195,40 @@ class IServUnitsSubstitutionIntegration extends Integration {
     for (final row in rows) {
       final substitution = <String, String>{"Entfall": ""};
       final columns = row.getElementsByTagName("td");
-      for (var i = 0; i < columns.length; i++) {
-        substitution[headerInformation[i]] =
-            columns[i].text.replaceAll("\n", " ");
+      for (var i = 1; i < columns.length; i++) {
+        // Get the substitution keys for the header information and the current columns index
+        var substitutionKey = headerInformation[i-1];
+        substitutionKey = substitutionKey == "Lehrer" ? "Vertretung" : substitutionKey;
+        String? beforeSubstitutionKey;
+        if (["Fach", "Raum", "Vertretung"].contains(substitutionKey)) {
+          beforeSubstitutionKey = "statt ${substitutionKey == "Vertretung" ? "Lehrer" : substitutionKey}";
+        }
+        // Handle random edge case, when there is no font child element
+        if (columns[i].text == "\u{00A0}") {
+          substitution[substitutionKey] = "\u{00A0}";
+          if (beforeSubstitutionKey != null) substitution[beforeSubstitutionKey] = "\u{00A0}";
+        }
+        if (columns[i].children.isEmpty) continue;
+        final cellElement = columns[i].children[0];
+        final strikethroughElements = cellElement.getElementsByTagName("s");
+        // Strikethrough indicates before value
+        if (strikethroughElements.isNotEmpty && beforeSubstitutionKey != null) {
+          final beforeSubstitutionValue = strikethroughElements[0].text;
+          substitution[beforeSubstitutionKey] = beforeSubstitutionValue.replaceAll("\n", " ");
+          // If there is only strikethrough text, the actual value will be empty (non breaking whitespace)
+          if (!cellElement.text.contains("→")) {
+            substitution[substitutionKey] = "---";
+            continue;
+          }
+        }
+        // Add the substitution value (Sometimes after an arrow)
+        final cellValue = cellElement.text.replaceAll("\n", " ").split("→").last;
+        substitution[substitutionKey] = cellValue;
+        if (strikethroughElements.isEmpty && beforeSubstitutionKey != null) {
+          substitution[beforeSubstitutionKey] = cellValue;
+        }
       }
-      if (substitution["Art"]?.contains("Entfall") ?? false) substitution["Entfall"] = "x";
+      if (substitution["Art"]!.contains("Entfall")) substitution["Entfall"] = "x";
       substitutions.add(substitution);
     }
 
