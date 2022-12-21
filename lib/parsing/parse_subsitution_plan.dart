@@ -135,6 +135,7 @@ class IServUnitsSubstitutionIntegration extends Integration {
   Future<Map<String, dynamic>> getCourseSubstitutionPlan(String course) async {
     final response = await client.get(Uri.parse('${Constants.substitutionLinkBase}_$course.htm'));
     if (response.statusCode != 200) {
+      log("Could not get substitution plan status code: ${response.statusCode}", name: "iserv-units-integration");
       return {
         "substitutions" : <Map<String, String>>[],
         "substituteDate" : DateTime.now(),
@@ -144,6 +145,7 @@ class IServUnitsSubstitutionIntegration extends Integration {
 
     final document = parse(response.body);
     if (document.outerHtml.contains("Fatal error")) {
+      log("Could not parse substitution plan: Fatal error", name: "iserv-units-integration");
       return {
         "substitutions" : <Map<String, String>>[],
         "substituteDate" : DateTime.now(),
