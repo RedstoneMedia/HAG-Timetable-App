@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/main.dart';
 import 'package:stundenplan/pages/calendar_settings_page.dart';
 import 'package:stundenplan/pages/intro/class_selection.dart';
@@ -526,7 +527,7 @@ class _SetupPageState extends State<SetupPage> {
                         ),
                       ),
                     ),
-                    if (!kReleaseMode) Column(
+                    if (!kReleaseMode || Constants.defineHasTesterFeature) Column(
                       children: [
                         Padding(
                           padding: const EdgeInsets.symmetric(
@@ -539,7 +540,7 @@ class _SetupPageState extends State<SetupPage> {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12.0),
                           child: Text(
-                            "Debug",
+                            "Testing",
                             style: GoogleFonts.poppins(
                                 color: sharedState.theme.textColor.withAlpha(150),
                                 fontWeight: FontWeight.bold,
@@ -548,25 +549,30 @@ class _SetupPageState extends State<SetupPage> {
                         ),
                         Padding(
                           padding: const EdgeInsets.only(bottom: 5.0),
-                          child : ElevatedButton(
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(sharedState.theme.subjectDropOutColor),
-                              shape: MaterialStateProperty.all<OutlinedBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5.0),
-                                ),
-                              ),
-                            ),
+                          child : StandardButton(
+                            sharedState: sharedState,
+                            text: "Show intro screen",
+                            fontSize: 9.0,
+                            textColor: sharedState.theme.textColor.withAlpha(150),
+                            fontWeight: FontWeight.normal,
+                            color: sharedState.theme.subjectDropOutColor,
                             onPressed: () {
                               Navigator.of(context).push(MaterialPageRoute(builder: (context) => ClassSelectionPage(widget.sharedState)));
                             },
-                            child: Text(
-                              "Show intro screen",
-                              style: GoogleFonts.poppins(
-                                  color: sharedState.theme.textColor.withAlpha(150),
-                                  fontSize: 9.0,
-                                  fontWeight: FontWeight.normal),
-                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 5.0),
+                          child: StandardButton(
+                            sharedState: sharedState,
+                            text: "Save snapshot",
+                            fontSize: 9.0,
+                            textColor: sharedState.theme.textColor.withAlpha(150),
+                            fontWeight: FontWeight.normal,
+                            color: sharedState.theme.subjectColor.withOpacity(0.6),
+                            onPressed: () async {
+                              await sharedState.saveSnapshot();
+                            },
                           ),
                         ),
                       ],

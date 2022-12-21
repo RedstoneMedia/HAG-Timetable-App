@@ -252,6 +252,8 @@ class StandardButton extends StatelessWidget {
   final SharedState sharedState;
   final Color color;
   final double fontSize;
+  final Color? textColor;
+  final FontWeight fontWeight;
   final double size;
   final bool disabled;
 
@@ -261,6 +263,8 @@ class StandardButton extends StatelessWidget {
     required this.sharedState,
     required this.color,
     this.fontSize = 20,
+    this.fontWeight = FontWeight.bold,
+    this.textColor,
     this.size = 1,
     this.disabled = false
   });
@@ -284,8 +288,8 @@ class StandardButton extends StatelessWidget {
         child: Text(
           text,
           style: GoogleFonts.poppins(
-              color: sharedState.theme.textColor,
-              fontWeight: FontWeight.bold,
+              color: textColor ?? sharedState.theme.textColor,
+              fontWeight: fontWeight,
               fontSize: fontSize),
         ),
       ),
@@ -307,7 +311,7 @@ class HelpButton extends StatelessWidget {
       top: -10,
       child: FloatingActionButton(
         onPressed: () async {
-          await launch("${Constants.wikiBaseUrl}/$helpPage");
+          await launchUrl(Uri.parse("${Constants.wikiBaseUrl}/$helpPage"));
         },
         backgroundColor: sharedState.theme.textColor.withAlpha(150),
         mini: true,

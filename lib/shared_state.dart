@@ -189,4 +189,15 @@ class SharedState {
     }
     return allSubjects;
   }
+
+  // Snapshot
+  Future<void> saveSnapshot() async {
+    final snapshotData = <String, dynamic>{
+      "integrations" : Integrations.instance.saveIntegrationValuesToJson(),
+      "content" : content.toJsonData()
+    };
+    final now = DateTime.now();
+    final saveFilePath = "${Constants.saveSnapshotFileLocation}_stundenplan_snapshot ${now.year}_${now.month}_${now.day} ${now.hour}_${now.minute}_${now.second}";
+    await saveToFile(jsonEncode(snapshotData), saveFilePath);
+  }
 }
