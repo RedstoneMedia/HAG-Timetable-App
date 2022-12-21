@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:developer';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/content.dart';
@@ -197,7 +198,8 @@ class SharedState {
       "content" : content.toJsonData()
     };
     final now = DateTime.now();
-    final saveFilePath = "${Constants.saveSnapshotFileLocation}_stundenplan_snapshot ${now.year}_${now.month}_${now.day} ${now.hour}_${now.minute}_${now.second}";
-    await saveToFile(jsonEncode(snapshotData), saveFilePath);
+    final timeStampString = DateFormat("dd_MM_yyy-HH_mm_ss").format(now);
+    final saveFilePath = "${Constants.saveSnapshotFileLocation}/stundenplan_snapshot_$timeStampString.snapshot";
+    await saveToFileArchived(jsonEncode(snapshotData), saveFilePath);
   }
 }

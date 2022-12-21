@@ -2,16 +2,18 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:archive/archive.dart';
 import 'package:clock/clock.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:stundenplan/constants.dart';
+import 'package:stundenplan/pages/setup_page.dart';
 import 'package:stundenplan/shared_state.dart';
 import 'package:tuple/tuple.dart';
-import 'constants.dart';
-import 'pages/setup_page.dart';
 
 Future<bool> isInternetAvailable(Connectivity connectivity) async {
   //TODO: Check on Windows
@@ -54,6 +56,22 @@ Future<String> loadFromFile(String path) async {
   final File saveFile = File("/storage/emulated/0/Android/data/stundenplan-data.save");
   // Read from the File
   return saveFile.readAsString();
+}
+
+Future<void> saveToFileArchived(String data, String path) async {
+  if (kIsWeb) return;
+  if (!Platform.isAndroid) return;
+  // Check if we have the storage Permission
+  if (await Permission.storage.request().isDenied) return;
+  // Compress data with gzip
+  final compressedData = GZipEncoder().encode(utf8.encode(data));
+  // Save to file: same code as `loadFromFile`
+  try {
+    final File saveFile = File(path);
+    await saveFile.writeAsBytes(compressedData!);
+  } catch (e) {
+    log("Error while writing archive to file at '$path'", name: "file", error: e);
+  }
 }
 
 String? getCharAt(String string, int index, {bool ignoreLength = false}) {
