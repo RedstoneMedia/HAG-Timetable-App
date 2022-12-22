@@ -101,6 +101,7 @@ class IServUnitsSubstitutionIntegration extends Integration {
 
   final Client client = Client();
   final SharedState sharedState;
+  final Map<String, String> lastResponses = {};
   bool loadCheckWeekDay = true;
 
   IServUnitsSubstitutionIntegration(this.sharedState) : super(name: "IServ", save: true, precedence: 0, providedValues: ["substitutions"]);
@@ -114,6 +115,7 @@ class IServUnitsSubstitutionIntegration extends Integration {
   Future<void> update() async {
     final weekSubstitutions = values["substitutions"]! as WeekSubstitutions;
     final schoolClasses = getRelevantSchoolClasses(sharedState);
+    if (Constants.defineHasTesterFeature) lastResponses.clear();
     // Get substitutions for each class and write it to week substitutions
     for (final schoolClassName in schoolClasses) {
       final ret = await getCourseSubstitutionPlan(schoolClassName);
@@ -132,8 +134,16 @@ class IServUnitsSubstitutionIntegration extends Integration {
     }
   }
 
+  @override
+  Map<String, dynamic> saveValuesToJson() {
+    final json = super.saveValuesToJson();
+    if (Constants.defineHasTesterFeature) json["lastResponses"] = lastResponses;
+    return json;
+  }
+
   Future<Map<String, dynamic>> getCourseSubstitutionPlan(String course) async {
     final response = await client.get(Uri.parse('${Constants.substitutionLinkBase}_$course.htm'));
+    if (Constants.defineHasTesterFeature) lastResponses[course] = "${response.statusCode}\n\n${response.body}";
     if (response.statusCode != 200) {
       log("Could not get substitution plan status code: ${response.statusCode}", name: "iserv-units-integration");
       return {
@@ -252,6 +262,7 @@ class SchulmanagerIntegration extends Integration {
   late Map<String, dynamic> studentData;
   bool active = false;
   bool loadCheckWeekDay = true;
+  dynamic lastResponse;
 
   SchulmanagerIntegration.Schulmanager(this.sharedState) : super(name: "Schulmanager", save: true, precedence: 1, providedValues: ["substitutions"]);
 
@@ -296,6 +307,7 @@ class SchulmanagerIntegration extends Integration {
         "student" : studentData
       }
     }]))![0];
+    if (Constants.defineHasTesterFeature) lastResponse = lessons;
     // Parse json into day substitutions list
     final substitutions = <DateTime, List<Map<String, dynamic>>>{};
     for (final l in lessons as List<dynamic>) {
@@ -372,6 +384,13 @@ class SchulmanagerIntegration extends Integration {
         values[jsonValueEntry.key] = WeekSubstitutions(jsonValueEntry.value, name, checkWeekDay: loadCheckWeekDay);
       }
     }
+  }
+
+  @override
+  Map<String, dynamic> saveValuesToJson() {
+    final json = super.saveValuesToJson();
+    if (Constants.defineHasTesterFeature) json["lastResponse"] = lastResponse;
+    return json;
   }
 
   Future<String?> getBundleVersion() async {

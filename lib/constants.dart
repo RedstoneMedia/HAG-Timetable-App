@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
+
 class Constants {
   // The current features of the installation
-  static const bool defineHasTesterFeature = bool.fromEnvironment("DEFINE_HAS_TESTER_FEATURE");
+  static const bool defineHasTesterFeature = bool.fromEnvironment("DEFINE_HAS_TESTER_FEATURE") || !kReleaseMode;
   static const bool defineHasSmallFeature = bool.fromEnvironment("DEFINE_HAS_SMALL_FEATURE");
 
   // Grid Properties
