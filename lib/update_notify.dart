@@ -109,8 +109,7 @@ class UpdateNotifier {
               ),
               onPressed: () async {
                 final path = await downloadNewAPKVersion(newVersion);
-                final dir = await getTemporaryDirectory();
-                await installAPK("${dir.path}/stundenplan.apk");
+                await installAPK(path);
               },
               child: Text('Herunterladen',
                   style: TextStyle(color: sharedState.theme.textColor)),
@@ -123,19 +122,20 @@ class UpdateNotifier {
 
   Future<String> downloadNewAPKVersion(Version newVersion) async {
       final url = Uri.parse("${Constants.newestReleaseDownloadUrlPart}$newVersion/app-arm64-v8a-release.apk");
-      log("Downloading new APK", name: "updater");
-      final response = await client.get(url);
-      log("Download done. Downloaded ${response.contentLength} bytes.", name: "updater");
       final output = await getTemporaryDirectory();
-      log("Saving APK in ${output.path}", name: "updater");
+      log("Downloading new APK to ${output.path}", name: "updater");
+      final request = await HttpClient().getUrl(url);
+      final response = await request.close();
       final file = File("${output.path}/stundenplan.apk");
-      await file.writeAsBytes(response.bodyBytes);
+      await response.pipe(file.openWrite());
+      log("Download done. Downloaded ${response.contentLength} bytes.", name: "updater");
       return file.path;
   }
 
   Future<void> installAPK(String path) async {
     log("Installing APK.", name: "updater");
+    // TODO: Maybe fork or implement AppInstaller in a custom plugin, since the package does not the provide information, if the installation was successful
     await AppInstaller.installApk(path);
-    log("APK installed.", name: "updater");
+    log("APK might be installed.", name: "updater");
 }
 }
