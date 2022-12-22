@@ -67,7 +67,7 @@ Future<void> saveToFileArchived(String data, String path) async {
   final compressedData = GZipEncoder().encode(utf8.encode(data));
   // Save to file: same code as `loadFromFile`
   try {
-    final File saveFile = File(path);
+    final File saveFile = await File(path).create(recursive: true);
     await saveFile.writeAsBytes(compressedData!);
   } catch (e) {
     log("Error while writing archive to file at '$path'", name: "file", error: e);

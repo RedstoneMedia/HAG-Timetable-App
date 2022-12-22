@@ -96,8 +96,7 @@ class Constants {
   static const double randomUpdateSpecialClassesChance = 0.01; // 1%
   static const String saveDataFileLocation = "/storage/emulated/0/Android/data/stundenplan-data.save";
 
-  // TODO: Maybe save theme somewhere else (a dedicated folder)
-  static const String saveSnapshotFileLocation = "/storage/emulated/0/Android/data";
+  static const String saveSnapshotFileLocation = "/storage/emulated/0/Android/data/com.example.stundenplan/files";
 
   static const String schulmanagerOicdBaseUrl = "https://login.schulmanager-online.de/oidc";
   static const String schulmanagerApiBaseUrl = "https://login.schulmanager-online.de/api";

@@ -197,7 +197,6 @@ class SharedState {
       "integrations" : Integrations.instance.saveIntegrationValuesToJson(),
       "content" : content.toJsonData()
     };
-    log(jsonEncode(snapshotData), name: "snapshot");
     final now = DateTime.now();
     final timeStampString = DateFormat("dd_MM_yyy-HH_mm_ss").format(now);
     final saveFilePath = "${Constants.saveSnapshotFileLocation}/stundenplan_snapshot_$timeStampString.snapshot";
