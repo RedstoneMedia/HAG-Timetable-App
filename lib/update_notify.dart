@@ -1,13 +1,13 @@
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:app_installer/app_installer.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/shared_state.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:yaml/yaml.dart'; // Contains a client for making API calls
 
 class Version {
@@ -108,8 +108,11 @@ class UpdateNotifier {
                 ),
               ),
               onPressed: () async {
-                final path = await downloadNewAPKVersion(newVersion);
-                await installAPK(path);
+                final newReleaseUri = Uri.parse(Constants.newestReleaseUrlPart + newVersion.toString());
+                if (await canLaunchUrl(newReleaseUri)) {
+                  await launchUrl(newReleaseUri);
+                }
+                Navigator.of(context).pop();
               },
               child: Text('Herunterladen',
                   style: TextStyle(color: sharedState.theme.textColor)),
@@ -132,10 +135,4 @@ class UpdateNotifier {
       return file.path;
   }
 
-  Future<void> installAPK(String path) async {
-    log("Installing APK.", name: "updater");
-    // TODO: Maybe fork or implement AppInstaller in a custom plugin, since the package does not the provide information, if the installation was successful
-    await AppInstaller.installApk(path);
-    log("APK might be installed.", name: "updater");
-}
 }
