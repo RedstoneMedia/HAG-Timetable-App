@@ -62,18 +62,18 @@ void writeSubstitutionPlan(List<Tuple2<Map<String, dynamic>, String>> plan, int 
     if (substitution.containsKey("Art")) cell.substitutionKind = substitution["Art"]!.toString();
     cell.isDropped = substitution["Entfall"]! == "x";
 
-    // Sometimes a substitution is set, but there is no data set which means that it is dropped.
-    if (cell.originalSubject == "\u{00A0}" && cell.subject == "\u{00A0}" && cell.room == "\u{00A0}" && cell.teacher == "\u{00A0}") {
-      cell.isDropped = true;
-    } else if (!cell.isDropped) {
-      cell.isSubstitute = true;
-    }
-
     // Replace non breaking space with three dashes
     // We need to do this because, otherwise the cell will not have any visible text and will just display a solid color.
     if (cell.subject == "\u{00A0}") cell.subject = "---";
     if (cell.teacher == "\u{00A0}") cell.teacher = "---";
     if (cell.room == "\u{00A0}") cell.room = "---";
+
+    // Sometimes a substitution is set, but there is no data set which means that it is dropped.
+    if (cell.subject == "---" && cell.room == "---" && cell.teacher == "---") {
+      cell.isDropped = true;
+    } else if (!cell.isDropped) {
+      cell.isSubstitute = true;
+    }
 
     if (hours.length == 1) {
       // No hour range (5)
@@ -201,9 +201,20 @@ class IServUnitsSubstitutionIntegration extends Integration {
       "Text",
       "(Le.) nach"
     ];
-    rows.removeAt(0);
-    final substitutions = <Map<String, String>>[];
+    final headerRow = rows.removeAt(0);
+    // Check if the substitution kind row exists
+    bool foundSubstitutionKindColumn = false;
+    for (var i = 0; i < headerRow.children.length; i++) {
+      final headerColumnText = headerRow.children[i].text;
+      if (headerColumnText == "Art") {
+        foundSubstitutionKindColumn = true;
+        break;
+      }
+    }
+    // If it doesn't remove it, from the header column map
+    if (!foundSubstitutionKindColumn) {headerInformation.remove("Art");}
 
+    final substitutions = <Map<String, String>>[];
     for (final row in rows) {
       final substitution = <String, String>{"Entfall": ""};
       final columns = row.getElementsByTagName("td");
@@ -240,7 +251,7 @@ class IServUnitsSubstitutionIntegration extends Integration {
           substitution[beforeSubstitutionKey] = cellValue;
         }
       }
-      if (substitution["Art"]!.contains("Entfall")) substitution["Entfall"] = "x";
+      if ((substitution["Art"] ?? substitution["(Le.) nach"]!).contains("Entfall")) substitution["Entfall"] = "x";
       substitutions.add(substitution);
     }
 
