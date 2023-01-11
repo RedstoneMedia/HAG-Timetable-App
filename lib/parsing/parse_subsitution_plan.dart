@@ -251,7 +251,7 @@ class IServUnitsSubstitutionIntegration extends Integration {
           substitution[beforeSubstitutionKey] = cellValue;
         }
       }
-      if ((substitution["Art"] ?? substitution["(Le.) nach"]!).contains("Entfall")) substitution["Entfall"] = "x";
+      if ((substitution["Art"] ?? substitution["(Le.) nach"] ?? "").contains("Entfall")) substitution["Entfall"] = "x";
       substitutions.add(substitution);
     }
 
