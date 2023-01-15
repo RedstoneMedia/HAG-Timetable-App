@@ -60,7 +60,7 @@ void writeSubstitutionPlan(List<Tuple2<Map<String, dynamic>, String>> plan, int 
     cell.text = substitution["Text"] as String;
     cell.source = plan[i].item2;
     if (substitution.containsKey("Art")) cell.substitutionKind = substitution["Art"]!.toString();
-    cell.isDropped = substitution["Entfall"]! == "x";
+    cell.isDropped = customStrip(substitution["Entfall"]! as String) == "x";
 
     // Replace non breaking space with three dashes
     // We need to do this because, otherwise the cell will not have any visible text and will just display a solid color.
@@ -199,20 +199,21 @@ class IServUnitsSubstitutionIntegration extends Integration {
       "Art",
       "Lehrer",
       "Text",
-      "(Le.) nach"
+      "(Le.) nach",
+      "Entfall"
     ];
+    // Check what kind of columns exist and remove those from the header column map, that don't exist
     final headerRow = rows.removeAt(0);
-    // Check if the substitution kind row exists
-    bool foundSubstitutionKindColumn = false;
-    for (var i = 0; i < headerRow.children.length; i++) {
+    headerRow.children.removeAt(0);
+    var i = 0;
+    headerInformation.removeWhere((headerName) {
+      if (headerRow.children.length <= i) return true;
       final headerColumnText = headerRow.children[i].text;
-      if (headerColumnText == "Art") {
-        foundSubstitutionKindColumn = true;
-        break;
-      }
-    }
-    // If it doesn't remove it, from the header column map
-    if (!foundSubstitutionKindColumn) {headerInformation.remove("Art");}
+      final checkHeaderName = headerName == "Lehrer" ? "(Lehrer)" : headerName;
+      if (!headerColumnText.contains(checkHeaderName)) return true;
+      i += 1;
+      return false;
+    });
 
     final substitutions = <Map<String, String>>[];
     for (final row in rows) {
