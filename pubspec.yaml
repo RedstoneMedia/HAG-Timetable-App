@@ -30,7 +30,7 @@ dependencies:
   yaml: ^3.1.1
   icalendar_parser: ^2.0.0
   image_picker: ^1.0.2
-  google_ml_kit: ^0.16.2
+  google_mlkit_text_recognition: ^0.10.0
   cookie_jar: ^4.0.8
   flutter_secure_storage: ^8.0.0
   rrule: ^0.2.10

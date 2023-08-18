@@ -81,6 +81,7 @@ class _CourseListImportPageState extends State<CourseListImportPage> {
     }
     final inputImage = InputImage.fromFilePath(photo.path);
     final RecognizedText recognisedText = await textRecognizer.processImage(inputImage);
+    
 
     final headerLocations = <String, Rect>{};
     const headerNames = ["montag", "dienstag", "mittwoch", "donnerstag", "freitag"];
