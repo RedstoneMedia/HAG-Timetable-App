@@ -12,14 +12,14 @@ dependencies:
   flutter:
     sdk: flutter
 
-  connectivity_plus: ^3.0.2
+  connectivity_plus: ^4.0.2
   flutter_colorpicker: ^1.0.3
-  flutter_launcher_icons: ^0.11.0
-  google_fonts: ^3.0.1
+  flutter_launcher_icons: ^0.13.1
+  google_fonts: ^5.1.0
   html: ^0.15.0
-  http: ^0.13.4
-  intl: ^0.17.0
-  package_info_plus: ^3.0.2
+  http: ^1.1.0
+  intl: ^0.18.1
+  package_info_plus: ^4.1.0
   path_provider: ^2.0.11
   permission_handler: ^10.0.0
   pull_to_refresh_flutter3: ^2.0.1
@@ -28,14 +28,14 @@ dependencies:
   tuple: ^2.0.0
   url_launcher: ^6.1.7
   yaml: ^3.1.1
-  icalendar_parser: ^1.1.0
-  image_picker: ^0.8.6
-  google_ml_kit: ^0.13.0
-  cookie_jar: ^3.0.1
-  flutter_secure_storage: ^7.0.1
+  icalendar_parser: ^2.0.0
+  image_picker: ^1.0.2
+  google_ml_kit: ^0.16.2
+  cookie_jar: ^4.0.8
+  flutter_secure_storage: ^8.0.0
   rrule: ^0.2.10
   workmanager: ^0.5.1
-  flutter_local_notifications: ^13.0.0
+  flutter_local_notifications: ^15.1.0+1
   collection: ^1.16.0
   clock: ^1.1.1
   archive: ^3.3.5
