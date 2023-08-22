@@ -40,6 +40,16 @@ Future<PermissionStatus> requestStorage() async {
   }
 }
 
+Future<void> tryMoveFile(String from, String to) async {
+  try {
+    final String oldData = await loadFromFile(from);
+    await saveToFile(oldData, to);
+    await File(from).delete();
+  } catch (e) {
+    log("Error while moving from '$from' to '$to'", name: "file", error: e);
+  }
+}
+
 Future<void> saveToFile(String data, String path) async {
   // This function uses root-level file access, which is only available on android
   if (kIsWeb) return;
@@ -49,6 +59,9 @@ Future<void> saveToFile(String data, String path) async {
 
   try {
     final File saveFile = File(path);
+    if (!(await saveFile.exists())) {
+      await saveFile.create();
+    }
     await saveFile.writeAsString(data);
   } catch (e) {
     log("Error while writing to file at '$path'", name: "file", error: e);
@@ -63,7 +76,7 @@ Future<String> loadFromFile(String path) async {
   if (await requestStorage().isDenied) throw const OSError("Storage access is denied");
 
   // Create a reference to the File
-  final File saveFile = File("/storage/emulated/0/Android/data/stundenplan-data.save");
+  final File saveFile = File(path);
   // Read from the File
   return saveFile.readAsString();
 }

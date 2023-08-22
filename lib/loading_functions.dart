@@ -16,6 +16,7 @@ import 'package:stundenplan/update_notify.dart';
 Future<void> openSetupPageAndCheckForFile(SharedState sharedState, BuildContext context) async {
   // Only load from file when file permissions are granted
   if (await checkForFilePermissionsAndShowDialog(context) == true) {
+    await tryMoveFile(Constants.saveDataFileLocationOld, Constants.saveDataFileLocation); // Legacy file location migration
     await loadProfileManagerAndThemeFromFile(sharedState);
   }
   // Making sure the Frame has been completely drawn and everything has loaded before navigating to new Page

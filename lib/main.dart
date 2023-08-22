@@ -90,6 +90,7 @@ class _MyAppState extends State<MyApp> {
       // App is opened for the firs time -> load settings from file
       await openSetupPageAndCheckForFile(sharedState, context);
     } else {
+      await tryMoveFile(Constants.saveDataFileLocationOld, Constants.saveDataFileLocation); // Legacy file location migration
       // Start and stop the notifications, based on, if they are enable or not
       if (sharedState.sendNotifications) {
           await startNotificationTask();

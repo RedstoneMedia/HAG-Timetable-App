@@ -94,7 +94,8 @@ class Constants {
   static const bool useAGs = true;
   static const String specialClassNameAG = "AG";
   static const double randomUpdateSpecialClassesChance = 0.01; // 1%
-  static const String saveDataFileLocation = "/storage/emulated/0/Android/data/stundenplan-data.save";
+  static const String saveDataFileLocation = "/storage/emulated/0/Documents/stundenplan-data.save";
+  static const String saveDataFileLocationOld = "/storage/emulated/0/Android/data/stundenplan-data.save";
 
   static const String saveSnapshotFileLocation = "/storage/emulated/0/Android/data/com.example.stundenplan/files";
 
