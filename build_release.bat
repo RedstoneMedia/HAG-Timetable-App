@@ -16,7 +16,7 @@ if "%1%"=="small" (
   git checkout smaller
   git rebase -X ours master
   @rem Remove google_ml_kit just to be safe
-  flutter pub remove google_ml_kit
+  flutter pub remove google_mlkit_text_recognition
   @rem Actually build the dam thing
   flutter build apk --split-per-abi --dart-define=DEFINE_HAS_SMALL_FEATURE=true
   @rem Just to make sure, that people don't accidentally commit to the "smaller" feature branch

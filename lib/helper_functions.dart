@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:stundenplan/constants.dart';
 import 'package:stundenplan/pages/setup_page.dart';
 import 'package:stundenplan/shared_state.dart';
@@ -30,12 +31,21 @@ void showSettingsWindow(BuildContext context, SharedState sharedState) {
   );
 }
 
+Future<PermissionStatus> requestStorage() async {
+  final info = await DeviceInfoPlugin().androidInfo;
+  if (info.version.sdkInt >= 30) {
+    return Permission.manageExternalStorage.request();
+  } else {
+    return Permission.storage.request(); // Deprecated but needed for older phones
+  }
+}
+
 Future<void> saveToFile(String data, String path) async {
   // This function uses root-level file access, which is only available on android
   if (kIsWeb) return;
   if (!Platform.isAndroid) return;
   // Check if we have the storage Permission
-  if (await Permission.storage.request().isDenied) return;
+  if (await requestStorage().isDenied) return;
 
   try {
     final File saveFile = File(path);
@@ -50,7 +60,7 @@ Future<String> loadFromFile(String path) async {
   if (kIsWeb) throw const OSError("Root-level file access is only available on android");
   if (!Platform.isAndroid) throw const OSError("Root-level file access is only available on android");
   // Check if we have the storage Permission
-  if (await Permission.storage.request().isDenied) throw const OSError("Storage access is denied");
+  if (await requestStorage().isDenied) throw const OSError("Storage access is denied");
 
   // Create a reference to the File
   final File saveFile = File("/storage/emulated/0/Android/data/stundenplan-data.save");
@@ -62,7 +72,7 @@ Future<void> saveToFileArchived(String data, String path) async {
   if (kIsWeb) return;
   if (!Platform.isAndroid) return;
   // Check if we have the storage Permission
-  if (await Permission.storage.request().isDenied) return;
+  if (await requestStorage().isDenied) return;
   // Compress data with gzip
   final compressedData = GZipEncoder().encode(utf8.encode(data));
   // Save to file: same code as `loadFromFile`

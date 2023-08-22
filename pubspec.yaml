@@ -36,6 +36,7 @@ dependencies:
   rrule: ^0.2.10
   workmanager: ^0.5.1
   flutter_local_notifications: ^15.1.0+1
+  device_info_plus: ^9.0.3
   collection: ^1.16.0
   clock: ^1.1.1
   archive: ^3.3.5
