@@ -34,6 +34,7 @@ dependencies:
   flutter_secure_storage: ^8.0.0
   rrule: ^0.2.10
   workmanager: ^0.5.1
+  google_mlkit_text_recognition: ^0.10.0
   flutter_local_notifications: ^15.1.0+1
   device_info_plus: ^9.0.3
   collection: ^1.16.0

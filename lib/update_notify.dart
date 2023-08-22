@@ -110,7 +110,7 @@ class UpdateNotifier {
               onPressed: () async {
                 final newReleaseUri = Uri.parse(Constants.newestReleaseUrlPart + newVersion.toString());
                 if (await canLaunchUrl(newReleaseUri)) {
-                  await launchUrl(newReleaseUri);
+                  await launchUrl(newReleaseUri, mode: LaunchMode.externalApplication);
                 }
                 Navigator.of(context).pop();
               },
