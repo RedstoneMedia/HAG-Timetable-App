@@ -192,48 +192,55 @@ class IServUnitsSubstitutionIntegration extends Integration {
 
     final mainTable = tables[0];
     final rows = mainTable.getElementsByTagName("tr");
-    final headerInformation = [
+    final baseHeaderInformation = [
       "Stunde",
       "Fach",
       "Raum",
       "Art",
       "Lehrer",
       "Text",
+      "Vertr-Text-2",
       "(Le.) nach",
       "Entfall"
     ];
-    // Check what kind of columns exist and remove those from the header column map, that don't exist
+    // Check what kind of columns exist and in what order they appear in the header
     final headerRow = rows.removeAt(0);
     headerRow.children.removeAt(0);
-    var i = 0;
-    headerInformation.removeWhere((headerName) {
-      if (headerRow.children.length <= i) return true;
+    final headerInformation = <String?>[];
+    for (var i = 0; i < headerRow.children.length; i++) {
       final headerColumnText = headerRow.children[i].text;
-      final checkHeaderName = headerName == "Lehrer" ? "(Lehrer)" : headerName;
-      if (!headerColumnText.contains(checkHeaderName)) return true;
-      i += 1;
-      return false;
-    });
-
+      final headerName = baseHeaderInformation.firstWhereOrNull((headerName) {
+        final checkHeaderName = headerName == "Lehrer" ? "(Lehrer)" : headerName;
+        return headerColumnText.contains(checkHeaderName);
+      });
+      if (headerInformation.contains(headerName)) {
+        headerInformation.add(null);
+      } else {
+        headerInformation.add(headerName);
+      }
+    }
+    // Parse substitutions in rows
     final substitutions = <Map<String, String>>[];
     for (final row in rows) {
       final substitution = <String, String>{"Entfall": ""};
       final columns = row.getElementsByTagName("td");
-      for (var i = 1; i < columns.length; i++) {
+      for (var i = 0; i < headerInformation.length; i++) {
         // Get the substitution keys for the header information and the current columns index
-        var substitutionKey = headerInformation[i-1];
+        var substitutionKey = headerInformation[i];
+        if (substitutionKey == null) continue;
+        final columnIndex = i + 1;
         substitutionKey = substitutionKey == "Lehrer" ? "Vertretung" : substitutionKey;
         String? beforeSubstitutionKey;
         if (["Fach", "Raum", "Vertretung"].contains(substitutionKey)) {
           beforeSubstitutionKey = "statt ${substitutionKey == "Vertretung" ? "Lehrer" : substitutionKey}";
         }
         // Handle random edge case, when there is no font child element
-        if (columns[i].text == "\u{00A0}") {
+        if (columns[columnIndex].text == "\u{00A0}") {
           substitution[substitutionKey] = "\u{00A0}";
           if (beforeSubstitutionKey != null) substitution[beforeSubstitutionKey] = "\u{00A0}";
         }
-        if (columns[i].children.isEmpty) continue;
-        final cellElement = columns[i].children[0];
+        if (columns[columnIndex].children.isEmpty) continue;
+        final cellElement = columns[columnIndex].children[0];
         final strikethroughElements = cellElement.getElementsByTagName("s");
         // Strikethrough indicates before value
         if (strikethroughElements.isNotEmpty && beforeSubstitutionKey != null) {
