@@ -21,7 +21,7 @@ if "%1%"=="small" (
   flutter build apk --split-per-abi --dart-define=DEFINE_HAS_SMALL_FEATURE=true
   @rem Just to make sure, that people don't accidentally commit to the "smaller" feature branch
   git checkout master
-  pub get
+  flutter pub get
   exit /b
 )
 @rem Default release build
