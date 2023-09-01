@@ -162,6 +162,15 @@ class IServUnitsSubstitutionIntegration extends Integration {
         "substituteWeekday" : 1
       };
     }
+    // Why does this even happen sometimes. Fix your stuff please Units!
+    if (!(document.body?.text.contains(course) ?? false)) {
+      log("Could not load substitution for course: $course. Site does not contain course name", level: 3);
+      return {
+        "substitutions" : <Map<String, String>>[],
+        "substituteDate" : DateTime.now(),
+        "substituteWeekday" : 1
+      };
+    }
 
     // Get weekday for that substitute table
     final headerText = customStrip(document

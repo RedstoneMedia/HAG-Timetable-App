@@ -1,5 +1,7 @@
 String customStrip(String s) {
-  return s.replaceAll(" ", "").replaceAll("\t", "").replaceAll("\n", "");
+  return s.replaceAll(" ", "")
+      .replaceAll("\t", "")
+      .replaceAll("\n", "");
 }
 
 String getCookieStringFromSetCookieHeader(String setCookieString, List<String> relevantCookies) {
