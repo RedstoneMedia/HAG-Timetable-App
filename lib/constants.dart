@@ -99,6 +99,7 @@ class Constants {
 
   static const String saveSnapshotFileLocation = "/storage/emulated/0/Android/data/com.example.stundenplan/files";
 
+  static const String schulmanagerBaseUrl = "https://login.schulmanager-online.de";
   static const String schulmanagerOicdBaseUrl = "https://login.schulmanager-online.de/oidc";
   static const String schulmanagerApiBaseUrl = "https://login.schulmanager-online.de/api";
   static const int schulmanagerSchoolId = 776;

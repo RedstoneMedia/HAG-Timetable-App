@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -31,6 +32,17 @@ const iServLoginExtraHeaders = {
   "Content-Type": "application/x-www-form-urlencoded"
 };
 
+
+Future<String> readResponse(HttpClientResponse response) {
+  final completer = Completer<String>();
+  final contents = StringBuffer();
+  response.transform(utf8.decoder).listen((data) {
+    contents.write(data);
+  }, onDone: () => completer.complete(contents.toString()));
+  return completer.future;
+}
+
+
 Future<Tuple4<Uri, int, HttpClientResponse, String>> followRedirects(HttpClient client, CookieJar cj, HttpClientResponse response) async {
   Uri? uri;
   int redirects = 0;
@@ -54,7 +66,7 @@ Future<Tuple4<Uri, int, HttpClientResponse, String>> followRedirects(HttpClient 
     }
     lastResponse = await request.close();
     if (lastResponse.statusCode != 302) {
-      lastBody = await lastResponse.transform(utf8.decoder).firstWhere((e) => true);
+      lastBody = await readResponse(lastResponse);
     }
     await cj.saveFromResponse(uri, lastResponse.cookies);
     redirects += 1;

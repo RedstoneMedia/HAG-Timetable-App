@@ -299,6 +299,7 @@ class SchulmanagerIntegration extends Integration {
     final _bundleVersion = await getBundleVersion();
     if (_bundleVersion == null) return;
     bundleVersion = _bundleVersion;
+    log("Bundle version: $bundleVersion", name: "schulmanager");
     // Attempt to init with stored jwt
     final checkAuthJwt = await getSchulmanagerJWT();
     var needsOauthLogin = true;
@@ -423,15 +424,21 @@ class SchulmanagerIntegration extends Integration {
 
   Future<String?> getBundleVersion() async {
     // Get bundle version in order to be able to make api requests
-    Response response = await client.get(Uri.parse("https://login.schulmanager-online.de/#/login"));
+    final Response response = await client.get(Uri.parse("${Constants.schulmanagerBaseUrl}/#/login"));
     if (response.statusCode != 200) return null;
     final result = parse(response.body);
     final scripts = result.getElementsByTagName("script");
     String? bundleVersion;
     for (final script in scripts) {
-      if (script.attributes["src"]?.contains("bundle") ?? false) {
-        final srcSplit = script.attributes["src"]!.split(".");
-        bundleVersion = srcSplit[srcSplit.length-2];
+      if (script.attributes["src"]?.contains("static/runtime.") ?? false) {
+        final srcRelative = script.attributes["src"]!;
+        final src = "${Constants.schulmanagerBaseUrl}/$srcRelative";
+        final responseJavscript = await client.get(Uri.parse(src));
+        if (responseJavscript.statusCode != 200) return null;
+        // Get javscript code and use regex to extract bundle version:
+        final regExp = RegExp(r'r\.h=\(\)=>"([A-Za-z0-9]+?)"');
+        final match = regExp.firstMatch(responseJavscript.body);
+        bundleVersion = match?.group(1);
         break;
       }
     }
@@ -466,10 +473,7 @@ class SchulmanagerIntegration extends Integration {
       }]);
       // Check for any errors
       if (classesResponse == null) {log("Could not class ids with term id", name: "schulmanager-integration"); return;}
-      final classesActualResponse = classesResponse[0] as Map<String, dynamic>;
-      if (classesActualResponse["status"] != 200) {log("Class response data had not ok error code: ${classesActualResponse["status"]}", name: "schulmanager-integration"); return;}
-      // Try to find the current students classes name from the class id
-      final classesData = classesActualResponse["data"] as List<dynamic>;
+      final classesData = classesResponse[0] as List<dynamic>;
       final schulmanagerClassData = classesData.firstWhereOrNull((classData) => (classData as Map<String, dynamic>)["id"] == studentData["classId"]);
       if (schulmanagerClassData == null) {log("Could not find the class name, that is associated with the students class id", name: "schulmanager-integration"); return;}
       // Save the class name
