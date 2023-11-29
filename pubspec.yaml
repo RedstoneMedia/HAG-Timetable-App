@@ -3,7 +3,7 @@ description: Stundenplan app für das HAG
 
 publish_to: 'none'
 
-version: 1.8.7+1
+version: 1.8.8+1
 
 environment:
   sdk: '>=2.12.0 <3.0.0'
@@ -12,34 +12,33 @@ dependencies:
   flutter:
     sdk: flutter
 
-  connectivity_plus: ^4.0.2
+  connectivity_plus: ^5.0.2
   flutter_colorpicker: ^1.0.3
   flutter_launcher_icons: ^0.13.1
-  google_fonts: ^5.1.0
+  google_fonts: ^6.1.0
   html: ^0.15.0
-  http: ^1.1.0
+  http: ^1.1.2
   intl: ^0.18.1
-  package_info_plus: ^4.1.0
-  path_provider: ^2.0.11
-  permission_handler: ^10.0.0
-  pull_to_refresh_flutter3: ^2.0.1
-  shared_preferences: ^2.0.15
-  time_ago_provider: ^4.1.2
-  tuple: ^2.0.0
-  url_launcher: ^6.1.7
-  yaml: ^3.1.1
+  package_info_plus: ^5.0.1
+  path_provider: ^2.1.1
+  permission_handler: ^11.1.0
+  pull_to_refresh_flutter3: ^2.0.2
+  shared_preferences: ^2.2.2
+  time_ago_provider: ^4.2.0
+  tuple: ^2.0.2
+  url_launcher: ^6.2.1
+  yaml: ^3.1.2
   icalendar_parser: ^2.0.0
-  image_picker: ^1.0.2
+  image_picker: ^1.0.4
   cookie_jar: ^4.0.8
-  flutter_secure_storage: ^8.0.0
-  rrule: ^0.2.10
-  workmanager: ^0.5.1
-  google_mlkit_text_recognition: ^0.10.0
-  flutter_local_notifications: ^15.1.0+1
-  device_info_plus: ^9.0.3
+  flutter_secure_storage: ^9.0.0
+  rrule: ^0.2.14
+  workmanager: ^0.5.2
+  flutter_local_notifications: ^16.2.0
+  device_info_plus: ^9.1.1
   collection: ^1.16.0
   clock: ^1.1.1
-  archive: ^3.3.5
+  archive: ^3.4.9
 
 flutter_icons:
   android: "launcher_icon"
