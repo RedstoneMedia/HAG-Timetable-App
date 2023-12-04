@@ -36,6 +36,7 @@ dependencies:
   workmanager: ^0.5.2
   flutter_local_notifications: ^16.2.0
   device_info_plus: ^9.1.1
+  google_mlkit_text_recognition: ^0.11.0
   collection: ^1.16.0
   clock: ^1.1.1
   archive: ^3.4.9
