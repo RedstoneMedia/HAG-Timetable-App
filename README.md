@@ -7,8 +7,6 @@
 ![stundeplan_wide](https://user-images.githubusercontent.com/34373974/185638161-9b39c7c5-f139-4459-bd7e-12f327f2753e.png)
 [English version](README-eng.md)
 
-Dies ist eine App für das HAG in Deutschland.
-
 Diese App existiert, da es für Minderjährige keinen anderen Weg gibt, den Stundenplan einzusehen, außer auf IServ.
 Die Darstellung auf IServ ist jedoch nicht intuitiv, nicht visuell interessant und ist nicht personalisiert, weswegen man oft überfordert ist.
 Dazu kommt, dass der Vertretungsplan und der Stundenplan nicht zusammengefasst ist.
